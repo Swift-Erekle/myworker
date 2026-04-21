@@ -10,10 +10,6 @@ const FROM = {
 
 /**
  * Send an email via SendGrid
- * @param {string} to
- * @param {string} subject
- * @param {string} html
- * @returns {Promise<boolean>}
  */
 async function sendEmail(to, subject, html) {
   if (!process.env.SENDGRID_API_KEY) {
@@ -29,7 +25,7 @@ async function sendEmail(to, subject, html) {
   }
 }
 
-// ── Email Templates ─────────────────────────────────────────
+// ── Base Template ────────────────────────────────────────────
 
 function baseTemplate(content) {
   return `<!DOCTYPE html>
@@ -48,6 +44,8 @@ function baseTemplate(content) {
 </div>
 </body></html>`;
 }
+
+// ── Templates ────────────────────────────────────────────────
 
 function emailVerifyTemplate(name, code) {
   return baseTemplate(`
@@ -97,9 +95,60 @@ function vipConfirmTemplate(name, vipType, days, amount) {
   `);
 }
 
+// ✅ NEW: Subscription confirmation email
+function subConfirmTemplate(name, plan, expiresAt, amount) {
+  const label = plan === 'top' ? '🔝 TOP' : '⚡ Pro';
+  const price = (amount / 100).toFixed(2);
+  const expDate = expiresAt ? new Date(expiresAt).toLocaleDateString('ka-GE') : '—';
+  const planFeatures = plan === 'top'
+    ? ['ულიმიტო შეთავაზებები', 'ავტო VIP+ (ყოველ დღე პირველი)', 'TOP ბეჯი', 'ავტო-განახლება 30 დღეში']
+    : ['ულიმიტო შეთავაზებები', 'გაუმჯობესებული პოზიცია', 'Pro ბეჯი', 'ავტო-განახლება 30 დღეში'];
+
+  return baseTemplate(`
+    <h2 style="color:#f0eff5;font-size:20px;margin-bottom:8px">${label} ტარიფი ჩართულია! 🎉</h2>
+    <p style="color:#9998b0;font-size:14px">გამარჯობა, ${name}! შენი გამოწერა წარმატებით გააქტიურდა.</p>
+    <div style="margin:20px 0;padding:20px;background:#0f0f13;border-radius:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+        <span style="color:#9998b0">ტარიფი:</span>
+        <span style="color:#f0eff5;font-weight:800;font-size:16px">${label}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+        <span style="color:#9998b0">ვადა:</span>
+        <span style="color:#f0eff5;font-weight:700">${expDate}-მდე</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:#9998b0">გადახდა:</span>
+        <span style="color:#ff6b2b;font-weight:700;font-size:18px">₾${price}</span>
+      </div>
+    </div>
+    <div style="margin:16px 0;padding:16px;background:#0f172a;border-radius:10px;border:1px solid rgba(255,107,43,.2)">
+      <div style="font-size:12px;color:#9998b0;margin-bottom:8px;font-weight:600">✅ შენი შესაძლებლობები:</div>
+      ${planFeatures.map(f => `<div style="font-size:13px;color:#f0eff5;margin-bottom:4px">• ${f}</div>`).join('')}
+    </div>
+    <p style="color:#9998b0;font-size:11px;text-align:center">ტარიფი ავტომატურად განახლდება 30 დღეში. გასათიშად: პარამეტრები → ბარათი → ავტო-განახლება.</p>
+  `);
+}
+
+// ✅ NEW: Auto-renewal failure notification
+function renewalFailedTemplate(name, plan, expiresAt) {
+  const label = plan === 'top' ? '🔝 TOP' : '⚡ Pro';
+  const expDate = expiresAt ? new Date(expiresAt).toLocaleDateString('ka-GE') : '—';
+  return baseTemplate(`
+    <h2 style="color:#e74c3c;font-size:20px;margin-bottom:8px">⚠️ ავტო-განახლება ვერ მოხდა</h2>
+    <p style="color:#9998b0;font-size:14px">გამარჯობა, ${name}! სამწუხაროდ ვერ მოხდა ${label} ტარიფის ავტო-განახლება.</p>
+    <p style="color:#9998b0;font-size:14px;margin-top:12px">ტარიფი გაუქმდება <strong style="color:#e74c3c">${expDate}-ს</strong>.</p>
+    <div style="margin:20px 0;text-align:center">
+      <a href="${process.env.SITE_URL}/card" style="display:inline-block;padding:12px 24px;background:#ff6b2b;color:#fff;border-radius:10px;text-decoration:none;font-weight:700">💳 ბარათის განახლება</a>
+    </div>
+    <p style="color:#9998b0;font-size:12px;text-align:center">დახმარება: support@xelosani.ge</p>
+  `);
+}
+
 module.exports = {
   sendEmail,
   emailVerifyTemplate,
   passwordResetTemplate,
   vipConfirmTemplate,
+  subConfirmTemplate,
+  renewalFailedTemplate,
 };

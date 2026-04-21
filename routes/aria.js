@@ -26,7 +26,12 @@ VIP სისტემა:
 - VIP: 2₾/1 დღე ან 10₾/5 დღე — სიის სათავეში
 - VIP+: 4₾/1 დღე ან 18₾/5 დღე — ყოველთვის VIP-ზე მაღლა
 
-ტარიფები ხელოსნებისთვის: Start (0₾, 3 თვე), Pro (30₾/თვე), TOP (70₾/თვე).
+ტარიფები ხელოსნებისთვის:
+- Start: 0₾, 3 თვე უფასო (5 შეთავაზება/თვეში), ვადის გასვლის შემდეგ — Pro ან TOP
+- Pro: 29₾/თვე — ულიმიტო შეთავაზებები, გაუმჯობესებული პოზიცია
+- TOP: 69₾/თვე — ყველაფერი რაც Pro-ს აქვს + ავტო VIP+ (ყოველ დღე ავტო-განახლება, პირველი ადგილი)
+
+ბარათის მიბმა: TOP და Pro ტარიფებისთვის შეგიძლიათ ბარათი მიაბათ ავტო-განახლებისთვის.
 მომხმარებლებისთვის: სრულიად უფასო.
 
 კონტაქტი: support@xelosani.ge
@@ -37,7 +42,7 @@ VIP სისტემა:
 // POST /api/aria/chat
 router.post('/chat', ariaLimiter, async (req, res) => {
   try {
-    const { messages } = req.body; // [{role:'user'|'model', parts:[{text}]}]
+    const { messages } = req.body;
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'messages სავალდებულოა' });
     }
@@ -47,17 +52,14 @@ router.post('/chat', ariaLimiter, async (req, res) => {
       return res.status(503).json({ error: 'Gemini API key კონფიგურირებული არ არის' });
     }
 
-    // Sanitize: only allow user/model roles, limit history
     let safeMessages = messages
       .filter((m) => m.role === 'user' || m.role === 'model')
-      .slice(-20) // last 20 turns max
+      .slice(-20)
       .map((m) => ({
         role: m.role,
         parts: [{ text: String(m.parts?.[0]?.text || m.text || '').substring(0, 2000) }],
       }));
 
-    // CRITICAL FIX: Gemini requires conversation to START with 'user' role.
-    // Remove any leading 'model' messages (caused by ARIA greeting being added first).
     while (safeMessages.length > 0 && safeMessages[0].role === 'model') {
       safeMessages.shift();
     }
@@ -74,8 +76,9 @@ router.post('/chat', ariaLimiter, async (req, res) => {
       },
     };
 
+    // ✅ Updated to Gemini 2.5 Flash
     const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

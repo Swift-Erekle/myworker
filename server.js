@@ -11,7 +11,7 @@ const { Server } = require('socket.io');
 const { setupSocket } = require('./socket');
 const prisma         = require('./utils/prisma');
 
-const authRoutes    = require('./routes/auth');      // ✅ fixed: now real auth routes
+const authRoutes    = require('./routes/auth');
 const userRoutes    = require('./routes/users');
 const requestRoutes = require('./routes/requests');
 const offerRoutes   = require('./routes/offers');
@@ -21,7 +21,7 @@ const paymentRoutes = require('./routes/payment');
 const ariaRoutes    = require('./routes/aria');
 
 const app    = express();
-app.set('trust proxy', 1);   // needed behind nginx / Railway / Render
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 
 // ── Socket.io ─────────────────────────────────────────────────
@@ -60,12 +60,13 @@ app.get('/api/health', (req, res) => res.json({ ok: true, env: process.env.NODE_
 // ── Payment result pages ───────────────────────────────────────
 app.get('/payment-success', (req, res) => {
   const { orderId, type, demo } = req.query;
+  const safeOrderId = String(orderId || '').replace(/[^a-zA-Z0-9\-]/g, '');
+  const safeType    = String(type || 'vip').replace(/[^a-zA-Z0-9]/g, '');
   res.send(`<!DOCTYPE html><html lang="ka">
 <head><meta charset="UTF-8"><title>გადახდა</title>
 <script>
-  // Notify parent window if opened in popup
   if (window.opener) {
-    window.opener.postMessage({ type: 'PAYMENT_SUCCESS', orderId: '${orderId}', payType: '${type}' }, '*');
+    window.opener.postMessage({ type: 'PAYMENT_SUCCESS', orderId: '${safeOrderId}', payType: '${safeType}' }, '*');
     window.close();
   } else {
     setTimeout(() => { window.location.href = '/'; }, 3000);
@@ -74,7 +75,7 @@ app.get('/payment-success', (req, res) => {
 <body style="font-family:sans-serif;background:#0f0f13;color:#fff;text-align:center;padding:80px 20px">
 <div style="font-size:64px;margin-bottom:16px">✅</div>
 <h1 style="color:#2ecc71">გადახდა წარმატებულია!</h1>
-<p style="color:#9998b0;margin-top:8px">${demo ? 'DEMO — ' : ''}VIP სტატუსი გააქტიურდა.</p>
+<p style="color:#9998b0;margin-top:8px">${demo ? 'DEMO — ' : ''}სტატუსი გააქტიურდა.</p>
 <p style="color:#9998b0;font-size:13px;margin-top:16px">3 წამში გადამისამართება...</p>
 </body></html>`);
 });
@@ -105,9 +106,9 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'სერვერის შეცდომა' });
 });
 
-// ── Cron job — plan expiry checks (runs daily at 06:00) ────────
-// Requires: npm install node-cron
-// Comment out if you don't have node-cron installed yet:
+// ══════════════════════════════════════════════════════════════
+// ⏰ CRON JOBS
+// ══════════════════════════════════════════════════════════════
 (function startCronJobs() {
   let cron;
   try { cron = require('node-cron'); } catch (_) {
@@ -115,57 +116,144 @@ app.use((err, req, res, next) => {
     return;
   }
 
-  // Run at 06:00 every day
+  const { sendEmail, renewalFailedTemplate } = require('./utils/email');
+  const { runAutoRenewals } = require('./routes/payment');
+
+  // ── 1. Plan expiry checks — daily at 06:00 ─────────────────
   cron.schedule('0 6 * * *', async () => {
     console.log('[CRON] Running plan expiry checks...');
     const now = new Date();
-
     try {
-      // 1. Expire Start trial users
+      // Expire Start trial users
       const trialExpired = await prisma.user.updateMany({
         where: {
-          plan:            'start',
-          trialExpiresAt:  { lt: now },
+          plan: 'start',
+          trialExpiresAt: { lt: now },
           subscriptionStatus: { not: 'expired' },
         },
         data: { subscriptionStatus: 'expired' },
       });
       if (trialExpired.count > 0) console.log(`[CRON] ${trialExpired.count} start trial(s) expired`);
 
-      // 2. Expire Pro/Top plan users
+      // Expire Pro/Top plan users (only if autoRenew=false or no saved card)
       const planExpired = await prisma.user.updateMany({
         where: {
-          plan:           { in: ['pro', 'top'] },
-          planExpiresAt:  { lt: now },
+          plan: { in: ['pro', 'top'] },
+          planExpiresAt: { lt: now },
+          autoRenew: false,
           subscriptionStatus: { not: 'expired' },
         },
         data: {
           subscriptionStatus: 'expired',
-          plan:               'start',      // revert to start
-          vipType:            'none',        // remove auto VIP+ for TOP
-          vipExpiresAt:       null,
+          plan: 'start',
+          vipType: 'none',
+          vipExpiresAt: null,
         },
       });
-      if (planExpired.count > 0) console.log(`[CRON] ${planExpired.count} pro/top plan(s) expired`);
+      if (planExpired.count > 0) console.log(`[CRON] ${planExpired.count} plan(s) expired (autoRenew=false)`);
 
-      // 3. Remove expired VIP/VIP+ badges
+      // Also expire plans where card charge likely failed (expired > 2 days ago)
+      const twoDaysAgo = new Date(now.getTime() - 2 * 86400000);
+      const hardExpired = await prisma.user.updateMany({
+        where: {
+          plan: { in: ['pro', 'top'] },
+          planExpiresAt: { lt: twoDaysAgo },
+          subscriptionStatus: { not: 'expired' },
+        },
+        data: {
+          subscriptionStatus: 'expired',
+          plan: 'start',
+          vipType: 'none',
+          vipExpiresAt: null,
+        },
+      });
+      if (hardExpired.count > 0) console.log(`[CRON] ${hardExpired.count} overdue plan(s) force-expired`);
+
+      // Remove expired VIP badges
       const vipExpired = await prisma.user.updateMany({
         where: {
-          vipType:      { not: 'none' },
+          vipType: { not: 'none' },
           vipExpiresAt: { lt: now },
+          plan: { not: 'top' }, // TOP plan VIP+ is managed by cron below
         },
         data: { vipType: 'none' },
       });
       if (vipExpired.count > 0) console.log(`[CRON] ${vipExpired.count} VIP badge(s) removed`);
 
-      // 4. Clean up expired verify codes
+      // Clean up expired verify codes
       await prisma.verifyCode.deleteMany({ where: { expiresAt: { lt: now } } });
     } catch (err) {
-      console.error('[CRON] Error:', err.message);
+      console.error('[CRON] Expiry check error:', err.message);
     }
   });
 
-  console.log('[CRON] Plan expiry scheduler started (runs daily at 06:00)');
+  // ── 2. ✅ NEW: Subscription auto-renewal — daily at 08:00 ───
+  // Charges saved cards for users whose plan expires in next 24h
+  cron.schedule('0 8 * * *', async () => {
+    console.log('[CRON] Running subscription auto-renewals...');
+    try {
+      const results = await runAutoRenewals();
+      console.log(`[CRON] Auto-renewal complete: ${results.renewed.length} renewed, ${results.failed.length} failed`);
+
+      // Notify users whose renewal failed
+      for (const fail of results.failed) {
+        try {
+          const user = await prisma.user.findUnique({ where: { id: fail.userId } });
+          if (user?.email && user.plan !== 'start') {
+            await sendEmail(
+              user.email,
+              'ხელოსანი.ge — ავტო-განახლება ვერ მოხდა',
+              renewalFailedTemplate(user.name, user.plan, user.planExpiresAt)
+            );
+          }
+        } catch (_) {}
+      }
+    } catch (err) {
+      console.error('[CRON] Auto-renewal error:', err.message);
+    }
+  });
+
+  // ── 3. ✅ NEW: TOP plan daily VIP+ refresh — daily at 00:05 ─
+  // TOP plan users always appear first in the list.
+  // We refresh vipActivatedAt daily so their "activated recently" sort wins.
+  cron.schedule('5 0 * * *', async () => {
+    const now = new Date();
+    try {
+      const topUsers = await prisma.user.updateMany({
+        where: {
+          plan: 'top',
+          planExpiresAt: { gt: now },
+        },
+        data: {
+          vipActivatedAt: now,   // Reset daily → always sorts to top
+          vipType: 'vipp',       // Ensure VIP+ badge stays on
+        },
+      });
+      if (topUsers.count > 0) console.log(`[CRON] ${topUsers.count} TOP plan VIP+ refreshed`);
+    } catch (err) {
+      console.error('[CRON] TOP refresh error:', err.message);
+    }
+  });
+
+  // ── 4. Support message cleanup / weekly stats (optional) ────
+  // Runs every Sunday at 07:00 — logs basic platform stats
+  cron.schedule('0 7 * * 0', async () => {
+    try {
+      const [users, handymen, openReqs, vipActive] = await Promise.all([
+        prisma.user.count({ where: { type: 'user' } }),
+        prisma.user.count({ where: { type: { in: ['handyman', 'company'] } } }),
+        prisma.request.count({ where: { status: 'open' } }),
+        prisma.user.count({ where: { vipType: { not: 'none' }, vipExpiresAt: { gt: new Date() } } }),
+      ]);
+      console.log(`[CRON] Weekly stats — Users: ${users}, Handymen: ${handymen}, Open requests: ${openReqs}, VIP active: ${vipActive}`);
+    } catch (_) {}
+  });
+
+  console.log('[CRON] All schedulers started:');
+  console.log('  06:00 daily — plan expiry checks');
+  console.log('  08:00 daily — subscription auto-renewal');
+  console.log('  00:05 daily — TOP plan VIP+ refresh');
+  console.log('  07:00 Sunday — weekly stats');
 })();
 
 // ── Start ──────────────────────────────────────────────────────

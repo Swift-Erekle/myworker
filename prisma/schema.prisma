@@ -1,10 +1,10 @@
 // prisma/schema.prisma
 // ════════════════════════════════════════════════════════════════
-// FIXES vs previous version:
-// 1. Message.fromId → String? (nullable) — fixes FK violation
-//    when system messages use fromId: 'system' (no real user)
-// 2. Message.from removed FK relation — system msg safe
-// 3. Added subscriptionStatus field to User
+// CHANGES v3:
+// 1. Added SavedCard model — stores TBC Pay recurrent tokens
+// 2. Added autoRenew Boolean to User
+// 3. Added isAutoRenewal + cardId to SubscriptionPayment
+// 4. TOP plan daily refresh handled via cron (vipActivatedAt)
 // ════════════════════════════════════════════════════════════════
 
 generator client {
@@ -52,6 +52,7 @@ model User {
   trialExpiresAt     DateTime?                     // null = trial not started
   usedFreeTrial      Boolean   @default(false)
   subscriptionStatus String    @default("active")  // active, expired, cancelled
+  autoRenew          Boolean   @default(true)       // ✅ NEW: auto-renew subscription
 
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
@@ -66,9 +67,27 @@ model User {
   supportRequests      SupportRequest[]
   vipPayments          VipPayment[]
   subscriptionPayments SubscriptionPayment[]
+  savedCards           SavedCard[]          // ✅ NEW
 
   @@index([type])
   @@index([email])
+}
+
+// ─────────────────────────────────────────────────────────────
+// ✅ NEW: მიბმული ბარათები (TBC Pay recurring tokens)
+// ─────────────────────────────────────────────────────────────
+model SavedCard {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  last4     String                      // last 4 digits
+  brand     String   @default("Card")  // Visa, Mastercard, etc.
+  expiry    String   @default("")      // "MM/YY"
+  token     String                      // TBC Pay recurrentPaymentId
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -153,16 +172,12 @@ model Chat {
 
 // ─────────────────────────────────────────────────────────────
 // შეტყობინებები
-// ════════════════════════════════════════════════════════════════
-// BUG FIX: fromId is now String? (nullable) so system messages
-// (fromId: null, type: 'system') don't violate FK constraints.
-// Previous: fromId String + User? relation → PostgreSQL FK error
-// ════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────────────────────
 model Message {
   id        String   @id @default(cuid())
   chatId    String
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  fromId    String?  // null = system message; userId otherwise
+  fromId    String?  // null = system message
   type      String   @default("text")  // text, image, video, voice, system
   content   String
   createdAt DateTime @default(now())
@@ -238,18 +253,20 @@ model VipPayment {
 // სუბსქრიფციის გადახდები (Pro / Top)
 // ─────────────────────────────────────────────────────────────
 model SubscriptionPayment {
-  id          String    @id @default(cuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan        String    // pro, top
-  amount      Int       // tetri (2900 = 29₾)
-  status      String    @default("pending")  // pending, paid, failed
-  tbcOrderId  String?   @unique
-  tbcPayId    String?
-  periodStart DateTime?
-  periodEnd   DateTime?
-  paidAt      DateTime?
-  createdAt   DateTime  @default(now())
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan          String    // pro, top
+  amount        Int       // tetri (2900 = 29₾)
+  status        String    @default("pending")  // pending, paid, failed
+  tbcOrderId    String?   @unique
+  tbcPayId      String?
+  periodStart   DateTime?
+  periodEnd     DateTime?
+  paidAt        DateTime?
+  isAutoRenewal Boolean   @default(false)  // ✅ NEW: was this auto-renewed?
+  cardId        String?                    // ✅ NEW: which card was used
+  createdAt     DateTime  @default(now())
 
   @@index([userId])
   @@index([status])

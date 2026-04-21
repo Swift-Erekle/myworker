@@ -33,7 +33,6 @@ async function getAccessToken() {
   }
   const data = await resp.json();
   cachedToken = data.access_token;
-  // TBC tokens typically last 1 hour
   tokenExpiresAt = Date.now() + (data.expires_in || 3600) * 1000;
   return cachedToken;
 }
@@ -43,29 +42,32 @@ async function getAccessToken() {
  * @param {object} params
  * @param {number} params.amount - in tetri (100 = 1 GEL)
  * @param {string} params.description
- * @param {string} params.merchantOrderId - your internal order ID
+ * @param {string} params.merchantOrderId
  * @param {string} [params.returnUrl]
  * @param {string} [params.cancelUrl]
+ * @param {boolean} [params.saveCard] - request card tokenization for recurring payments
  * @returns {{ payId, redirectUrl }}
  */
-async function createPayment({ amount, description, merchantOrderId, returnUrl, cancelUrl }) {
+async function createPayment({ amount, description, merchantOrderId, returnUrl, cancelUrl, saveCard = false }) {
   const token = await getAccessToken();
 
   const body = {
     amount: {
       currency: 'GEL',
-      total: amount,        // tetri
+      total: amount,
       subtotal: amount,
       tax: 0,
       shipping: 0,
     },
     extra: description,
-    expirationTimeout: 900, // 15 min
+    expirationTimeout: 900,
     merchantPaymentId: merchantOrderId,
     returnUrl: returnUrl || `${SITE_URL}/payment-success`,
     cancelUrl: cancelUrl || `${SITE_URL}/payment-cancel`,
     callbackUrl: `${SITE_URL}/api/payment/callback`,
     installmentProducts: null,
+    // ✅ Request card saving for recurring payments
+    ...(saveCard ? { saveCard: true } : {}),
   };
 
   const resp = await fetch(`${TBC_BASE}/v1/tpay/payments`, {
@@ -83,7 +85,6 @@ async function createPayment({ amount, description, merchantOrderId, returnUrl, 
   }
 
   const data = await resp.json();
-  // Find approval URL from HATEOAS links
   const approvalLink = (data.links || []).find(
     (l) => l.rel === 'approval_url' || l.rel === 'approve'
   );
@@ -93,6 +94,120 @@ async function createPayment({ amount, description, merchantOrderId, returnUrl, 
     redirectUrl: approvalLink?.href || data.redirectUrl,
     raw: data,
   };
+}
+
+/**
+ * ✅ NEW: Create a card-binding payment (minimal amount just to save card token)
+ * After payment, TBC returns recurrentPaymentId in callback.
+ * @param {object} params
+ * @param {string} params.merchantOrderId
+ * @param {string} params.returnUrl
+ * @param {string} params.cancelUrl
+ */
+async function createBindPayment({ merchantOrderId, returnUrl, cancelUrl }) {
+  const token = await getAccessToken();
+
+  const body = {
+    amount: {
+      currency: 'GEL',
+      total: 10,      // 10 tetri = 0.10₾ verification (will be refunded)
+      subtotal: 10,
+      tax: 0,
+      shipping: 0,
+    },
+    extra: 'ბარათის მიბმა — ხელოსანი.ge',
+    expirationTimeout: 900,
+    merchantPaymentId: merchantOrderId,
+    returnUrl: returnUrl || `${SITE_URL}/payment-success?type=bind`,
+    cancelUrl: cancelUrl || `${SITE_URL}/payment-cancel`,
+    callbackUrl: `${SITE_URL}/api/payment/callback`,
+    saveCard: true,  // ✅ This triggers card tokenization
+  };
+
+  const resp = await fetch(`${TBC_BASE}/v1/tpay/payments`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error(`TBC createBindPayment error ${resp.status}: ${err}`);
+  }
+
+  const data = await resp.json();
+  const approvalLink = (data.links || []).find(
+    (l) => l.rel === 'approval_url' || l.rel === 'approve'
+  );
+
+  return {
+    payId: data.payId,
+    redirectUrl: approvalLink?.href || data.redirectUrl,
+    raw: data,
+  };
+}
+
+/**
+ * ✅ NEW: Charge a saved card using the recurrentPaymentId token
+ * Used for auto-renewal subscriptions.
+ * @param {object} params
+ * @param {string} params.recurrentPaymentId - the token from TBC Pay
+ * @param {number} params.amount - in tetri
+ * @param {string} params.description
+ * @param {string} params.merchantOrderId
+ * @returns {{ payId, status }}
+ */
+async function chargeWithToken({ recurrentPaymentId, amount, description, merchantOrderId }) {
+  const token = await getAccessToken();
+
+  const resp = await fetch(`${TBC_BASE}/v1/tpay/payments/execute`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      recurrentPaymentId,
+      merchantPaymentId: merchantOrderId,
+      extra: description,
+      amount: {
+        currency: 'GEL',
+        total: amount,
+        subtotal: amount,
+        tax: 0,
+        shipping: 0,
+      },
+    }),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error(`TBC chargeWithToken error ${resp.status}: ${err}`);
+  }
+
+  return resp.json();
+}
+
+/**
+ * ✅ NEW: Refund/void a payment (used after card binding verification charge)
+ * @param {string} payId
+ * @param {number} [amount] - partial refund amount in tetri, omit for full refund
+ */
+async function refundPayment(payId, amount) {
+  const token = await getAccessToken();
+  const body = amount ? { amount: { currency: 'GEL', total: amount } } : {};
+  const resp = await fetch(`${TBC_BASE}/v1/tpay/payments/${payId}/refund`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+  return resp.ok;
 }
 
 /**
@@ -121,4 +236,4 @@ async function cancelPayment(payId) {
   return resp.ok;
 }
 
-module.exports = { createPayment, getPaymentStatus, cancelPayment };
+module.exports = { createPayment, createBindPayment, chargeWithToken, refundPayment, getPaymentStatus, cancelPayment };
