@@ -36,6 +36,8 @@ model User {
   vipActivatedAt DateTime?                  // ბოლო გააქტიურების დრო (სორტირებისთვის)
   blocked        Boolean   @default(false)
   portfolio      Json      @default("[]")   // [{url, type, publicId}]
+  avatar         String?                    // profile photo URL
+  specialties    String[]  @default([])     // multiple specialties
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

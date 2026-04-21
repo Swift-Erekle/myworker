@@ -424,7 +424,24 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
         <button class="btn bg bs" onclick="clearCatFilter()" style="font-size:11px">✕ გასუფთ.</button>
       </div>
     </div>
-    <div class="cards-grid" id="handymenGrid"></div>
+    <!-- Featured companies section (only shown if any company has VIP) -->
+    <div id="companiesSection" style="display:none;margin-bottom:32px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:16px 20px;background:linear-gradient(135deg,rgba(52,152,219,.12),rgba(52,152,219,.06));border:1px solid rgba(52,152,219,.3);border-radius:14px">
+        <span style="font-size:22px">🏢</span>
+        <div>
+          <div style="font-weight:800;font-size:16px">კომპანიები</div>
+          <div style="font-size:12px;color:var(--t2)">პროფესიონალური გუნდები და ბრიგადები</div>
+        </div>
+      </div>
+      <div class="cards-grid" id="companiesGrid"></div>
+    </div>
+    <!-- Regular handymen -->
+    <div id="handymenSection">
+      <div id="handymenSectionTitle" style="display:none;margin-bottom:16px">
+        <div style="font-weight:800;font-size:16px">🔧 ხელოსნები</div>
+      </div>
+      <div class="cards-grid" id="handymenGrid"></div>
+    </div>
   </div>
 </div>
 
@@ -591,7 +608,11 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
       <div class="fg"><label>სახელი</label><input id="rName" placeholder="გიორგი"></div>
       <div class="fg"><label>გვარი / კომპანია</label><input id="rSurname" placeholder="ბერიძე"></div>
     </div>
-    <div class="fg" id="rSpecGroup" style="display:none"><label>სპეციალობა</label><select id="rSpec"><option value="">— აირჩიე —</option></select></div>
+    <div class="fg" id="rSpecGroup" style="display:none">
+      <label>სპეციალობა(ები) <span style="color:var(--t2);font-weight:400">— ერთ ან მეტს აირჩიე</span></label>
+      <div id="rSpecCheckboxes" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:220px;overflow-y:auto;padding:4px"></div>
+      <div style="font-size:11px;color:var(--t2);margin-top:4px">კატეგორიაზე დაჭერა = ყველა ქვე-კატეგ. + ფხ.</div>
+    </div>
     <div class="fg"><label>ტელეფონი</label><input id="rPhone" placeholder="+995 5XX XXX XXX"></div>
     <div class="fg"><label>ელ-ფოსტა</label><input id="rEmail" type="email" placeholder="you@email.com"></div>
     <div class="fg">
@@ -752,12 +773,29 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
 
 <!-- EDIT DESCRIPTION -->
 <div class="mo" id="moEditDesc">
-  <div class="modal">
+  <div class="modal" style="max-width:560px">
     <button class="mc" onclick="closeMo('moEditDesc')">✕</button>
     <h2>✏️ პროფილის რედაქტირება</h2>
-    <div class="sub">აღწერა, სპეციალობა, სერვისები</div>
-    <div class="fg"><label>აღწერა</label><textarea id="editDescText" style="min-height:120px" placeholder="გამოცდილება, გარანტია, სამუშაოს სტილი..."></textarea></div>
-    <div class="fg"><label>სპეციალობა</label><select id="editSpecSelect"><option value="">— აირჩიე —</option></select></div>
+    <div class="sub">ფოტო, სპეციალობა, აღწერა</div>
+    <!-- Avatar upload -->
+    <div class="fg" style="text-align:center">
+      <label>პროფილის ფოტო</label>
+      <div style="display:flex;align-items:center;gap:16px;margin-top:8px">
+        <div id="avatarPreview" style="width:72px;height:72px;border-radius:50%;background:var(--s2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden;flex-shrink:0"></div>
+        <div>
+          <label class="btn bg bs" style="cursor:pointer">
+            📷 ფოტოს ატვირთვა
+            <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="previewAvatar(this)">
+          </label>
+          <div style="font-size:11px;color:var(--t2);margin-top:4px">JPG, PNG · მაქს. 5MB</div>
+        </div>
+      </div>
+    </div>
+    <div class="fg"><label>აღწერა</label><textarea id="editDescText" style="min-height:100px" placeholder="გამოცდილება, გარანტია, სამუშაოს სტილი..."></textarea></div>
+    <div class="fg" id="editSpecGroup">
+      <label>სპეციალობა(ები) <span style="color:var(--t2);font-weight:400">— ერთ ან მეტს აირჩიე</span></label>
+      <div id="editSpecCheckboxes" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:200px;overflow-y:auto;padding:4px"></div>
+    </div>
     <div class="fg"><label>სერვისები (მძიმით გამოყოფილი)</label><input id="editServices" placeholder="მაგ: გაყვანილობა, ავარიული სამუშაო, განათება"></div>
     <div class="fg"><label>ქალაქი / უბანი</label><input id="editCity" placeholder="ვაკე, თბილისი"></div>
     <button class="btn bp" style="width:100%;justify-content:center" onclick="saveDesc()">შენახვა</button>
@@ -839,6 +877,28 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
   </div>
 </div>
 
+<!-- USER SUPPORT CHAT MODAL -->
+<div class="mo" id="moUserSupport">
+  <div class="modal wide" style="padding:0;overflow:hidden;max-height:88vh;display:flex;flex-direction:column">
+    <div class="chat-header" style="border-radius:20px 20px 0 0">
+      <button class="btn bg bs" onclick="closeMo('moUserSupport')">← უკან</button>
+      <div>
+        <div style="font-weight:700">🎧 სუპორტი</div>
+        <div style="font-size:11px;color:var(--ok)" id="userSupportStatus">მოლოდინში...</div>
+      </div>
+    </div>
+    <div class="chat-body" id="userSupportBody" style="flex:1;min-height:280px;max-height:400px">
+      <div style="text-align:center;color:var(--t2);font-size:13px;padding:20px">⏳ იტვირთება...</div>
+    </div>
+    <div class="chat-footer">
+      <div class="chat-input-row">
+        <textarea id="userSupportInput" placeholder="შეტყობინება სუპ. გუნდს..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendUserSupportMsg()}"></textarea>
+        <div class="cib" style="background:var(--accent);border-color:var(--accent)" onclick="sendUserSupportMsg()">➤</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ARIA CHAT WIDGET -->
 <div id="ariaToggle" style="position:fixed;bottom:24px;right:24px;z-index:300">
   <button id="ariaToggleBtn" onclick="toggleAria()" style="width:54px;height:54px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 8px 24px rgba(255,107,43,.45);transition:all .2s;display:flex;align-items:center;justify-content:center">💬</button>
@@ -865,111 +925,22 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
 
 <!-- ====== JAVASCRIPT ====== -->
 <script>
-// ======================================================
-// CONFIG — API KEYS (load from .env via backend in prod!)
-// ======================================================
-// ⚠️ SECURITY WARNING: In production, API keys must NEVER
-// be in frontend code. Use a backend (Node.js/PHP/Python)
-// that reads from .env and exposes only safe endpoints.
-const CONFIG = {
-  GEMINI_API_KEY: 'YOUR_GEMINI_API_KEY_HERE',       // .env: GEMINI_API_KEY
-  SENDGRID_API_KEY: 'YOUR_SENDGRID_API_KEY_HERE',   // .env: SENDGRID_API_KEY (USE BACKEND!)
-  SENDGRID_FROM_EMAIL: 'noreply@xelosani.ge',
-  TBC_PAY_CLIENT_ID: 'YOUR_TBC_CLIENT_ID_HERE',     // .env: TBC_CLIENT_ID (USE BACKEND!)
-  TBC_PAY_CLIENT_SECRET: 'YOUR_TBC_SECRET_HERE',    // .env: TBC_CLIENT_SECRET (USE BACKEND!)
-  TBC_PAY_API_BASE: 'https://api.tbcpayments.ge',
-  SITE_URL: 'https://xelosani.ge',
-};
-
-// ======================================================
-// XSS PROTECTION — always sanitize user-generated content
-// ======================================================
-function sanitize(str){
-  if(str===null||str===undefined) return '';
-  return String(str)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#39;');
-}
-
-// ======================================================
-// SHA-256 PASSWORD HASHING (Web Crypto API)
-// ⚠️ Still frontend — real apps use bcrypt on server-side
-// ======================================================
-async function hashPass(password){
-  if(!password) return '';
-  if(/^[0-9a-f]{64}$/.test(String(password))) return password; // already hashed
-  const enc = new TextEncoder();
-  const buf = await crypto.subtle.digest('SHA-256', enc.encode(String(password)));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
-// Migrate all plain-text passwords to SHA-256 on startup
-async function migratePasswords(){
-  let changed = false;
-  for(const u of state.users){
-    if(u.pass && !/^[0-9a-f]{64}$/.test(u.pass)){
-      u.pass = await hashPass(u.pass);
-      changed = true;
-    }
-  }
-  if(changed){ save(); }
-}
-
-// ======================================================
-// SENDGRID EMAIL
-// ⚠️ WARNING: Should be called from backend only in prod!
-// Frontend calling SendGrid exposes your API key.
-// Use: POST /api/send-email { to, subject, html }
-// ======================================================
-async function sendEmail(to, subject, htmlContent){
-  if(!CONFIG.SENDGRID_API_KEY || CONFIG.SENDGRID_API_KEY.startsWith('YOUR_')){
-    // Demo mode: show in console
-    console.log(`📧 [DEMO EMAIL] To: ${to} | Subject: ${subject}`);
-    return false;
-  }
-  try{
-    const resp = await fetch('https://api.sendgrid.com/v3/mail/send',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'Authorization':'Bearer '+CONFIG.SENDGRID_API_KEY
-      },
-      body:JSON.stringify({
-        personalizations:[{to:[{email:to}]}],
-        from:{email:CONFIG.SENDGRID_FROM_EMAIL, name:'ხელოსანი.ge'},
-        subject: subject,
-        content:[{type:'text/html', value:htmlContent}]
-      })
-    });
-    return resp.status === 202;
-  }catch(e){
-    console.error('SendGrid error:', e);
-    return false;
-  }
-}
-
-// Email templates
-function emailVerifyTemplate(name, code){
-  return `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#0f0f13;color:#f0eff5;border-radius:16px">
-    <h2 style="color:#ff6b2b">ხელოსანი.ge</h2>
-    <p>გამარჯობა, ${sanitize(name)}!</p>
-    <p>შენი ვერიფიკაციის კოდია:</p>
-    <div style="font-size:36px;font-weight:800;letter-spacing:12px;color:#ff6b2b;padding:20px;background:#1a1a24;border-radius:12px;text-align:center;margin:20px 0">${code}</div>
-    <p style="color:#9998b0;font-size:13px">კოდი მოქმედებს 15 წუთის განმავლობაში</p>
-  </div>`;
-}
-
-// ====== STATE ======
-// Central category list
-// ============================================================
-// TWO-LEVEL CATEGORY SYSTEM
-// CATS_DATA: main categories + subcategories
-// ============================================================
+// ========================================================
+// CATEGORIES — updated Georgian profession names
+// ========================================================
 const CATS_DATA = [
-  { id:'santeqnika', icon:'🚰', name:'სანტექნიკა', subs:[
+  { id:'electrician', icon:'⚡', name:'ელექტრიკოსი', subs:[
+    'ელექტრო გაყვანილობის მონტაჟი',
+    'ელექტრო გაყვანილობის შეკეთება-დიაგნოსტიკა',
+    'განათების სისტემის მონტაჟი-შეკეთება',
+    'სოკეტი / ჩამრთველის მონტაჟი-შეკეთება',
+    'ელექტრო ფარის (სად. დაფის) მონტაჟი',
+    'სარელეო დაცვა-ავტომატიკა',
+    'ელექტრო თბილი იატაკის მონტაჟი',
+    'ჭკვიანი სახლის (Smart Home) სისტემები',
+    'გენერატორის, UPS-ის მონტაჟი',
+  ]},
+  { id:'plumber', icon:'🚰', name:'სანტექნიკი', subs:[
     'სანტექნიკის სისტემის მონტაჟი',
     'სანტექნიკის შეკეთება-დიაგნოსტიკა',
     'ავარიული სანტექნიკა',
@@ -981,21 +952,10 @@ const CATS_DATA = [
     'სანიტარული კვანძის კაფელი-ლოჟი',
     'წყლის ფილტრაცია-დარბილება',
   ]},
-  { id:'electricoba', icon:'⚡', name:'ელექტროობა', subs:[
-    'ელექტრო გაყვანილობის მონტაჟი',
-    'ელექტრო გაყვანილობის შეკეთება-დიაგნოსტიკა',
-    'განათების სისტემის მონტაჟი-შეკეთება',
-    'სოკეტი / ჩამრთველის მონტაჟი-შეკეთება',
-    'ელექტრო ფარის (სად. დაფის) მონტაჟი',
-    'სარელეო დაცვა-ავტომატიკა',
-    'ელექტრო თბილი იატაკის მონტაჟი',
-    'ჭკვიანი სახლის (Smart Home) სისტემები',
-    'გენერატორის, UPS-ის მონტაჟი',
-  ]},
-  { id:'durgloba', icon:'🪚', name:'დურგლობა & ავეჯი', subs:[
+  { id:'carpenter', icon:'🪚', name:'დურგალი', subs:[
     'ავეჯის შეკვეთით დამზადება',
     'ავეჯის შეკეთება-რესტავრაცია',
-    'ავეჯის აწყობა-დაშლა (IKEA და სხვ.)',
+    'ავეჯის აწყობა-დაშლა (IKEA)',
     'სამზარეულოს კომპლექტის მონტაჟი',
     'კარადის / ჩაშენებული ავეჯის მონტაჟი',
     'ხის კიბე / ტერასა / აივანი',
@@ -1003,7 +963,7 @@ const CATS_DATA = [
     'პლინტუსი / კარნიზი / სარდაფის ფიქალი',
     'ავეჯის გადაზიდვა',
   ]},
-  { id:'moxatva', icon:'🖌️', name:'მხატვრობა & მოპირკეთება', subs:[
+  { id:'painter', icon:'🖌️', name:'მხატვარი', subs:[
     'კედლების შეღებვა',
     'შპალერის გაკვრა',
     'დეკორატიული ბათქაში (ვენეციური, ესპანკა)',
@@ -1013,7 +973,7 @@ const CATS_DATA = [
     'ლესვა (ბათქაში) — შიდა / გარე',
     'სტიაშკა — იატაკის გასწორება',
   ]},
-  { id:'mshenebloba', icon:'🔨', name:'მშენებლობა & რემონტი', subs:[
+  { id:'builder', icon:'🔨', name:'მშენებელი', subs:[
     'სრული რემონტი ("შავი" დასრულ.)',
     'კოსმეტიკური რემონტი',
     'კედლების აგება / დემონტაჟი',
@@ -1024,7 +984,7 @@ const CATS_DATA = [
     'სამშენებლო ნარჩენების გატანა',
     'ახალი ფანჯრები (მეტ-პლ. / ალუმინი)',
   ]},
-  { id:'hvac', icon:'❄️', name:'გათბობა, HVAC & კონდ.', subs:[
+  { id:'hvac', icon:'❄️', name:'კონდიციონერის ტექნიკოსი', subs:[
     'კონდიციონერის მონტაჟი',
     'კონდიციონერის შეკეთება-სერვისი',
     'კონდიციონერის წმენდა',
@@ -1035,7 +995,7 @@ const CATS_DATA = [
     'ვენტილაციის სისტემის მონტაჟი-წმენდა',
     'ბუხარი / ღუმელი / კერამ. გამათბობელი',
   ]},
-  { id:'universal', icon:'🛠️', name:'უნივერსალური სამ.', subs:[
+  { id:'handyman', icon:'🛠️', name:'უნივერსალური ხელოსანი', subs:[
     'წვრილმანი სარემონტო სამუშაოები',
     'ნივთების დაკიდება (TV, სარკე, კარადა)',
     'კარის საკეტის მონტაჟი-შეცვლა',
@@ -1045,7 +1005,7 @@ const CATS_DATA = [
     'მეტ-პლ. კარ-ფანჯ. / აივნის მონტ.',
     'ავარიული გამოძახება (ნებ. სამ.)',
   ]},
-  { id:'ezos_movla', icon:'🏡', name:'ეზოს & ბაღის მოვლა', subs:[
+  { id:'gardener', icon:'🏡', name:'მებაღე', subs:[
     'ლანდშაფტური დიზაინი',
     'ბაღის / ეზოს მოვლა',
     'ხეების გასხვლა',
@@ -1053,7 +1013,7 @@ const CATS_DATA = [
     'ღობე / ტერასა / აივანი',
     'აუზის მშ. / შეკ. / წმენდა',
   ]},
-  { id:'teqnika', icon:'📱', name:'ტექნიკა & ციფ. სერვ.', subs:[
+  { id:'technician', icon:'📱', name:'ტექნიკოსი', subs:[
     'კომპიუტერის / ნოუთბუქის შეკეთება',
     'სმარტფონის შეკეთება (ეკრანი, ბატ.)',
     'CCTV კამერების მონტაჟი',
@@ -1062,7 +1022,7 @@ const CATS_DATA = [
     'PS / Xbox-ის გასუფთავება',
     'პროგ. უზრ. ინსტ. / Windows',
   ]},
-  { id:'specialuri', icon:'✨', name:'სპეციალიზებული', subs:[
+  { id:'specialist', icon:'✨', name:'სპეციალიზებული ხელოსანი', subs:[
     'ლითონის კარ / კიბე / მოაჯირის დამზ.',
     'ფრანგ. გასაჭ. ჭერი (ბაუფი, ბარისოლი)',
     'მზის პანელი / მზ. წყ. გამაც. მონტ.',
@@ -1072,7 +1032,7 @@ const CATS_DATA = [
     'მქსოვი — კედ. / ჭ. / ფასადი',
     'მხატვარ-სახელ. (ოჩოპინტრე)',
   ]},
-  { id:'saxlurt', icon:'🏠', name:'სახლური მომსახ.', subs:[
+  { id:'household', icon:'🏠', name:'სახლის მომსახურება', subs:[
     'დამლაგებელი — სახლის დალაგება',
     'დამლაგებელი — გენ. დალაგება',
     'ძიძა / ბავშვის მომვლელი',
@@ -1082,922 +1042,1142 @@ const CATS_DATA = [
   ]},
 ];
 
-// Flat list of all subcategories (for backward compat)
-const CATS = CATS_DATA.flatMap(g=>g.subs);
-
-// Icon lookup by main category name or sub name
+const CATS = CATS_DATA.flatMap(g => g.subs);
 const CAT_ICONS = Object.fromEntries(
-  CATS_DATA.flatMap(g=>[
-    [g.name.replace(/^[^\s]+ /,'').trim(), g.icon],
-    ...g.subs.map(s=>[s, g.icon])
-  ])
+  CATS_DATA.flatMap(g => [[g.name, g.icon], ...g.subs.map(s => [s, g.icon])])
 );
-
-// Get parent category name for a sub
-function getCatParent(sub){
-  return CATS_DATA.find(g=>g.subs.includes(sub))?.name.replace(/^[^\s]+ /,'').trim()||sub;
+function getCatParent(sub) {
+  return CATS_DATA.find(g => g.subs.includes(sub))?.name || sub;
 }
 
-let state = JSON.parse(localStorage.getItem('xg_state') || 'null') || {
-  users: [
-    {id:'admin1',name:'ადმინი',surname:'სისტემა',type:'admin',email:'admin@xelosani.ge',pass:'Admin123!',phone:'+995 555 000 000',verified:true},
-    {id:'staff1',name:'სუპორტი',surname:'გუნდი',type:'staff',email:'staff@xelosani.ge',pass:'Staff123!',phone:'+995 555 000 001',verified:true},
-    {id:'u1',name:'ნინო',surname:'მაისურაძე',type:'user',email:'nino@test.ge',pass:'123456',phone:'+995 555 001 001'},
-    {id:'h1',name:'გიორგი',surname:'ბერიძე',type:'handyman',email:'giorgi@test.ge',pass:'123456',phone:'+995 555 123 456',specialty:'ელექტრიკოსი',city:'ვაკე',desc:'15 წლის გამოცდილება ელექტრო სამუშაოებში. ვაძლევ 1 წლის გარანტიას.',services:['გაყვანილობა','განათება','ავარიული სამუშაო'],emoji:'⚡',color:'#ff6b2b22',verified:true,jobs:134,vip:{type:'vipp',at:Date.now()-100000,exp:Date.now()+86400000*4}},
-    {id:'h2',name:'ლევან',surname:'კვარაცხელია',type:'handyman',email:'levan@test.ge',pass:'123456',phone:'+995 555 234 567',specialty:'სანტექნიკი',city:'საბურთალო',desc:'გამოცდილი სანტექნიკი. 24/7 გამოძახება.',services:['გაჟონვა','მილები','ბოილერი'],emoji:'🔧',color:'#3498db22',verified:true,jobs:98,vip:{type:'vip',at:Date.now()-50000,exp:Date.now()+86400000*3}},
-    {id:'h3',name:'ნინო',surname:'ჩიქოვანი',type:'handyman',email:'nino2@test.ge',pass:'123456',phone:'+995 555 345 678',specialty:'მხატვარი',city:'გლდანი',desc:'ინტერიერის მხატვრობა. სუფთა სამუშაო გარანტირებულია.',services:['ინტერიერი','ფასადი','დეკორი'],emoji:'🎨',color:'#9b59b622',verified:true,jobs:67,vip:{type:'vip',at:Date.now()-200000,exp:Date.now()+86400000*2}},
-    {id:'h4',name:'დავით',surname:'მაისურაძე',type:'handyman',email:'davit@test.ge',pass:'123456',phone:'+995 555 456 789',specialty:'დურგალი',city:'ისანი',desc:'ავეჯის დამზადება და შეკეთება.',services:['ავეჯი','კარ-ფანჯარა','პარკეტი'],emoji:'🪚',color:'#27ae6022',verified:false,jobs:52,vip:{type:'none'}},
-    {id:'c1',name:'რემო',surname:'გუნდი',type:'company',email:'remo@test.ge',pass:'123456',phone:'+995 555 999 000',specialty:'სანტექნიკი',city:'თბილისი',desc:'10 კაციანი გუნდი. ყველა სახის სანტექნიკა.',services:['სრული სანტექნიკა','კომერციული','ახალ. მშენ.'],emoji:'🏢',color:'#16213e',verified:true,jobs:210,vip:{type:'none'}},
-  ],
-  requests:[
-    {id:'r1',userId:'u1',title:'სამზარეულოში გაჟონვა',category:'სანტექნიკი',desc:'ონკანის ქვეშ გაჟონვაა.',city:'ვაკე',budget:100,urgency:'urgent',status:'open',time:'1 სთ-ის წინ',offers:[]},
-    {id:'r2',userId:'u1',title:'კედლის მოხატვა',category:'მხატვარი',desc:'20კვ.მ ოთახი.',city:'საბურთალო',budget:300,urgency:'normal',status:'open',time:'3 სთ-ის წინ',offers:[]},
-  ],
-  offers:[],
-  chats:[],
-  reviews:[
-    {id:'rv1',reviewerId:'u1',handymanId:'h1',stars:5,comment:'ძალიან კარგი მუშა, სუფთა და სწრაფი!',date:'3 დღის წინ'},
-    {id:'rv2',reviewerId:'u1',handymanId:'h1',stars:5,comment:'პრობლემა გადაჭრა პირველ ვიზიტზე.',date:'1 კვირის წინ'},
-    {id:'rv3',reviewerId:'u1',handymanId:'h2',stars:4,comment:'კარგი სამუშაო, ოდნავ გვიან მოვიდა.',date:'5 დღის წინ'},
-  ],
-  supportRequests:[],
-  vipPayments:[],
-  currentUserId: null
-};
+// ========================================================
+// API HELPER
+// ========================================================
+function getToken() { return localStorage.getItem('xg_token'); }
+function setToken(t) { localStorage.setItem('xg_token', t); }
+function clearToken() { localStorage.removeItem('xg_token'); }
 
-let currentUser = () => state.users.find(u=>u.id===state.currentUserId)||null;
-let regType = 'user';
-let currentStars = 0;
-let currentReviewHandymanId = null;
-let currentOfferRequestId = null;
+async function api(path, opts = {}) {
+  const token = getToken();
+  const isFormData = opts.body instanceof FormData;
+  const headers = {};
+  if (!isFormData) headers['Content-Type'] = 'application/json';
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  if (opts.headers) Object.assign(headers, opts.headers);
+  const res = await fetch('/api' + path, {
+    ...opts,
+    headers,
+    body: isFormData ? opts.body : (opts.body ? JSON.stringify(opts.body) : undefined),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { status: res.status, error: data.error || 'შეცდომა' };
+  return data;
+}
+
+// ========================================================
+// XSS PROTECTION
+// ========================================================
+function sanitize(str) {
+  if (str == null) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ========================================================
+// GLOBAL STATE
+// ========================================================
+let currentUser = null;
+let socket = null;
 let currentChatId = null;
+let currentOfferRequestId = null;
+let currentReviewHandymanId = null;
+let currentStars = 0;
 let currentVipType = 'vip';
 let currentVipDays = 1;
+let currentProfileId = null;
+let regType = 'user';
+let pendingRegEmail = null;
+let reqMediaFiles = [];
+let portFiles = [];
 let mediaRecorder = null;
 let audioChunks = [];
 let isRecording = false;
-let portFiles = [];
-let currentProfileId = null;
-let pendingRegUser = null;
-let verifyCode = null;
+let adminTab = 'accounts';
+let currentSupportId = null;       // admin side support
+let currentUserSupportId = null;   // user side support
+let ariaOpen = false;
+let ariaMessages = [];
+let ariaLoading = false;
+let selectedRegSpecialties = [];   // for register multi-select
+let selectedEditSpecialties = [];  // for edit multi-select
+let avatarFile = null;             // pending avatar file
 
-function save(){localStorage.setItem('xg_state',JSON.stringify(state))}
-
-// ====== ENSURE ADMIN/STAFF ALWAYS EXIST (fix for cached localStorage) ======
-(function ensureSystemAccounts(){
-  // ✅ FIX: Only create if NOT already present — NEVER overwrite passwords
-  const SYSTEM_DEFAULTS = [
-    {id:'admin1',name:'ადმინი',surname:'სისტემა',type:'admin',email:'admin@xelosani.ge',pass:'Admin123!',phone:'+995 555 000 000',verified:true},
-    {id:'staff1',name:'სუპორტი',surname:'გუნდი',type:'staff',email:'staff@xelosani.ge',pass:'Staff123!',phone:'+995 555 000 001',verified:true},
-  ];
-  let changed = false;
-  SYSTEM_DEFAULTS.forEach(sys=>{
-    const exists = state.users.find(u=>u.id===sys.id);
-    if(!exists){
-      // Create ONCE and never touch again
-      state.users.unshift(sys);
-      changed = true;
-    }
-    // DO NOT overwrite password/type/email of existing account
-  });
-  if(!state.supportRequests) { state.supportRequests = []; changed = true; }
-  if(changed) save();
-})();
-// Migrate plain-text passwords to SHA-256 on startup
-(async()=>{ await migratePasswords(); })();
-
-// ====== INIT CATEGORIES ======
-function buildCatOptgroups(firstOptionHTML){
-  return firstOptionHTML +
-    CATS_DATA.map(g=>`<optgroup label="${g.icon} ${g.name.replace(/^[^\s]+ /,'').trim()}">${
-      g.subs.map(s=>`<option value="${s}">${s}</option>`).join('')
-    }</optgroup>`).join('') +
-    '<option value="სხვა">🔩 სხვა (მითითება)</option>';
-}
-
-function initCats(){
-  // Populate all category selects with optgroups
-  ['fSpec','rCat','qCat','rSpec','editSpecSelect'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(!el) return;
-    const first = el.options[0].outerHTML;
-    el.innerHTML = buildCatOptgroups(first);
-  });
-  // Hero pills — show main categories
-  const hp = document.getElementById('heroPills');
-  if(hp){
-    hp.innerHTML = CATS_DATA.map(g=>
-      `<div class="pill" onclick="filterMainCat('${g.id}')">${g.icon} ${g.name.replace(/^[^\s]+ /,'').trim()}</div>`
-    ).join('');
-  }
-}
-
-// Filter by main category (shows all subs)
-function filterMainCat(catId){
-  nav('handymen');
-  setTimeout(()=>{
-    const group = CATS_DATA.find(g=>g.id===catId);
-    if(!group) return;
-    const el = document.getElementById('fSpec');
-    if(el){
-      // pick first sub of this group as representative filter
-      el.value = group.subs[0];
-      // actually filter by group — set a data attr to remember
-      el.dataset.mainCatId = catId;
-      renderHandymen();
-    }
-  },100);
-}
-
-// ====== ROUTING ======
-function nav(page){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  const el = document.getElementById('page-'+page);
-  if(el) el.classList.add('active');
-  window.scrollTo(0,0);
-  renderNav();
-  if(page==='handymen'){ renderMainCatPills(); renderHandymen(); }
-  if(page==='requests') renderRequestsPage();
-  if(page==='dashboard') renderDashboard();
-  if(page==='admin') renderAdmin();
-  if(page==='home'){
-    renderHomeGrid();
-  }
-}
-
-// ====== NAV ======
-function renderNav(){
-  const cu = currentUser();
-  const links = document.getElementById('navLinks');
-  if(!cu){
-    links.innerHTML = `
-      <span class="nav-a" onclick="nav('handymen')">ხელოსნები</span>
-      <span class="nav-a" onclick="nav('pricing')">ტარიფები</span>
-      <button class="btn bo bs" onclick="openMo('moLogin')">შესვლა</button>
-      <button class="btn bp bs" onclick="openMo('moRegister')">რეგისტრაცია</button>`;
-  } else if(cu.type==='admin'||cu.type==='staff'){
-    const pending=(state.supportRequests||[]).filter(s=>s.status==='pending').length;
-    links.innerHTML = `
-      <span class="nav-a" onclick="nav('admin')">🛡️ ${cu.type==='admin'?'ადმინი':'სტაფი'}</span>
-      <button class="btn bp bs" onclick="adminTab='support';nav('admin')">${pending>0?`🎧 სუპ. (${pending})`:'🎧 სუპ.'}</button>
-      <button class="btn bo bs" onclick="doLogout()">გამოსვლა</button>`;
-  } else if(cu.type==='user'){
-    links.innerHTML = `
-      <span class="nav-a" onclick="nav('handymen')">ხელოსნები</span>
-      <span class="nav-a" onclick="nav('requests')">მოთხოვნები</span>
-      <button class="btn bg bs" onclick="openMo('moRequest')">+ მოთხოვნა</button>
-      <button class="btn bp bs" onclick="nav('dashboard')">👤 ${cu.name}</button>
-      <button class="btn bo bs" onclick="doLogout()">გამოსვლა</button>`;
+// ========================================================
+// SOCKET.IO — REAL-TIME
+// ========================================================
+function initSocket() {
+  if (!currentUser) return;
+  if (socket && socket.connected) return;
+  if (!window.io) {
+    const s = document.createElement('script');
+    s.src = '/socket.io/socket.io.js';
+    s.onload = () => connectSocket();
+    document.head.appendChild(s);
   } else {
-    links.innerHTML = `
-      <span class="nav-a" onclick="nav('handymen')">ხელოსნები</span>
-      <span class="nav-a" onclick="nav('requests')">მოთხოვნები</span>
-      <span class="nav-a" onclick="nav('vip-info')">⭐ VIP</span>
-      <button class="btn bp bs" onclick="nav('dashboard')">🔧 ${cu.name}</button>
-      <button class="btn bo bs" onclick="doLogout()">გამოსვლა</button>`;
+    connectSocket();
   }
 }
 
-// ====== VIP HELPERS ======
-function vipActive(u){
-  if(!u.vip||u.vip.type==='none') return false;
-  return u.vip.exp > Date.now();
-}
-function vipWeight(u){
-  if(!vipActive(u)) return 0;
-  if(u.vip.type==='vipp') return 2;
-  if(u.vip.type==='vip') return 1;
-  return 0;
-}
-function sortHandymen(arr){
-  return [...arr].sort((a,b)=>{
-    const wa=vipWeight(a), wb=vipWeight(b);
-    if(wa!==wb) return wb-wa;
-    if(wa===wb&&wa>0){
-      // same tier: newest activation first
-      return (b.vip?.at||0)-(a.vip?.at||0);
+function connectSocket() {
+  const token = getToken();
+  if (!token || !window.io) return;
+  socket = io({ auth: { token } });
+
+  socket.on('newMessage', msg => {
+    if (msg.chatId === currentChatId) appendChatMsg(msg);
+  });
+  socket.on('userTyping', ({ userId, isTyping }) => {
+    const el = document.getElementById('typingIndicator');
+    if (el && userId !== currentUser?.id) el.style.display = isTyping ? 'block' : 'none';
+  });
+  socket.on('newSupportMsg', msg => {
+    // Admin side
+    if (document.getElementById('supportChatBody') && currentSupportId) {
+      renderSupportChatMessages(msg, null);
     }
-    return (b.rating||4.5)-(a.rating||4.5);
+    // User side
+    if (document.getElementById('userSupportBody') && currentUserSupportId === msg.supportRequestId) {
+      appendUserSupportMsg(msg);
+    }
+  });
+  socket.on('supportAlert', ({ supportId, preview }) => {
+    if (currentUser?.type === 'admin' || currentUser?.type === 'staff') {
+      toast('🎧 სუპ. შეტყობინება', preview, 'ok');
+    }
+  });
+  socket.on('newSupportRequest', () => {
+    if (currentUser?.type === 'admin' || currentUser?.type === 'staff') {
+      toast('🎧 ახალი სუპ. მოთხოვნა', 'მომხმარებელს სჭირდება დახმარება', 'ok');
+    }
   });
 }
-function getHandyRating(hid){
-  const revs = state.reviews.filter(r=>r.handymanId===hid);
-  if(!revs.length) return null;
-  return (revs.reduce((a,r)=>a+r.stars,0)/revs.length).toFixed(1);
+
+// ========================================================
+// NAVIGATION
+// ========================================================
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('page-' + page);
+  if (el) el.classList.add('active');
+  window.scrollTo(0, 0);
+  if (page === 'home') renderHomeGrid();
+  else if (page === 'handymen') renderHandymen();
+  else if (page === 'requests') renderRequestsPage();
+  else if (page === 'dashboard') renderDashboard();
+  else if (page === 'admin') renderAdmin();
 }
 
-// ====== RENDER HANDYMAN CARD ======
-function hCardHTML(h){
-  const rating = getHandyRating(h.id);
-  const revCount = state.reviews.filter(r=>r.handymanId===h.id).length;
-  const isVipp = vipActive(h)&&h.vip.type==='vipp';
-  const isVip = vipActive(h)&&h.vip.type==='vip';
-  return `<div class="hcard ${isVipp?'is-vipp':isVip?'is-vip':''}" onclick="showProfile('${h.id}')">
-    ${isVipp?'<div class="vip-ribbon vipp">💜 VIP+</div>':isVip?'<div class="vip-ribbon vip">⭐ VIP</div>':''}
+function renderNav() {
+  const cu = currentUser;
+  const links = document.getElementById('navLinks');
+  if (!links) return;
+  const isAdmin = cu && (cu.type === 'admin' || cu.type === 'staff');
+  const isHandyman = cu && (cu.type === 'handyman' || cu.type === 'company');
+  links.innerHTML = `
+    <span class="nav-a" onclick="nav('home')">🏠 მთავარი</span>
+    <span class="nav-a" onclick="nav('handymen')">🔧 ხელოსნები</span>
+    <span class="nav-a" onclick="nav('requests')">📋 მოთხოვნები</span>
+    <span class="nav-a" onclick="nav('pricing')">💎 ტარიფები</span>
+    ${cu ? `
+      <span class="nav-a" onclick="${isAdmin ? "nav('admin')" : "nav('dashboard')"}">${isAdmin ? '🛡️ ადმინი' : '📊 დაფა'}</span>
+      ${isHandyman ? `<span class="nav-a" onclick="nav('vip-info')">⭐ VIP</span>` : ''}
+      <span class="nav-a" style="color:var(--accent)">${avatarNavHtml(cu)}</span>
+      <button class="btn bo bs" onclick="doLogout()">გამოსვლა</button>
+    ` : `
+      <button class="btn bo bs" onclick="openMo('moLogin')">შესვლა</button>
+      <button class="btn bp bs" onclick="openMo('moRegister')">რეგისტრაცია</button>
+    `}
+  `;
+}
+
+function avatarNavHtml(cu) {
+  if (cu.avatar) return `<img src="${sanitize(cu.avatar)}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:4px">${sanitize(cu.name)}`;
+  return `${cu.emoji || '👤'} ${sanitize(cu.name)}`;
+}
+
+// ========================================================
+// MULTI-SPECIALTY — CHECKBOX UI
+// ========================================================
+function buildSpecCheckboxes(containerId, selectedArr, onChangeFn) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = CATS_DATA.map(cat => {
+    const isSelected = selectedArr.includes(cat.name);
+    return `
+      <div>
+        <label style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:${isSelected ? 'rgba(255,107,43,.12)' : 'var(--s2)'};border:1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'};border-radius:8px;cursor:pointer;transition:.2s;font-size:12px;font-weight:600" id="spec-label-${cat.id}">
+          <input type="checkbox" value="${cat.name}" ${isSelected ? 'checked' : ''} 
+            onchange="${onChangeFn}(this)"
+            style="accent-color:var(--accent)">
+          ${cat.icon} ${cat.name}
+        </label>
+      </div>
+    `;
+  }).join('');
+}
+
+function onRegSpecChange(cb) {
+  const val = cb.value;
+  if (cb.checked) {
+    if (!selectedRegSpecialties.includes(val)) selectedRegSpecialties.push(val);
+  } else {
+    selectedRegSpecialties = selectedRegSpecialties.filter(s => s !== val);
+  }
+  // Update label style
+  const label = cb.closest('label');
+  if (label) {
+    const catId = CATS_DATA.find(c => c.name === val)?.id || '';
+    label.style.background = cb.checked ? 'rgba(255,107,43,.12)' : 'var(--s2)';
+    label.style.borderColor = cb.checked ? 'var(--accent)' : 'var(--border)';
+  }
+}
+
+function onEditSpecChange(cb) {
+  const val = cb.value;
+  if (cb.checked) {
+    if (!selectedEditSpecialties.includes(val)) selectedEditSpecialties.push(val);
+  } else {
+    selectedEditSpecialties = selectedEditSpecialties.filter(s => s !== val);
+  }
+  const label = cb.closest('label');
+  if (label) {
+    label.style.background = cb.checked ? 'rgba(255,107,43,.12)' : 'var(--s2)';
+    label.style.borderColor = cb.checked ? 'var(--accent)' : 'var(--border)';
+  }
+}
+
+// ========================================================
+// AVATAR PREVIEW
+// ========================================================
+function previewAvatar(input) {
+  const file = input.files[0];
+  if (!file) return;
+  avatarFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('avatarPreview');
+    if (preview) preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ========================================================
+// AUTH — LOGIN
+// ========================================================
+async function doLogin() {
+  const email = document.getElementById('liEmail').value.trim();
+  const password = document.getElementById('liPass').value;
+  if (!email || !password) { toast('⚠️ შეავსე ყველა ველი', '', 'err'); return; }
+  try {
+    const data = await api('/auth/login', { method: 'POST', body: { email, password } });
+    setToken(data.token);
+    currentUser = data.user;
+    closeMo('moLogin');
+    renderNav();
+    toast('✅ კეთილი იყოს!', `${data.user.name}, შეხვედი სისტემაში`, 'ok');
+    if (currentUser.type === 'admin' || currentUser.type === 'staff') nav('admin');
+    else nav('dashboard');
+    initSocket();
+  } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
+}
+
+// ========================================================
+// AUTH — REGISTER
+// ========================================================
+async function doRegister() {
+  const name = document.getElementById('rName').value.trim();
+  const surname = document.getElementById('rSurname').value.trim();
+  const email = document.getElementById('rEmail').value.trim();
+  const phone = document.getElementById('rPhone').value.trim();
+  const password = document.getElementById('rPass').value;
+  const pass2 = document.getElementById('rPass2').value;
+  const desc = document.getElementById('rDesc')?.value || '';
+
+  if (!name || !email || !password) { toast('⚠️ შეავსე სავალდებულო ველები', '', 'err'); return; }
+  if (password.length < 8) { toast('⚠️ პაროლი მინიმუმ 8 სიმბოლო', '', 'err'); return; }
+  if (password !== pass2) { toast('⚠️ პაროლები არ ემთხვევა', '', 'err'); return; }
+  if ((regType === 'handyman' || regType === 'company') && selectedRegSpecialties.length === 0) {
+    toast('⚠️ მინიმუმ ერთი სპეციალობა აირჩიე', '', 'err'); return;
+  }
+
+  const specialty = selectedRegSpecialties[0] || undefined;
+  try {
+    await api('/auth/register', {
+      method: 'POST',
+      body: { name, surname, email, phone: phone || undefined, password, type: regType, specialty, desc: desc || undefined }
+    });
+    pendingRegEmail = email;
+    closeMo('moRegister');
+    document.getElementById('verifySubText').textContent = `კოდი გამოგზავნილია ${email}-ზე`;
+    ['vc1','vc2','vc3','vc4','vc5','vc6'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    openMo('moVerify');
+    setTimeout(() => document.getElementById('vc1')?.focus(), 300);
+    toast('📧 კოდი გაიგზავნა', `${email}-ზე`, 'ok');
+  } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
+}
+
+// ========================================================
+// AUTH — VERIFY EMAIL
+// ========================================================
+async function confirmVerify() {
+  const code = ['vc1','vc2','vc3','vc4','vc5','vc6'].map(id => document.getElementById(id)?.value || '').join('');
+  if (code.length < 6) { toast('⚠️ 6-ნიშნა კოდი შეიყვანე', '', 'err'); return; }
+  if (!pendingRegEmail) { toast('⚠️ შეცდომა — ხელახლა სცადე', '', 'err'); return; }
+  try {
+    const data = await api('/auth/verify', { method: 'POST', body: { email: pendingRegEmail, code } });
+    setToken(data.token);
+    currentUser = data.user;
+    // After register, update specialties array in backend
+    if (selectedRegSpecialties.length > 1) {
+      try { await api('/users/me', { method: 'PATCH', body: { specialties: selectedRegSpecialties } }); } catch (_) {}
+    }
+    closeMo('moVerify');
+    renderNav();
+    toast('🎉 რეგისტრაცია დასრულდა!', 'ელ-ფოსტა დადასტურებულია ✓', 'ok');
+    nav('dashboard');
+    pendingRegEmail = null;
+    selectedRegSpecialties = [];
+    initSocket();
+  } catch (e) { toast('⚠️ ' + (e.error || 'კოდი არასწორია'), '', 'err'); }
+}
+
+async function resendCode() {
+  if (!pendingRegEmail) return;
+  try {
+    await api('/auth/resend', { method: 'POST', body: { email: pendingRegEmail } });
+    toast('📧 კოდი ხელახლა გაიგზავნა', '', 'ok');
+  } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
+}
+
+function vcNext(el, nextId) {
+  el.value = el.value.replace(/[^0-9]/g, '');
+  if (el.value && nextId) document.getElementById(nextId)?.focus();
+  const code = ['vc1','vc2','vc3','vc4','vc5','vc6'].map(id => document.getElementById(id)?.value || '').join('');
+  if (code.length === 6) setTimeout(confirmVerify, 200);
+}
+function vcBack(e, el, prevId) {
+  if (e.key === 'Backspace' && !el.value && prevId) document.getElementById(prevId)?.focus();
+}
+
+// ========================================================
+// AUTH — LOGOUT
+// ========================================================
+function doLogout() {
+  clearToken(); currentUser = null;
+  if (socket) { socket.disconnect(); socket = null; }
+  currentChatId = null; currentUserSupportId = null;
+  renderNav(); nav('home');
+  toast('👋 გამოსვლა', '', 'ok');
+}
+
+// ========================================================
+// AUTH — FORGOT / RESET
+// ========================================================
+async function sendForgotCode() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  if (!email) { toast('⚠️ ელ-ფოსტა შეიყვანე', '', 'err'); return; }
+  try {
+    await api('/auth/forgot', { method: 'POST', body: { email } });
+    pendingRegEmail = email;
+    document.getElementById('forgotStep2text').textContent = `კოდი გამოგზავნილია ${email}-ზე`;
+    ['fc1','fc2','fc3','fc4','fc5','fc6'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    document.getElementById('forgotPart1').style.display = 'none';
+    document.getElementById('forgotPart2').style.display = 'block';
+    setTimeout(() => document.getElementById('fc1')?.focus(), 300);
+    toast('📧 კოდი გაიგზავნა (თუ ანგარიში არსებობს)', '', 'ok');
+  } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
+}
+function vcNextForgot(el) { el.value = el.value.replace(/[^0-9]/g, ''); }
+async function confirmForgot() {
+  const code = ['fc1','fc2','fc3','fc4','fc5','fc6'].map(id => document.getElementById(id)?.value || '').join('');
+  if (code.length < 6) { toast('⚠️ 6-ნიშნა კოდი შეიყვანე', '', 'err'); return; }
+  const newPassword = document.getElementById('forgotNewPass').value;
+  const newPassword2 = document.getElementById('forgotNewPass2').value;
+  if (!newPassword || newPassword.length < 8) { toast('⚠️ პაროლი მინ. 8 სიმბ.', '', 'err'); return; }
+  if (newPassword !== newPassword2) { toast('⚠️ პაროლები არ ემთხვევა', '', 'err'); return; }
+  const email = pendingRegEmail || document.getElementById('forgotEmail').value.trim();
+  try {
+    await api('/auth/reset', { method: 'POST', body: { email, code, newPassword } });
+    closeMo('moForgot');
+    toast('✅ პაროლი შეიცვალა!', 'ახლა შეგიძლია შეხვიდე', 'ok');
+    document.getElementById('forgotPart1').style.display = 'block';
+    document.getElementById('forgotPart2').style.display = 'none';
+    document.getElementById('forgotEmail').value = '';
+    pendingRegEmail = null;
+    openMo('moLogin');
+  } catch (e) { toast('⚠️ ' + (e.error || 'კოდი არასწორია'), '', 'err'); }
+}
+
+// ========================================================
+// REGISTER TYPE
+// ========================================================
+function setRegType(type) {
+  regType = type;
+  ['user','handyman','company'].forEach(t => {
+    document.getElementById('at-' + t)?.classList.toggle('active', t === type);
+  });
+  const isWorker = type !== 'user';
+  document.getElementById('rSpecGroup').style.display = isWorker ? 'block' : 'none';
+  document.getElementById('rDescGroup').style.display = isWorker ? 'block' : 'none';
+  if (isWorker) {
+    selectedRegSpecialties = [];
+    buildSpecCheckboxes('rSpecCheckboxes', selectedRegSpecialties, 'onRegSpecChange');
+  }
+}
+
+// ========================================================
+// HANDYMEN — LIST WITH COMPANY SECTION
+// ========================================================
+async function renderHandymen() {
+  const grid = document.getElementById('handymenGrid');
+  const companiesGrid = document.getElementById('companiesGrid');
+  const companiesSection = document.getElementById('companiesSection');
+  const handymenSection = document.getElementById('handymenSection');
+  const handymenSectionTitle = document.getElementById('handymenSectionTitle');
+  if (!grid) return;
+  grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳ იტვირთება...</div>';
+  if (companiesGrid) companiesGrid.innerHTML = '';
+
+  const spec = document.getElementById('fSpec')?.value || '';
+  const minRating = document.getElementById('fRating')?.value || '';
+  const mainCatId = document.getElementById('fSpec')?.dataset?.mainCatId || '';
+
+  try {
+    let url = '/users/handymen?';
+    if (spec) url += `specialty=${encodeURIComponent(spec)}&`;
+    if (minRating) url += `minRating=${minRating}&`;
+    let all = await api(url);
+    if (mainCatId) {
+      const group = CATS_DATA.find(g => g.id === mainCatId);
+      if (group) all = all.filter(h => {
+        const specs = h.specialties?.length ? h.specialties : [h.specialty];
+        return specs.some(s => group.name === s);
+      });
+    }
+
+    // Split: companies with active VIP vs everyone else
+    const featuredCompanies = all.filter(h => h.type === 'company' && isVipActive(h));
+    const rest = all.filter(h => !(h.type === 'company' && isVipActive(h)));
+
+    // Companies section
+    if (companiesSection && companiesGrid) {
+      if (featuredCompanies.length > 0) {
+        companiesSection.style.display = 'block';
+        companiesGrid.innerHTML = featuredCompanies.map(h => handymanCard(h, true)).join('');
+        if (handymenSectionTitle) handymenSectionTitle.style.display = rest.length ? 'block' : 'none';
+      } else {
+        companiesSection.style.display = 'none';
+        if (handymenSectionTitle) handymenSectionTitle.style.display = 'none';
+      }
+    }
+
+    if (!rest.length && !featuredCompanies.length) {
+      grid.innerHTML = '<div class="empty"><div class="ei">🔍</div><h3>ხელოსანი ვერ მოიძებნა</h3><p>ფილტრი შეცვალე</p></div>';
+    } else if (!rest.length) {
+      grid.innerHTML = '';
+    } else {
+      grid.innerHTML = rest.map(h => handymanCard(h)).join('');
+    }
+  } catch (e) {
+    grid.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ჩატვირთვა ვერ მოხდა</h3></div>';
+  }
+}
+
+async function renderHomeGrid() {
+  const grid = document.getElementById('homeGrid');
+  if (!grid) return;
+  try {
+    const handymen = await api('/users/handymen');
+    // Home shows top 6 non-company or VIP ones
+    grid.innerHTML = handymen.slice(0, 6).map(h => handymanCard(h)).join('');
+  } catch (e) { grid.innerHTML = ''; }
+}
+
+function isVipActive(h) {
+  if (!h.vipType || h.vipType === 'none') return false;
+  return h.vipExpiresAt && new Date(h.vipExpiresAt) > new Date();
+}
+function avgRating(reviews) {
+  if (!reviews || !reviews.length) return 0;
+  return reviews.reduce((s, r) => s + r.stars, 0) / reviews.length;
+}
+
+function handymanCard(h, isCompanyCard = false) {
+  const vip = isVipActive(h);
+  const isCompany = h.type === 'company';
+  const rating = avgRating(h.reviewsReceived);
+  const stars = rating > 0 ? '★'.repeat(Math.round(rating)) : '';
+  const allSpecs = h.specialties?.length ? h.specialties : (h.specialty ? [h.specialty] : []);
+
+  const avatarHtml = h.avatar
+    ? `<img src="${sanitize(h.avatar)}" style="width:52px;height:52px;border-radius:11px;object-fit:cover;flex-shrink:0">`
+    : `<div class="av" style="background:${sanitize(h.color || '#22222f')};color:var(--accent)">${sanitize(h.emoji || '🔧')}</div>`;
+
+  const companyBorderStyle = isCompanyCard
+    ? 'border-color:rgba(52,152,219,.5);background:linear-gradient(135deg,var(--surface),rgba(52,152,219,.05));'
+    : '';
+
+  return `<div class="hcard${vip && h.vipType === 'vipp' ? ' is-vipp' : vip ? ' is-vip' : ''}" 
+    style="${companyBorderStyle}" onclick="showProfile('${h.id}')">
+    ${isCompanyCard ? `<div class="vip-ribbon" style="background:rgba(52,152,219,.15);color:#3498db;border:1px solid rgba(52,152,219,.4)">🏢 კომპანია</div>` :
+      vip ? `<div class="vip-ribbon ${h.vipType}">${h.vipType === 'vipp' ? '💜 VIP+' : '⭐ VIP'}</div>` : ''}
     <div class="ct">
-      <div class="av" style="background:${h.color||'#22222f'};color:var(--accent)">${h.emoji||'🔧'}</div>
-      <div class="ci"><h3>${h.name} ${h.surname}</h3><div class="sp">${h.specialty}</div><div class="loc">📍 ${h.city||'თბილისი'}</div></div>
+      ${avatarHtml}
+      <div class="ci">
+        <h3>${sanitize(h.name)} ${sanitize(h.surname || '')}</h3>
+        <div class="sp">${allSpecs.slice(0, 2).map(s => sanitize(s)).join(' · ')}</div>
+        <div class="loc">📍 ${sanitize(h.city || '')}</div>
+      </div>
     </div>
-    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
-      ${h.verified?'<span class="badge bv">✓ გადამოწმებული</span>':''}
-      ${h.type==='company'?'<span class="badge" style="background:rgba(52,152,219,.12);color:#3498db">🏢 კომპანია</span>':''}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+      ${h.verified ? '<span class="badge bv">✓ ვერ.</span>' : ''}
+      ${isCompany && !isCompanyCard && vip ? `<span class="badge" style="background:rgba(52,152,219,.12);color:#3498db">🏢</span>` : ''}
+      ${!isCompany && vip && h.vipType === 'vipp' ? '<span class="badge" style="background:rgba(168,85,247,.12);color:var(--vipp)">💜 VIP+</span>' :
+        !isCompany && vip ? '<span class="badge" style="background:rgba(241,196,15,.12);color:var(--vip)">⭐ VIP</span>' : ''}
     </div>
     <div class="cs">
-      <div class="cst"><strong class="stars">${rating?'★'.repeat(Math.round(parseFloat(rating)))+' '+rating:'ახალი'}</strong>რეიტინგი</div>
-      <div class="cst"><strong>${revCount}</strong>შეფასება</div>
-      <div class="cst"><strong>${h.jobs||0}</strong>სამუშაო</div>
+      <div class="cst"><strong>${rating > 0 ? rating.toFixed(1) + ' ' + stars : '—'}</strong>რეიტ.</div>
+      <div class="cst"><strong>${(h.reviewsReceived || []).length}</strong>შეფ.</div>
+      <div class="cst"><strong>${h.jobs || 0}</strong>სამ.</div>
+    </div>
+    ${h.services && h.services.length ? `<div style="margin-top:10px;display:flex;gap:4px;flex-wrap:wrap">${h.services.slice(0, 3).map(s => `<span class="tag">${sanitize(s)}</span>`).join('')}</div>` : ''}
+  </div>`;
+}
+
+// ========================================================
+// PROFILE
+// ========================================================
+async function showProfile(hid) {
+  currentProfileId = hid;
+  nav('profile');
+  try {
+    const h = await api('/users/' + hid);
+    const cu = currentUser;
+    const reviews = h.reviewsReceived || [];
+    const rating = avgRating(reviews);
+    const vip = isVipActive(h);
+    const isOwner = cu && cu.id === hid;
+    const allSpecs = h.specialties?.length ? h.specialties : (h.specialty ? [h.specialty] : []);
+
+    const avatarHtml = h.avatar
+      ? `<img src="${sanitize(h.avatar)}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--accent)">`
+      : `<div class="av" style="width:72px;height:72px;font-size:28px;background:${sanitize(h.color || '#22222f')};color:var(--accent)">${sanitize(h.emoji || '🔧')}</div>`;
+
+    document.getElementById('pAv').innerHTML = avatarHtml;
+    document.getElementById('pName').textContent = h.name + ' ' + (h.surname || '');
+    document.getElementById('pSp').textContent = allSpecs.join(' · ');
+    document.getElementById('pVipBadge').innerHTML = vip
+      ? `<span class="vip-ribbon ${h.vipType}" style="position:static;margin-left:4px">${h.vipType === 'vipp' ? '💜 VIP+' : '⭐ VIP'}</span>` : '';
+    document.getElementById('pBadges').innerHTML = `
+      ${h.verified ? '<span class="badge bv">✓ ვერიფიცირებული</span>' : ''}
+      ${h.type === 'company' ? '<span class="badge" style="background:rgba(52,152,219,.12);color:#3498db">🏢 კომპანია</span>' : ''}
+    `;
+    document.getElementById('pDesc').textContent = h.desc || 'აღწერა არ არის';
+    document.getElementById('pRating').textContent = rating > 0 ? rating.toFixed(1) : '—';
+    document.getElementById('pRevN').textContent = reviews.length;
+    document.getElementById('pRevCount').textContent = reviews.length;
+    document.getElementById('pJobs').textContent = h.jobs || 0;
+    document.getElementById('pServices').innerHTML = (h.services || []).map(s =>
+      `<div style="display:flex;align-items:center;gap:6px"><span style="color:var(--ok)">✓</span><span>${sanitize(s)}</span></div>`
+    ).join('') || '<span style="color:var(--t2)">სერვისები არ არის</span>';
+    document.getElementById('pInfo').innerHTML = `
+      ${h.city ? `<div>📍 ${sanitize(h.city)}</div>` : ''}
+      <div>📧 ${sanitize(h.email)}</div>
+      ${h.phone ? `<div>📞 ${sanitize(h.phone)}</div>` : ''}
+    `;
+
+    // Portfolio
+    const port = h.portfolio || [];
+    document.getElementById('pPortfolio').innerHTML = port.length
+      ? port.map((p, i) => `<div class="port-item" onclick="openLightbox('${p.type || 'image'}','${sanitize(p.url)}')">
+          ${(p.type || 'image') === 'video'
+            ? `<video src="${sanitize(p.url)}" style="width:100%;height:100%;object-fit:cover"></video>`
+            : `<img src="${sanitize(p.url)}">`}
+          ${isOwner ? `<button class="port-del" onclick="event.stopPropagation();deletePortfolioItem(${i})">✕</button>` : ''}
+        </div>`).join('')
+      : '<div style="color:var(--t2);font-size:13px">პორტფოლიო ცარიელია</div>';
+
+    // Reviews
+    document.getElementById('pReviews').innerHTML = reviews.length
+      ? reviews.map(r => `<div style="padding:12px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <div style="font-weight:600;font-size:13px">${sanitize(r.reviewer?.name || 'მომხ.')} ${sanitize(r.reviewer?.surname || '')}</div>
+            <div class="stars">${'★'.repeat(r.stars)}</div>
+          </div>
+          ${r.comment ? `<div style="color:var(--t2);font-size:13px">${sanitize(r.comment)}</div>` : ''}
+        </div>`).join('')
+      : '<div style="color:var(--t2);font-size:13px">შეფასება ჯერ არ არის</div>';
+
+    const canReview = cu && cu.type === 'user' && cu.id !== hid;
+    document.getElementById('pActions').innerHTML = `
+      ${isOwner ? `<button class="btn bg bs" onclick="openEditDesc()">✏️ რედ.</button>
+        <button class="btn bg bs" onclick="loadPortfolio();openMo('moPortfolio')">🖼️ პორტ.</button>` : ''}
+      ${!isOwner && (h.type === 'handyman' || h.type === 'company') && cu
+        ? `<button class="btn bp" onclick="openSendOffer('${h.id}')">💬 შეთ.</button>` : ''}
+      ${canReview ? `<button class="btn bo bs" onclick="openReviewModal('${hid}')">⭐ შეფ.</button>` : ''}
+      ${h.phone && cu ? `<button class="btn bo bs" onclick="toast('📞 ${sanitize(h.name)}','${sanitize(h.phone || '')}','ok')">📞</button>` : ''}
+    `;
+  } catch (e) {
+    toast('⚠️ პროფილი ვერ ჩაიტვირთა', '', 'err');
+    nav('handymen');
+  }
+}
+
+// ========================================================
+// REQUESTS PAGE
+// ========================================================
+async function renderRequestsPage() {
+  const cu = currentUser;
+  const loginPrompt = document.getElementById('reqLoginPrompt');
+  const content = document.getElementById('reqContent');
+  if (!cu) { loginPrompt.style.display = 'flex'; content.style.display = 'none'; return; }
+  loginPrompt.style.display = 'none'; content.style.display = 'block';
+  const addBtn = document.getElementById('addReqBtn');
+  if (addBtn) {
+    addBtn.innerHTML = cu.type === 'user'
+      ? `<button class="btn bp" onclick="openMo('moRequest')">+ მოთხოვნა</button>` : '';
+  }
+  await renderRequests();
+}
+
+async function renderRequests() {
+  const grid = document.getElementById('requestsGrid');
+  if (!grid) return;
+  grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳ იტვირთება...</div>';
+  const cat = document.getElementById('rCat')?.value || '';
+  const urg = document.getElementById('rUrg')?.value || '';
+  try {
+    let url = '/requests?status=open&';
+    if (cat) url += `category=${encodeURIComponent(cat)}&`;
+    if (urg) url += `urgency=${urg}&`;
+    const requests = await api(url);
+    if (!requests.length) {
+      grid.innerHTML = '<div class="empty"><div class="ei">📋</div><h3>მოთხოვნა ვერ მოიძებნა</h3></div>';
+      return;
+    }
+    grid.innerHTML = requests.map(r => requestCard(r)).join('');
+  } catch (e) {
+    grid.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ჩატვირთვა ვერ მოხდა</h3></div>';
+  }
+}
+
+function requestCard(r, showActions = true) {
+  const cu = currentUser;
+  const isOwner = cu && cu.id === r.userId;
+  const offerCount = r._count?.offers || (r.offers?.length || 0);
+  return `<div class="rcard">
+    <div class="rh">
+      <div class="rt">${sanitize(r.title)}</div>
+      <span class="status ${r.status === 'open' ? 'sn' : r.status === 'in_progress' ? 'sa' : 'sd'}">${r.status === 'open' ? 'ღია' : r.status === 'in_progress' ? 'მიმდ.' : 'დასრ.'}</span>
+    </div>
+    <div style="color:var(--t2);font-size:13px;margin-top:4px">${sanitize(r.desc || '')}</div>
+    <div class="rmeta">
+      <span class="tag">${sanitize(r.category || '')}</span>
+      <span class="tag">📍 ${sanitize(r.city || '')}</span>
+      ${r.budget ? `<span class="tag">💰 ${r.budget}₾</span>` : ''}
+      ${r.urgency === 'urgent' ? '<span class="tag urg">⚡ გადაუდებელი</span>' : ''}
+      <span class="tag">💬 ${offerCount} შეთ.</span>
+    </div>
+    ${showActions && cu ? `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      ${isOwner ? `<button class="btn bg bs" onclick="viewOffers('${r.id}')">💬 შეთავ. (${offerCount})</button>` : ''}
+      ${!isOwner && (cu.type === 'handyman' || cu.type === 'company')
+        ? `<button class="btn bp bs" onclick="openSendOffer('${r.id}','${sanitize(r.title)}')">+ შეთ.</button>` : ''}
+    </div>` : ''}
+  </div>`;
+}
+
+// ========================================================
+// SUBMIT REQUEST
+// ========================================================
+function toggleOtherCat() {
+  const val = document.getElementById('qCat').value;
+  document.getElementById('qCatOtherGroup').style.display = val === 'სხვა' ? 'block' : 'none';
+}
+
+let reqMediaInputFiles = [];
+function addReqMedia(input) {
+  reqMediaInputFiles = [...reqMediaInputFiles, ...Array.from(input.files)];
+  input.value = ''; renderReqMediaGrid();
+}
+function renderReqMediaGrid() {
+  const el = document.getElementById('reqMediaGrid'); if (!el) return;
+  el.innerHTML = reqMediaInputFiles.map((f, i) => `
+    <div class="req-media-item">
+      <div style="font-size:10px;color:var(--t2);padding:4px">${sanitize(f.name)}</div>
+      <button class="req-media-del" onclick="reqMediaInputFiles.splice(${i},1);renderReqMediaGrid()">✕</button>
+    </div>`).join('');
+}
+
+async function submitRequest() {
+  const cu = currentUser;
+  if (!cu) { openMo('moLogin'); return; }
+  if (cu.type !== 'user') { toast('⚠️ მხოლოდ მომხმარებელს შეუძლია', '', 'err'); return; }
+  const title = document.getElementById('qTitle').value.trim();
+  let cat = document.getElementById('qCat').value;
+  if (!title) { toast('⚠️ სათაური შეიყვანე', '', 'err'); return; }
+  if (!cat) { toast('⚠️ კატეგორია აირჩიე', '', 'err'); return; }
+  if (cat === 'სხვა') {
+    const other = document.getElementById('qCatOther').value.trim();
+    if (other) cat = 'სხვა — ' + other;
+  }
+  const fd = new FormData();
+  fd.append('title', title); fd.append('category', cat);
+  fd.append('desc', document.getElementById('qDesc').value || '');
+  fd.append('city', document.getElementById('qCity').value || 'თბილისი');
+  fd.append('budget', document.getElementById('qBudget').value || '');
+  fd.append('urgency', document.getElementById('qUrg').value || 'normal');
+  reqMediaInputFiles.forEach(f => fd.append('media', f));
+  try {
+    await api('/requests', { method: 'POST', body: fd });
+    closeMo('moRequest');
+    reqMediaInputFiles = []; renderReqMediaGrid();
+    ['qTitle','qDesc','qCity','qBudget','qCatOther'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    document.getElementById('qCat').value = '';
+    document.getElementById('qCatOtherGroup').style.display = 'none';
+    toast('📋 მოთხოვნა გამოქვეყნდა!', 'ხელოსნები მალე გეწერებიან', 'ok');
+    renderRequests();
+  } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
+}
+
+// ========================================================
+// OFFERS
+// ========================================================
+function openSendOffer(reqId, title) {
+  const cu = currentUser;
+  if (!cu) { openMo('moLogin'); return; }
+  currentOfferRequestId = reqId;
+  document.getElementById('offerReqTitle').textContent = title || '';
+  document.getElementById('ofPrice').value = '';
+  document.getElementById('ofDuration').value = '';
+  document.getElementById('ofComment').value = '';
+  openMo('moOffer');
+}
+
+async function submitOffer() {
+  if (!currentOfferRequestId) return;
+  const price = parseInt(document.getElementById('ofPrice').value);
+  if (!price) { toast('⚠️ ფასი შეიყვანე', '', 'err'); return; }
+  try {
+    await api('/offers', {
+      method: 'POST',
+      body: { requestId: currentOfferRequestId, price, duration: document.getElementById('ofDuration').value, comment: document.getElementById('ofComment').value }
+    });
+    closeMo('moOffer');
+    toast('✅ შეთავაზება გაიგზავნა!', '', 'ok');
+  } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
+}
+
+async function viewOffers(reqId) {
+  const el = document.getElementById('offersList');
+  const titleEl = document.getElementById('offersReqTitle');
+  if (el) el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t2)">⏳ იტვირთება...</div>';
+  openMo('moOffers');
+  try {
+    const req = await api('/requests/' + reqId);
+    if (titleEl) titleEl.textContent = req.title || '';
+    const offers = req.offers || [];
+    if (!el) return;
+    if (!offers.length) { el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t2)">შეთავაზება ჯერ არ არის</div>'; return; }
+    el.innerHTML = offers.map(o => {
+      const h = o.handyman;
+      const rating = avgRating(h?.reviewsReceived || []);
+      const avatarHtml = h?.avatar
+        ? `<img src="${sanitize(h.avatar)}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+        : `<div class="av" style="width:44px;height:44px;font-size:18px;background:${sanitize(h?.color || '#22222f')};color:var(--accent)">${sanitize(h?.emoji || '🔧')}</div>`;
+      return `<div class="oi">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          ${avatarHtml}
+          <div style="flex:1">
+            <div style="font-weight:700">${sanitize(h?.name || '')} ${sanitize(h?.surname || '')}</div>
+            <div style="color:var(--accent);font-size:12px">${sanitize(h?.specialty || '')}</div>
+            <div style="font-size:11px;color:var(--t2)">${rating > 0 ? rating.toFixed(1) + ' ★' : ''} ${o.duration ? '· ' + sanitize(o.duration) : ''}</div>
+            ${o.comment ? `<div style="margin-top:6px;font-size:13px;color:var(--t2)">${sanitize(o.comment)}</div>` : ''}
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div class="oprice">₾${o.price}</div>
+            <span class="status ${o.status === 'pending' ? 'sn' : 'sa'}">${o.status === 'pending' ? 'მოლ.' : 'მიღ.'}</span>
+          </div>
+        </div>
+        ${req.status === 'open' && o.status === 'pending' ? `<div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn bp bs" onclick="acceptOffer('${o.id}')">✓ მიღება</button>
+          <button class="btn bg bs" onclick="showProfile('${h?.id}')">პროფ.</button>
+        </div>` : ''}
+        ${o.status === 'accepted' ? `<button class="btn bg bs" style="margin-top:8px" onclick="openChatForOffer('${o.id}')">💬 ჩათი</button>` : ''}
+      </div>`;
+    }).join('');
+  } catch (e) { if (el) el.innerHTML = '<div style="color:var(--err);text-align:center;padding:20px">' + (e.error || '') + '</div>'; }
+}
+
+async function acceptOffer(offerId) {
+  try {
+    const data = await api('/offers/' + offerId + '/accept', { method: 'POST' });
+    toast('✅ შეთავაზება მიღებულია!', 'ჩათი გაიხსნა', 'ok');
+    closeMo('moOffers');
+    openChat(data.chatId);
+  } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
+}
+
+// ========================================================
+// REVIEWS
+// ========================================================
+function openReviewModal(hid) {
+  currentReviewHandymanId = hid; currentStars = 0; setStar(0);
+  document.getElementById('revText').value = ''; openMo('moReview');
+}
+function setStar(n) {
+  currentStars = n;
+  document.querySelectorAll('#starInp span').forEach((s, i) => s.classList.toggle('lit', i < n));
+}
+async function submitReview() {
+  if (!currentUser || !currentReviewHandymanId) return;
+  if (currentStars === 0) { toast('⚠️ ვარსკვლავი აირჩიე', '', 'err'); return; }
+  try {
+    await api('/offers/reviews', {
+      method: 'POST',
+      body: { handymanId: currentReviewHandymanId, stars: currentStars, comment: document.getElementById('revText').value }
+    });
+    closeMo('moReview');
+    toast('⭐ შეფასება გამოქვეყნდა!', '', 'ok');
+    if (currentProfileId === currentReviewHandymanId) showProfile(currentProfileId);
+  } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
+}
+
+// ========================================================
+// DASHBOARD
+// ========================================================
+async function renderDashboard() {
+  const cu = currentUser;
+  if (!cu) { nav('home'); return; }
+  const body = document.getElementById('dashBody');
+  const title = document.getElementById('dashTitle');
+  if (!body) return;
+  if (title) title.textContent = `${cu.emoji || '👤'} ${cu.name} ${cu.surname || ''}`;
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳ იტვირთება...</div>';
+  try {
+    if (cu.type === 'user') {
+      const [myReqs, myChats] = await Promise.all([api('/requests/mine'), api('/chat/mine')]);
+      // Check for open support request
+      let supportHtml = '';
+      try {
+        const supportReqs = await api('/admin/support?mine=1').catch(() => null);
+        // fallback: try to get user's own support requests
+      } catch (_) {}
+
+      body.innerHTML = `
+        <div class="dg">
+          <div class="dc"><div class="dn">${myReqs.length}</div><div class="dl">მოთხოვნა</div></div>
+          <div class="dc"><div class="dn">${myChats.length}</div><div class="dl">ჩათი</div></div>
+          <div class="dc"><div class="dn">${myReqs.filter(r => r.status === 'in_progress').length}</div><div class="dl">მიმდინარე</div></div>
+        </div>
+        <div style="margin-top:24px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn bp" onclick="openMo('moRequest')">+ მოთხოვნა</button>
+          <button class="btn bo" onclick="nav('handymen')">🔧 ხელოსნები</button>
+          <button class="btn bg" onclick="openUserSupport()">🎧 სუპ.</button>
+        </div>
+        <h3 style="margin:20px 0 12px;font-size:15px">📋 ჩემი მოთხოვნები</h3>
+        ${myReqs.length ? myReqs.map(r => requestCard(r)).join('') : '<div class="empty"><div class="ei">📋</div><h3>მოთხოვნა არ გაქვს</h3></div>'}
+        <h3 style="margin:20px 0 12px;font-size:15px">💬 ჩათები</h3>
+        ${myChats.length ? myChats.map(c => chatItem(c)).join('') : '<div class="empty"><div class="ei">💬</div><h3>ჩათი ჯერ არ გაქვს</h3></div>'}
+      `;
+    } else {
+      const [myOffers, myChats, cu2] = await Promise.all([
+        api('/offers/mine'), api('/chat/mine'), api('/auth/me')
+      ]);
+      currentUser = cu2;
+      const vip = isVipActive(cu2);
+      const isCompany = cu2.type === 'company';
+      const vip1Price = isCompany ? 10 : 2;
+      const vipp1Price = isCompany ? 15 : 4;
+
+      body.innerHTML = `
+        <div class="dg">
+          <div class="dc"><div class="dn">${cu2.jobs || 0}</div><div class="dl">სამუშაო</div></div>
+          <div class="dc"><div class="dn">${myOffers.length}</div><div class="dl">შეთ.</div></div>
+          <div class="dc"><div class="dn">${myChats.length}</div><div class="dl">ჩათი</div></div>
+          <div class="dc"><div class="dn" style="color:${vip ? (cu2.vipType === 'vipp' ? 'var(--vipp)' : 'var(--vip)') : 'var(--t2)'}">${vip ? (cu2.vipType === 'vipp' ? '💜 VIP+' : '⭐ VIP') : '—'}</div><div class="dl">VIP</div></div>
+        </div>
+        ${vip ? `<div style="margin:12px 0;padding:10px 14px;background:${cu2.vipType === 'vipp' ? 'rgba(168,85,247,.1)' : 'rgba(241,196,15,.1)'};border:1px solid ${cu2.vipType === 'vipp' ? 'rgba(168,85,247,.3)' : 'rgba(241,196,15,.3)'};border-radius:10px;font-size:12px;color:var(--t2)">
+          ✅ VIP ვადა: <strong style="color:var(--text)">${new Date(cu2.vipExpiresAt).toLocaleDateString('ka-GE')}-მდე</strong>
+        </div>` : ''}
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn bp" onclick="nav('requests')">📋 მოთხ.</button>
+          <button class="btn bvip" onclick="openVipModal('vip')">⭐ VIP ${vip1Price}₾</button>
+          <button class="btn bvipp" onclick="openVipModal('vipp')">💜 VIP+ ${vipp1Price}₾</button>
+          <button class="btn bo" onclick="showProfile('${cu2.id}')">👤 პროფ.</button>
+          <button class="btn bg" onclick="openEditDesc()">✏️ რედ.</button>
+        </div>
+        <h3 style="margin:20px 0 12px;font-size:15px">💬 ჩემი შეთავაზებები</h3>
+        ${myOffers.length ? myOffers.map(o => `<div class="oi">
+          <div>
+            <div style="font-weight:600">${sanitize(o.request?.title || 'მოთხ.')}</div>
+            <div style="font-size:12px;color:var(--t2)">${sanitize(o.request?.category || '')} · ${sanitize(o.request?.city || '')}</div>
+            ${o.comment ? `<div style="font-size:12px;color:var(--t2)">${sanitize(o.comment)}</div>` : ''}
+            ${o.chat ? `<button class="btn bg bs" style="margin-top:8px" onclick="openChat('${o.chat.id}')">💬 ჩათი</button>` : ''}
+          </div>
+          <div style="text-align:right">
+            <div class="oprice">₾${o.price}</div>
+            <span class="status ${o.status === 'pending' ? 'sn' : 'sa'}">${o.status === 'pending' ? 'მოლ.' : 'მიღ.'}</span>
+          </div>
+        </div>`).join('') : '<div class="empty"><div class="ei">💬</div><h3>შეთავ. ჯერ არ გაქვს</h3></div>'}
+        <h3 style="margin:20px 0 12px;font-size:15px">💬 ჩათები</h3>
+        ${myChats.length ? myChats.map(c => chatItem(c)).join('') : '<div class="empty"><div class="ei">💬</div><h3>ჩათი ჯერ არ გაქვს</h3></div>'}
+      `;
+    }
+  } catch (e) {
+    body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ჩატვირთვა ვერ მოხდა</h3></div>';
+  }
+}
+
+function chatItem(c) {
+  const cu = currentUser;
+  const other = cu.type === 'user' ? c.chatHandyman : c.chatUser;
+  const lastMsg = c.messages?.[0];
+  const avatarHtml = other?.avatar
+    ? `<img src="${sanitize(other.avatar)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">`
+    : `<div class="av" style="width:40px;height:40px;font-size:16px;background:var(--s2);color:var(--accent)">${sanitize(other?.emoji || '👤')}</div>`;
+  return `<div class="oi" style="cursor:pointer" onclick="openChat('${c.id}')">
+    <div style="display:flex;gap:10px;align-items:center">
+      ${avatarHtml}
+      <div>
+        <div style="font-weight:600">${sanitize(other?.name || '')} ${sanitize(other?.surname || '')}</div>
+        ${c.offer?.request ? `<div style="font-size:11px;color:var(--t2)">${sanitize(c.offer.request.title || '')}</div>` : ''}
+        ${lastMsg ? `<div style="font-size:12px;color:var(--t2);margin-top:2px">${sanitize(String(lastMsg.content || '').substring(0, 40))}</div>` : ''}
+      </div>
     </div>
   </div>`;
 }
 
-function renderHandymen(){
-  const fSpecEl  = document.getElementById('fSpec');
-  const spec     = fSpecEl?.value||'';
-  const mainCatId= fSpecEl?.dataset?.mainCatId||'';
-  const minR     = parseFloat(document.getElementById('fRating')?.value)||0;
-  let arr = state.users.filter(u=>u.type==='handyman'||u.type==='company');
-
-  if(mainCatId && !spec){
-    // filter by entire main category group
-    const group = CATS_DATA.find(g=>g.id===mainCatId);
-    if(group) arr = arr.filter(h=>group.subs.includes(h.specialty));
-  } else if(spec){
-    arr = arr.filter(h=>h.specialty===spec);
-    delete fSpecEl.dataset.mainCatId;
-  }
-  if(minR) arr = arr.filter(h=>{const r=getHandyRating(h.id);return r&&parseFloat(r)>=minR});
-  const sorted = sortHandymen(arr);
-  const grid = document.getElementById('handymenGrid');
-  grid.innerHTML = sorted.length
-    ? sorted.map(hCardHTML).join('')
-    : `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--t2)">
-        <div style="font-size:48px;margin-bottom:12px">🔍</div>
-        <h3>ვერ მოიძებნა</h3>
-        <p style="font-size:13px;margin-top:6px">სცადე სხვა კატეგორია</p>
-      </div>`;
+async function openChatForOffer(offerId) {
+  try {
+    const chats = await api('/chat/mine');
+    const c = chats.find(c => c.offerId === offerId);
+    if (c) openChat(c.id);
+    else toast('⚠️ ჩათი ვერ მოიძებნა', '', 'err');
+  } catch (e) { toast('⚠️ ' + e.error, '', 'err'); }
 }
 
-function renderHomeGrid(){
-  const arr = state.users.filter(u=>u.type==='handyman'||u.type==='company');
-  const sorted = sortHandymen(arr).slice(0,3);
-  const el = document.getElementById('homeGrid');
-  if(el) el.innerHTML = sorted.map(hCardHTML).join('');
-}
-
-// ====== REQUESTS PAGE ======
-function renderRequestsPage(){
-  const cu = currentUser();
-  const lp = document.getElementById('reqLoginPrompt');
-  const rc = document.getElementById('reqContent');
-  if(!cu){lp.style.display='flex';rc.style.display='none';return}
-  lp.style.display='none';rc.style.display='block';
-  // Show add button only for users
-  const ab = document.getElementById('addReqBtn');
-  if(cu.type==='user') ab.innerHTML=`<button class="btn bp" onclick="openMo('moRequest')">+ ახალი მოთხოვნა</button>`;
-  else ab.innerHTML='';
-  renderRequests();
-}
-
-function renderRequests(){
-  const cu = currentUser();
-  if(!cu) return;
-  const cat = document.getElementById('rCat')?.value||'';
-  const urg = document.getElementById('rUrg')?.value||'';
-  let arr=[...state.requests];
-  if(cat) arr=arr.filter(r=>r.category===cat);
-  if(urg) arr=arr.filter(r=>r.urgency===urg);
-  const el = document.getElementById('requestsGrid');
-  if(!arr.length){el.innerHTML='<div class="empty"><div class="ei">📋</div><h3>მოთხოვნები არ არის</h3></div>';return}
-  el.innerHTML = arr.map(r=>{
-    const isOwner = r.userId===cu.id;
-    const canOffer = (cu.type==='handyman'||cu.type==='company') && !isOwner && r.status==='open';
-    const alreadyOffered = r.offers.some(oid=>state.offers.find(o=>o.id===oid&&o.handymanId===cu.id));
-    return `<div class="rcard">
-      <div class="rh">
-        <div class="rt">${r.title}</div>
-        <span class="status ${r.status==='open'?'sn':r.status==='in_progress'?'sa':'sd'}">${r.status==='open'?'ღია':r.status==='in_progress'?'მიმდინარე':'დასრულებული'}</span>
-      </div>
-      <div style="color:var(--t2);font-size:12px;margin-top:4px">${r.desc}</div>
-      ${r.media&&r.media.length?`<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${r.media.slice(0,4).map(m=>m.type==='video'?`<video src="${m.url}" style="width:60px;height:60px;border-radius:6px;object-fit:cover;cursor:pointer" onclick="openLightbox('video','${m.url}')"></video>`:`<img src="${m.url}" style="width:60px;height:60px;border-radius:6px;object-fit:cover;cursor:pointer" onclick="openLightbox('image','${m.url}')">`).join('')}</div>`:''}
-      <div class="rmeta" style="margin-top:10px">
-        <span class="tag">${r.category}</span>
-        <span class="tag">📍 ${r.city}</span>
-        ${r.budget?`<span class="tag">💰 ${r.budget}₾</span>`:''}
-        ${r.urgency==='urgent'?'<span class="tag urg">🔴 გადაუდებელი</span>':''}
-        <span class="tag">💬 ${r.offers.length} შეთავაზება</span>
-        <span class="tag" style="color:var(--t2)">${r.time}</span>
-      </div>
-      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-        ${isOwner?`<button class="btn bg bs" onclick="viewOffers('${r.id}')">💬 შეთავაზებების ნახვა (${r.offers.length})</button>`:''}
-        ${canOffer&&!alreadyOffered?`<button class="btn bp bs" onclick="openOfferModal('${r.id}')">💬 შეთავაზება</button>`:''}
-        ${alreadyOffered?'<span class="tag" style="color:var(--ok)">✓ გაგზავნილია</span>':''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ====== PROFILE ======
-function showProfile(hid){
-  currentProfileId = hid;
-  const h = state.users.find(u=>u.id===hid);
-  if(!h) return;
-  const cu = currentUser();
-  const isOwn = cu && cu.id===hid;
-  const revs = state.reviews.filter(r=>r.handymanId===hid);
-  const rating = getHandyRating(hid);
-  const isVipp = vipActive(h)&&h.vip.type==='vipp';
-  const isVip = vipActive(h)&&h.vip.type==='vip';
-  document.getElementById('pName').textContent = h.name+' '+h.surname;
-  document.getElementById('pSp').textContent = (h.emoji||'🔧')+' '+h.specialty+(h.type==='company'?' (კომპანია)':'');
-  document.getElementById('pAv').textContent = h.emoji||'🔧';
-  document.getElementById('pAv').style.background = h.color||'#22222f';
-  document.getElementById('pAv').style.color = 'var(--accent)';
-  document.getElementById('pVipBadge').innerHTML = isVipp?'<span class="vip-ribbon vipp" style="position:static">💜 VIP+</span>':isVip?'<span class="vip-ribbon vip" style="position:static">⭐ VIP</span>':'';
-  document.getElementById('pBadges').innerHTML = `${h.verified?'<span class="badge bv">✓ გადამოწმებული</span>':''}${h.type==='company'?'<span class="badge" style="background:rgba(52,152,219,.12);color:#3498db">🏢 კომპანია</span>':''}`;
-
-  // Description — no inline edit button here (edit is in pActions)
-  const descEl = document.getElementById('pDesc');
-  descEl.textContent = h.desc||'აღწერა ჯერ არ არის'; // ✅ XSS fix: textContent
-
-  document.getElementById('pRating').textContent = rating||'—';
-  document.getElementById('pRevN').textContent = revs.length;
-  document.getElementById('pRevCount').textContent = revs.length;
-  document.getElementById('pJobs').textContent = h.jobs||0;
-  document.getElementById('pInfo').innerHTML = `<div>📍 ${h.city||'თბილისი'}</div><div>📞 ${h.phone}</div><div>🕐 09:00–21:00</div>`;
-  document.getElementById('pServices').innerHTML = (h.services||[]).map(s=>`<div style="display:flex;align-items:center;gap:6px;padding:7px 11px;background:var(--s2);border-radius:7px;font-size:12px"><span style="color:var(--accent)">✓</span>${s}</div>`).join('');
-
-  // Portfolio — with lightbox + delete for own profile
-  const port = h.portfolio||[];
-  document.getElementById('pPortfolio').innerHTML = port.length
-    ? port.map((p,i)=>`
-        <div class="wp" style="cursor:pointer">
-          ${p.type==='video'
-            ?`<video src="${p.url}" onclick="openLightbox('video','${p.url}')" style="width:100%;height:100%;object-fit:cover;cursor:pointer"></video>`
-            :`<img src="${p.url}" onclick="openLightbox('image','${p.url}')" style="cursor:pointer">`}
-          ${isOwn?`<button class="port-del" onclick="deletePortfolioItem(${i})" title="წაშლა">✕</button>`:''}
-        </div>`).join('')
-    : '<div style="color:var(--t2);font-size:12px">პორტფოლიო ჯერ არ არის</div>';
-
-  // Reviews
-  document.getElementById('pReviews').innerHTML = revs.length
-    ? revs.map(r=>{
-        const reviewer = state.users.find(u=>u.id===r.reviewerId);
-        return `<div class="rev-item"><div style="display:flex;justify-content:space-between;align-items:center"><div class="rev-author">${sanitize(reviewer?reviewer.name+' '+reviewer.surname:'მომხმარებელი')}</div><div class="stars">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div></div><div class="rev-txt">${sanitize(r.comment)}</div><div class="rev-date">${sanitize(r.date)}</div></div>`;
-      }).join('')
-    : '<div style="color:var(--t2);font-size:12px;padding:10px 0">შეფასებები ჯერ არ არის</div>';
-
-  // Actions
-  let actions = '';
-  if(cu && cu.type==='user'){
-    const canReview = state.offers.some(o=>o.handymanId===hid && o.status==='accepted' && state.requests.find(r=>r.id===o.requestId&&r.userId===cu.id));
-    actions = `<button class="btn bp" onclick="openContactModal('${hid}')">📞 დაკავშირება</button>`;
-    if(canReview) actions += `<button class="btn bg" onclick="openReviewModal('${hid}')">⭐ შეფასება</button>`;
-  }
-  if(isOwn){
-    actions = `<button class="btn bg" onclick="openEditDesc()">✏️ პროფილის რედაქტირება</button>`;
-    actions += `<button class="btn bg" onclick="openMo('moPortfolio');loadPortfolio()">🖼️ პორტფოლიო</button>`;
-    if(cu.type!=='user') actions += `<button class="btn bvip bs" onclick="nav('vip-info')">⭐ VIP</button>`;
-  }
-  document.getElementById('pActions').innerHTML = actions;
-  nav('profile');
-}
-
-// ====== OFFERS ======
-function openOfferModal(reqId){
-  const cu = currentUser();
-  if(!cu){openMo('moLogin');return}
-  if(cu.type==='user'){toast('⚠️ მხოლოდ ხელოსანს შეუძლია შეთავაზება','','err');return}
-  currentOfferRequestId = reqId;
-  const req = state.requests.find(r=>r.id===reqId);
-  document.getElementById('offerReqTitle').textContent = req?req.title:'';
-  openMo('moOffer');
-}
-
-function submitOffer(){
-  const cu = currentUser();
-  if(!cu||cu.type==='user') return;
-  const price = document.getElementById('ofPrice').value;
-  if(!price){toast('⚠️ ფასი შეიყვანე','','err');return}
-  const offer = {id:'o'+Date.now(),requestId:currentOfferRequestId,handymanId:cu.id,price,duration:document.getElementById('ofDuration').value,comment:document.getElementById('ofComment').value,status:'pending',createdAt:Date.now()};
-  state.offers.push(offer);
-  const req = state.requests.find(r=>r.id===currentOfferRequestId);
-  if(req) req.offers.push(offer.id);
-  save();
-  closeMo('moOffer');
-  toast('✅ შეთავაზება გაიგზავნა!','მომხმარებელი მიიღებს შეტყობინებას','ok');
-  renderRequests();
-}
-
-function viewOffers(reqId){
-  const req = state.requests.find(r=>r.id===reqId);
-  if(!req) return;
-  document.getElementById('offersReqTitle').textContent = req.title;
-  const cu = currentUser();
-  const offers = req.offers.map(oid=>state.offers.find(o=>o.id===oid)).filter(Boolean);
-  if(!offers.length){
-    document.getElementById('offersList').innerHTML='<div class="empty"><div class="ei">💬</div><h3>შეთავაზება ჯერ არ არის</h3></div>';
-  } else {
-    document.getElementById('offersList').innerHTML = offers.map(o=>{
-      const h = state.users.find(u=>u.id===o.handymanId);
-      const accepted = o.status==='accepted';
-      return `<div class="oac">
-        <div class="oah">
-          <div>
-            <div style="font-weight:700">${h?h.name+' '+h.surname:'ხელოსანი'}</div>
-            <div style="font-size:12px;color:var(--t2)">${h?.specialty||''} · ${o.duration||''}</div>
-          </div>
-          <div style="text-align:right"><div class="oprice">₾${o.price}</div><span class="status ${accepted?'sa':'sn'}">${accepted?'მიღებული':'მოლოდინში'}</span></div>
-        </div>
-        ${o.comment?`<div style="color:var(--t2);font-size:12px;margin-top:8px">${sanitize(o.comment)}</div>`:''}
-        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-          ${!accepted&&req.status==='open'?`<button class="btn bok bs" onclick="acceptOffer('${o.id}','${reqId}')">✓ მიღება</button>`:''}
-          ${accepted?`<button class="btn bp bs" onclick="openChat('${o.id}')">💬 ჩათი</button>`:''}
-          <button class="btn bg bs" onclick="closeMo('moOffers');showProfile('${o.handymanId}')">პროფილი</button>
-        </div>
-      </div>`;
-    }).join('');
-  }
-  openMo('moOffers');
-}
-
-function acceptOffer(offerId, reqId){
-  const offer = state.offers.find(o=>o.id===offerId);
-  const req = state.requests.find(r=>r.id===reqId);
-  if(!offer||!req) return;
-  offer.status='accepted';
-  req.status='in_progress';
-  // Create chat
-  const chatId = 'c'+Date.now();
-  state.chats.push({id:chatId,offerId,requestId:reqId,userId:req.userId,handymanId:offer.handymanId,messages:[{id:'m0',from:'system',type:'text',content:`ჩათი გაიხსნა: "${req.title}"`,time:now()}]});
-  save();
-  closeMo('moOffers');
-  toast('✅ შეთავაზება მიღებულია!','ჩათი გაიხსნა — ახლა შეგიძლია ესაუბრო','ok');
-  openChat(offerId);
-}
-
-// ====== CHAT ======
-// ====== CHAT POLLING (simulates real-time for localStorage) ======
-// In production: replace with Socket.io or WebSocket
+// ========================================================
+// CHAT
+// ========================================================
 let chatPollTimer = null;
-function startChatPolling(){
-  stopChatPolling();
-  chatPollTimer = setInterval(()=>{
-    // Re-read state from localStorage to catch messages from other tabs
-    const stored = localStorage.getItem('xg_state');
-    if(stored){
-      const fresh = JSON.parse(stored);
-      if(currentChatId){
-        const freshChat = fresh.chats.find(c=>c.id===currentChatId);
-        const localChat = state.chats.find(c=>c.id===currentChatId);
-        if(freshChat && localChat && freshChat.messages.length !== localChat.messages.length){
-          state = fresh; // sync state
-          renderChat();
-        }
+async function openChat(chatId) {
+  currentChatId = chatId; nav('chat');
+  if (socket) socket.emit('joinChat', chatId);
+  await loadChatMessages();
+}
+async function loadChatMessages() {
+  const chatId = currentChatId; if (!chatId) return;
+  try {
+    const chat = await api('/chat/' + chatId);
+    const cu = currentUser;
+    const other = cu.id === chat.userId ? chat.chatHandyman : chat.chatUser;
+    document.getElementById('chatTitle').textContent = `${other?.name || ''} ${other?.surname || ''}`;
+    document.getElementById('chatSub').textContent = chat.offer?.request?.title || '';
+    renderMessages(chat.messages || []);
+    if (!socket || !socket.connected) {
+      clearInterval(chatPollTimer);
+      let known = (chat.messages || []).length;
+      chatPollTimer = setInterval(async () => {
+        if (currentChatId !== chatId) { clearInterval(chatPollTimer); return; }
+        try {
+          const msgs = await api('/chat/' + chatId + '/messages');
+          if (msgs.length !== known) { renderMessages(msgs); known = msgs.length; }
+        } catch (_) {}
+      }, 3000);
+    }
+  } catch (e) { toast('⚠️ ჩათი ვერ ჩაიტვირთა', '', 'err'); }
+}
+function renderMessages(msgs) {
+  const body = document.getElementById('chatBody'); if (!body) return;
+  const cu = currentUser;
+  body.innerHTML = msgs.map(m => {
+    const isMe = m.fromId === cu?.id;
+    const isSystem = m.fromId === 'system';
+    if (isSystem) return `<div style="text-align:center;color:var(--t2);font-size:12px;padding:8px">${sanitize(m.content)}</div>`;
+    if (m.type === 'image') return `<div class="msg ${isMe ? 'me' : 'them'}"><img src="${sanitize(m.content)}" style="max-width:200px;border-radius:8px;cursor:pointer" onclick="openLightbox('image','${sanitize(m.content)}')"></div>`;
+    if (m.type === 'video') return `<div class="msg ${isMe ? 'me' : 'them'}"><video src="${sanitize(m.content)}" controls style="max-width:200px;border-radius:8px"></video></div>`;
+    if (m.type === 'voice') return `<div class="msg ${isMe ? 'me' : 'them'}"><audio src="${sanitize(m.content)}" controls style="max-width:200px"></audio></div>`;
+    return `<div class="msg ${isMe ? 'me' : 'them'}">${sanitize(m.content)}<div class="mtime">${new Date(m.createdAt).toLocaleTimeString('ka-GE', {hour:'2-digit',minute:'2-digit'})}</div></div>`;
+  }).join('');
+  body.scrollTop = body.scrollHeight;
+}
+function appendChatMsg(msg) {
+  const body = document.getElementById('chatBody'); if (!body) return;
+  const cu = currentUser;
+  const isMe = msg.fromId === cu?.id;
+  const div = document.createElement('div');
+  div.className = `msg ${isMe ? 'me' : 'them'}`;
+  div.innerHTML = sanitize(msg.content) + `<div class="mtime">${new Date(msg.createdAt || Date.now()).toLocaleTimeString('ka-GE', {hour:'2-digit',minute:'2-digit'})}</div>`;
+  body.appendChild(div); body.scrollTop = body.scrollHeight;
+}
+async function sendChatMsg() {
+  const input = document.getElementById('chatInput');
+  const content = input?.value?.trim();
+  if (!content || !currentChatId) return;
+  input.value = '';
+  if (socket && socket.connected) {
+    socket.emit('sendMessage', { chatId: currentChatId, content });
+  } else {
+    try {
+      const msg = await api('/chat/' + currentChatId + '/messages', { method: 'POST', body: { content } });
+      appendChatMsg(msg);
+    } catch (e) { toast('⚠️ ' + e.error, '', 'err'); }
+  }
+}
+function chatKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMsg(); }
+  if (socket && socket.connected) socket.emit('typing', { chatId: currentChatId, isTyping: true });
+}
+async function sendFile(input) {
+  const file = input.files[0]; if (!file || !currentChatId) return;
+  const fd = new FormData(); fd.append('file', file);
+  try {
+    const msg = await api('/chat/' + currentChatId + '/upload', { method: 'POST', body: fd });
+    appendChatMsg(msg);
+  } catch (e) { toast('⚠️ ფაილის ატვირთვა ვერ მოხდა', '', 'err'); }
+  input.value = '';
+}
+async function toggleVoice() {
+  if (!isRecording) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream); audioChunks = [];
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        const fd = new FormData(); fd.append('file', blob, 'voice.webm');
+        try { const msg = await api('/chat/' + currentChatId + '/upload', { method: 'POST', body: fd }); appendChatMsg(msg); }
+        catch (e) { toast('⚠️ ხმა ვერ გაიგზავნა', '', 'err'); }
+      };
+      mediaRecorder.start(); isRecording = true;
+      document.getElementById('voiceBtn').textContent = '⏹️';
+      document.getElementById('recStatus').style.display = 'block';
+    } catch (e) { toast('⚠️ მიკროფონი ვერ მოიძებნა', '', 'err'); }
+  } else {
+    mediaRecorder?.stop(); mediaRecorder?.stream?.getTracks().forEach(t => t.stop());
+    isRecording = false;
+    document.getElementById('voiceBtn').textContent = '🎤';
+    document.getElementById('recStatus').style.display = 'none';
+  }
+}
+
+// ========================================================
+// USER SUPPORT CHAT (user-side)
+// ========================================================
+async function openUserSupport() {
+  const cu = currentUser; if (!cu) { openMo('moLogin'); return; }
+  openMo('moUserSupport');
+  document.getElementById('userSupportBody').innerHTML = '<div style="text-align:center;padding:20px;color:var(--t2)">⏳ იტვირთება...</div>';
+
+  try {
+    // Try to get existing open support request
+    let sr = null;
+    try {
+      // POST to get or create a support request
+      const res = await api('/admin/support', { method: 'POST', body: { message: '' } });
+      sr = res;
+    } catch (e) {
+      if (e.status === 409 && e.error) {
+        // Already has open request — get its ID from error or search
+        // The backend returns { supportId, message }
+        const raw = e; 
+        // Re-fetch to get supportId - let's call the endpoint and parse
       }
     }
-  }, 2000); // poll every 2 seconds
-}
-function stopChatPolling(){ if(chatPollTimer){clearInterval(chatPollTimer);chatPollTimer=null;} }
 
-function openChat(offerId){
-  const chat = state.chats.find(c=>c.offerId===offerId);
-  if(!chat){toast('⚠️ ჩათი ვერ მოიძებნა','','err');return}
-  currentChatId = chat.id;
-  const cu = currentUser();
-  const other = cu?.id===chat.userId ? state.users.find(u=>u.id===chat.handymanId) : state.users.find(u=>u.id===chat.userId);
-  const req = state.requests.find(r=>r.id===chat.requestId);
-  document.getElementById('chatTitle').textContent = (other?.name||'')+ ' '+(other?.surname||'');
-  document.getElementById('chatSub').textContent = req?.title||'';
-  renderChat();
-  startChatPolling(); // ✅ start polling for new messages
-  nav('chat');
-}
+    // Get support requests for this user via a different approach
+    // Since there's no user-side GET endpoint, we create one if none
+    // Then load messages via socket
+    document.getElementById('userSupportBody').innerHTML = '';
+    document.getElementById('userSupportStatus').textContent = 'ოპერატორი მოლოდინში';
 
-function renderChat(){
-  const cu = currentUser();
-  const chat = state.chats.find(c=>c.id===currentChatId);
-  if(!chat) return;
-  const cb = document.getElementById('chatBody');
-  cb.innerHTML = chat.messages.map(m=>{
-    if(m.from==='system') return `<div style="text-align:center;font-size:11px;color:var(--t2);padding:4px 12px;background:var(--surface);border-radius:20px;align-self:center">${m.content}</div>`;
-    const isMe = m.from===cu?.id;
-    let content='';
-    if(m.type==='text') content=`<div>${sanitize(m.content)}</div>`;
-    else if(m.type==='image') content=`<img src="${m.content}" onclick="window.open(this.src)">`;
-    else if(m.type==='video') content=`<video src="${m.content}" controls></video>`;
-    else if(m.type==='voice') content=`<audio src="${m.content}" controls></audio>`;
-    return `<div class="msg ${isMe?'me':'them'}">${content}<div class="mtime">${m.time}</div></div>`;
-  }).join('');
-  cb.scrollTop=cb.scrollHeight;
-}
+    const note = document.createElement('div');
+    note.style.cssText = 'text-align:center;color:var(--t2);font-size:13px;padding:20px';
+    note.textContent = 'ჩათი გაიხსნა. ჩაწერე შეტყობინება — ოპერატორი მალე გიპასუხებს!';
+    document.getElementById('userSupportBody').appendChild(note);
 
-function sendChatMsg(){
-  const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if(!text) return;
-  addChatMessage({type:'text',content:text});
-  input.value='';
-}
-
-function chatKeydown(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChatMsg()}}
-
-function sendFile(input){
-  const file = input.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e=>{
-    const type = file.type.startsWith('video')?'video':'image';
-    addChatMessage({type,content:e.target.result});
-  };
-  reader.readAsDataURL(file);
-  input.value='';
-}
-
-function addChatMessage(msg){
-  const cu = currentUser();
-  const chat = state.chats.find(c=>c.id===currentChatId);
-  if(!chat||!cu) return;
-  chat.messages.push({id:'m'+Date.now(),from:cu.id,...msg,time:now()});
-  save();
-  renderChat();
-}
-
-let voiceBtn, recStatus;
-async function toggleVoice(){
-  if(!isRecording){
-    try{
-      const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-      audioChunks=[];
-      mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.ondataavailable=e=>audioChunks.push(e.data);
-      mediaRecorder.onstop=()=>{
-        const blob=new Blob(audioChunks,{type:'audio/webm'});
-        const url=URL.createObjectURL(blob);
-        addChatMessage({type:'voice',content:url});
-        stream.getTracks().forEach(t=>t.stop());
-      };
-      mediaRecorder.start();
-      isRecording=true;
-      document.getElementById('voiceBtn').classList.add('recording');
-      document.getElementById('recStatus').style.display='block';
-    }catch(e){toast('⚠️ მიკროფონი მიუწვდომელია','','err')}
-  } else {
-    mediaRecorder?.stop();
-    isRecording=false;
-    document.getElementById('voiceBtn').classList.remove('recording');
-    document.getElementById('recStatus').style.display='none';
+    if (sr && sr.id) {
+      currentUserSupportId = sr.id;
+      if (socket) socket.emit('joinSupport', sr.id);
+    }
+  } catch (e) {
+    document.getElementById('userSupportBody').innerHTML =
+      '<div style="text-align:center;padding:20px;color:var(--err)">შეცდომა: ' + sanitize(e.error || 'სცადე ხელახლა') + '</div>';
   }
 }
 
-// ====== DASHBOARD ======
-function renderDashboard(){
-  const cu = currentUser();
-  if(!cu){nav('home');return}
-  const body = document.getElementById('dashBody');
-  document.getElementById('dashTitle').textContent = cu.type==='user'?'ჩემი მოთხოვნები':'ჩემი დაფა';
+async function sendUserSupportMsg() {
+  const input = document.getElementById('userSupportInput');
+  const content = input?.value?.trim();
+  if (!content) return;
+  input.value = '';
 
-  if(cu.type==='user'){
-    const myReqs = state.requests.filter(r=>r.userId===cu.id);
-    const myChats = state.chats.filter(c=>c.userId===cu.id);
-    body.innerHTML = `
-      <div class="dg">
-        <div class="dc"><div class="dn">${myReqs.length}</div><div class="dl">გამოქვეყნებული მოთხოვნა</div></div>
-        <div class="dc"><div class="dn">${myReqs.reduce((a,r)=>a+r.offers.length,0)}</div><div class="dl">მიღებული შეთავაზება</div></div>
-        <div class="dc"><div class="dn">${myChats.length}</div><div class="dl">აქტიური ჩათი</div></div>
-      </div>
-      <div class="tabs">
-        <div class="tab active" onclick="switchTab('dt-reqs','dt-chats',this,document.querySelectorAll('#dashBody .tab')[1])">ჩემი მოთხოვნები</div>
-        <div class="tab" onclick="switchTab('dt-chats','dt-reqs',this,document.querySelectorAll('#dashBody .tab')[0])">ჩათები</div>
-      </div>
-      <div id="dt-reqs">
-        ${myReqs.length?myReqs.map(r=>`
-          <div class="rcard">
-            <div class="rh"><div class="rt">${r.title}</div><span class="status ${r.status==='open'?'sn':r.status==='in_progress'?'sa':'sd'}">${r.status==='open'?'ღია':r.status==='in_progress'?'მიმდინარე':'დასრულებული'}</span></div>
-            <div class="rmeta"><span class="tag">${r.category}</span><span class="tag">📍 ${r.city}</span><span class="tag">💬 ${r.offers.length} შეთავაზება</span></div>
-            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn bp bs" onclick="viewOffers('${r.id}')">შეთავაზებების ნახვა</button>
-            </div>
-          </div>`).join('')
-          :'<div class="empty"><div class="ei">📋</div><h3>მოთხოვნა ჯერ არ გაქვს</h3></div>'}
-      </div>
-      <div id="dt-chats" style="display:none">
-        ${myChats.length?myChats.map(c=>{
-          const h=state.users.find(u=>u.id===c.handymanId);
-          const req=state.requests.find(r=>r.id===c.requestId);
-          const last=c.messages[c.messages.length-1];
-          return `<div class="rcard" style="cursor:pointer" onclick="currentChatId='${c.id}';renderChat();nav('chat')">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div><div style="font-weight:700">${h?h.name+' '+h.surname:''}</div><div style="color:var(--t2);font-size:12px">${req?.title||''}</div></div>
-              <div style="font-size:11px;color:var(--t2)">${last?.time||''}</div>
-            </div>
-            ${last&&last.from!=='system'?`<div style="color:var(--t2);font-size:12px;margin-top:6px">${last.type==='text'?sanitize(last.content.substring(0,60))+'...':'[მედია]'}</div>`:''}
-          </div>`;}).join('')
-          :'<div class="empty"><div class="ei">💬</div><h3>ჩათი ჯერ არ გაქვს</h3><p>მიღე შეთავაზება — გაიხსნება ჩათი</p></div>'}
-      </div>`;
-  } else {
-    // Handyman/Company dashboard
-    const myOffers = state.offers.filter(o=>o.handymanId===cu.id);
-    const myChats = state.chats.filter(c=>c.handymanId===cu.id);
-    const earned = myOffers.filter(o=>o.status==='accepted').reduce((a,o)=>a+parseFloat(o.price||0),0);
-    const vipInfo = vipActive(cu)?`${cu.vip.type==='vipp'?'💜 VIP+':'⭐ VIP'} — ${Math.ceil((cu.vip.exp-Date.now())/86400000)} დღე დარჩა`:'არ არის';
-    body.innerHTML = `
-      <div class="dg">
-        <div class="dc"><div class="dn">${myOffers.length}</div><div class="dl">გაგზავნილი შეთავაზება</div></div>
-        <div class="dc"><div class="dn">${myOffers.filter(o=>o.status==='accepted').length}</div><div class="dl">მიღებული</div></div>
-        <div class="dc"><div class="dn">₾${earned}</div><div class="dl">ამ შეთავაზებებიდან</div></div>
-        <div class="dc"><div class="dn" style="font-size:18px">${vipInfo}</div><div class="dl">VIP სტატუსი</div></div>
-      </div>
-      <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap">
-        <button class="btn bp" onclick="showProfile('${cu.id}')">👤 ჩემი პროფილი</button>
-        <button class="btn bvip" onclick="nav('vip-info')">⭐ VIP გაახლება</button>
-        <button class="btn bg" onclick="openMo('moPortfolio');loadPortfolio()">🖼️ პორტფოლიო</button>
-      </div>
-      <div class="tabs">
-        <div class="tab active" onclick="switchTab('dt-offers','dt-hchats',this,document.querySelectorAll('#dashBody .tab')[1])">ჩემი შეთავაზებები</div>
-        <div class="tab" onclick="switchTab('dt-hchats','dt-offers',this,document.querySelectorAll('#dashBody .tab')[0])">ჩათები</div>
-      </div>
-      <div id="dt-offers">
-        ${myOffers.length?myOffers.map(o=>{
-          const req=state.requests.find(r=>r.id===o.requestId);
-          return `<div class="oi">
-            <div><div style="font-weight:700">${req?.title||'მოთხოვნა'}</div><div style="color:var(--t2);font-size:12px">${req?.city||''} · ${o.duration||''}</div></div>
-            <div style="text-align:right"><div class="oprice">₾${o.price}</div><span class="status ${o.status==='pending'?'sn':'sa'}">${o.status==='pending'?'მოლოდინში':'მიღებული'}</span>
-            ${o.status==='accepted'?`<div style="margin-top:6px"><button class="btn bp bs" onclick="openChat('${o.id}')">💬 ჩათი</button></div>`:''}
-            </div>
-          </div>`;}).join('')
-          :'<div class="empty"><div class="ei">💬</div><h3>შეთავაზება ჯერ არ გაგიგზავნია</h3></div>'}
-      </div>
-      <div id="dt-hchats" style="display:none">
-        ${myChats.length?myChats.map(c=>{
-          const u=state.users.find(x=>x.id===c.userId);
-          const req=state.requests.find(r=>r.id===c.requestId);
-          const last=c.messages[c.messages.length-1];
-          return `<div class="rcard" style="cursor:pointer" onclick="currentChatId='${c.id}';renderChat();nav('chat')">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div><div style="font-weight:700">${u?u.name+' '+u.surname:''}</div><div style="color:var(--t2);font-size:12px">${req?.title||''}</div></div>
-            </div>
-          </div>`;}).join('')
-          :'<div class="empty"><div class="ei">💬</div><h3>ჩათი ჯერ არ გაქვს</h3></div>'}
-      </div>`;
+  if (!currentUserSupportId) {
+    // Create support request first
+    try {
+      const sr = await api('/admin/support', { method: 'POST', body: { message: content } });
+      currentUserSupportId = sr.id;
+      if (socket) socket.emit('joinSupport', sr.id);
+      appendUserSupportMsg({ fromRole: 'user', content, createdAt: new Date().toISOString() });
+      document.getElementById('userSupportStatus').textContent = '🔴 ოპერატორი შეტყობინდა';
+    } catch (e) {
+      if (e.status === 409) {
+        // Extract supportId - create a dummy message via socket
+        toast('⚠️ სუპ. მოთხოვნა უკვე ღიაა', '', 'ok');
+      } else {
+        toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err');
+      }
+    }
+    return;
+  }
+
+  if (socket && socket.connected) {
+    socket.emit('sendSupportMsg', { supportId: currentUserSupportId, content });
+    appendUserSupportMsg({ fromRole: 'user', content, createdAt: new Date().toISOString() });
   }
 }
 
-function switchTab(show,hide,el,other){
-  document.getElementById(show).style.display='block';
-  document.getElementById(hide).style.display='none';
-  el.classList.add('active');other.classList.remove('active');
+function appendUserSupportMsg(msg) {
+  const body = document.getElementById('userSupportBody'); if (!body) return;
+  const isMe = msg.fromRole === 'user';
+  const div = document.createElement('div');
+  div.className = `msg ${isMe ? 'me' : 'them'}`;
+  div.innerHTML = sanitize(msg.content) + `<div class="mtime">${new Date(msg.createdAt || Date.now()).toLocaleTimeString('ka-GE', {hour:'2-digit',minute:'2-digit'})}</div>`;
+  // Remove placeholder if present
+  const placeholder = body.querySelector('div[style*="text-align:center"]');
+  if (placeholder) placeholder.remove();
+  body.appendChild(div); body.scrollTop = body.scrollHeight;
+  if (!isMe) document.getElementById('userSupportStatus').textContent = '🔴 ოპ. პასუხობს';
 }
 
-// ====== AUTH ======
-function setRegType(type){
-  regType=type;
-  ['user','handyman','company'].forEach(t=>{
-    document.getElementById('at-'+t)?.classList.toggle('sel',t===type);
-  });
-  const isH = type==='handyman'||type==='company';
-  document.getElementById('rSpecGroup').style.display=isH?'block':'none';
-  document.getElementById('rDescGroup').style.display=isH?'block':'none';
-}
-
-async function doLogin(){
-  const email=document.getElementById('liEmail').value.trim();
-  const passRaw=document.getElementById('liPass').value;
-  const passHash=await hashPass(passRaw);
-  const user=state.users.find(u=>u.email===email&&u.pass===passHash);
-  if(!user){toast('⚠️ ელ-ფოსტა ან პაროლი არასწორია','','err');return}
-  if(user.blocked){toast('🚫 ეს ანგარიში დაბლოკილია','ადმინისტრატორთან დასაკავშირებლად მოგვწერე','err');return}
-  state.currentUserId=user.id;save();closeMo('moLogin');
-  renderNav();toast('✅ კეთილი იყოს!',`${user.name}, შენ შეხვედი სისტემაში`,'ok');
-  if(user.type==='admin') nav('admin');
-  else if(user.type==='staff') nav('admin');
-  else nav('dashboard');
-}
-
-async function doRegister(){
-  const name=document.getElementById('rName').value.trim();
-  const surname=document.getElementById('rSurname').value.trim();
-  const email=document.getElementById('rEmail').value.trim();
-  const pass=document.getElementById('rPass').value;
-  const pass2=document.getElementById('rPass2').value;
-  if(!name||!email||!pass){toast('⚠️ შეავსე ყველა სავალდებულო ველი','','err');return}
-  if(pass.length<8){toast('⚠️ პაროლი მინიმუმ 8 სიმბოლო უნდა იყოს','','err');return}
-  if(pass!==pass2){toast('⚠️ პაროლები არ ემთხვევა','','err');return}
-  if(!/[A-Za-z]/.test(pass)&&!/[0-9]/.test(pass)){toast('⚠️ პაროლი უნდა შეიცავდეს ასოსა და ციფრს','','err');return}
-  if(state.users.find(u=>u.email===email)){toast('⚠️ ეს ელ-ფოსტა უკვე გამოყენებულია','','err');return}
-  const phone=document.getElementById('rPhone').value.trim();
-  if(phone && state.users.find(u=>u.phone===phone)){toast('⚠️ ეს ტელეფონის ნომერი უკვე გამოყენებულია','','err');return}
-  if(regType!=='user'&&!document.getElementById('rSpec').value){toast('⚠️ სპეციალობა აირჩიე','','err');return}
-  // Hash password before storing
-  const passHash = await hashPass(pass);
-  // Store pending user & send verification
-  pendingRegUser={
-    id:'u'+Date.now(),name,surname,type:regType,email,pass:passHash,
-    phone:phone,
-    emailVerified:false,
-    ...(regType!=='user'?{
-      specialty:document.getElementById('rSpec').value,
-      desc:document.getElementById('rDesc').value,
-      emoji:regType==='company'?'🏢':'🔨',color:'#22222f',
-      verified:false,jobs:0,vip:{type:'none'},
-      services:[]
-    }:{})
-  };
-  closeMo('moRegister');
-  sendVerificationCode(email, name);
-  openMo('moVerify');
-}
-
-async function sendVerificationCode(email, name=''){
-  verifyCode = String(Math.floor(100000+Math.random()*900000));
-  document.getElementById('verifySubText').textContent=`კოდი გამოგზავნილია ${email}-ზე`;
-  ['vc1','vc2','vc3','vc4','vc5','vc6'].forEach(id=>{document.getElementById(id).value='';});
-  setTimeout(()=>document.getElementById('vc1')?.focus(),300);
-  // Try SendGrid; fallback to demo toast
-  const sent = await sendEmail(
-    email,
-    'ხელოსანი.ge — ვერიფიკაციის კოდი',
-    emailVerifyTemplate(name||email, verifyCode)
-  );
-  if(!sent){
-    // Demo fallback — show code in toast
-    toast('📧 ვერიფიკაციის კოდი',`კოდი: ${verifyCode}  (SendGrid კონფ. არ არის)`,'ok');
-  } else {
-    toast('📧 ელ-ფოსტა გაიგზავნა',`კოდი გაიგზავნა ${email}-ზე`,'ok');
-  }
-}
-
-function resendCode(){
-  if(!pendingRegUser) return;
-  sendVerificationCode(pendingRegUser.email);
-  toast('📧 კოდი ხელახლა გაიგზავნა','','ok');
-}
-
-function vcNext(el, nextId){
-  el.value=el.value.replace(/[^0-9]/g,'');
-  if(el.value&&nextId) document.getElementById(nextId)?.focus();
-  // Auto confirm when all filled
-  const code=['vc1','vc2','vc3','vc4','vc5','vc6'].map(id=>document.getElementById(id)?.value||'').join('');
-  if(code.length===6) setTimeout(confirmVerify,200);
-}
-
-function vcBack(e, el, prevId){
-  if(e.key==='Backspace'&&!el.value&&prevId) document.getElementById(prevId)?.focus();
-}
-
-function confirmVerify(){
-  const entered=['vc1','vc2','vc3','vc4','vc5','vc6'].map(id=>document.getElementById(id)?.value||'').join('');
-  if(entered.length<6){toast('⚠️ 6-ნიშნა კოდი შეიყვანე','','err');return}
-  if(entered!==verifyCode){toast('⚠️ კოდი არასწორია','სცადე კვლავ','err');return}
-  if(!pendingRegUser){toast('⚠️ შეცდომა, სცადე ხელახლა','','err');return}
-  pendingRegUser.emailVerified=true;
-  state.users.push(pendingRegUser);
-  state.currentUserId=pendingRegUser.id;
-  save();
-  closeMo('moVerify');
-  renderNav();
-  toast('🎉 რეგისტრაცია დასრულდა!','ელ-ფოსტა დადასტურებულია ✓','ok');
-  nav('dashboard');
-  pendingRegUser=null;verifyCode=null;
-}
-
-function doLogout(){
-  state.currentUserId=null;
-  currentProfileId=null; // ✅ FIX: reset on logout
-  currentChatId=null;
-  stopChatPolling();
-  save();renderNav();nav('home');
-  toast('👋 გამოსვლა','','ok');
-}
-
-// ====== REQUESTS ======
-function toggleOtherCat(){
-  const val = document.getElementById('qCat').value;
-  document.getElementById('qCatOtherGroup').style.display = val==='სხვა'?'block':'none';
-  // Show which main category was selected
-  if(val && val!=='სხვა'){
-    const group = CATS_DATA.find(g=>g.subs.includes(val));
-    const hint = document.querySelector('#qCat + div');
-    if(hint && group) hint.textContent = group.icon+' '+group.name.replace(/^[^ ]+ /,'').trim()+' → '+val;
-    else if(hint) hint.textContent='';
-  }
-}
-
-let reqMediaFiles = [];
-function addReqMedia(input){
-  Array.from(input.files).forEach(f=>{
-    const reader=new FileReader();
-    reader.onload=e=>{
-      reqMediaFiles.push({url:e.target.result,type:f.type.startsWith('video')?'video':'image'});
-      renderReqMediaGrid();
-    };
-    reader.readAsDataURL(f);
-  });
-  input.value='';
-}
-
-function renderReqMediaGrid(){
-  const el=document.getElementById('reqMediaGrid');
-  if(!el) return;
-  el.innerHTML=reqMediaFiles.map((m,i)=>`
-    <div class="req-media-item">
-      ${m.type==='video'?`<video src="${m.url}" style="width:100%;height:100%;object-fit:cover"></video>`:`<img src="${m.url}">`}
-      <button class="req-media-del" onclick="reqMediaFiles.splice(${i},1);renderReqMediaGrid()">✕</button>
-    </div>`).join('');
-}
-
-function submitRequest(){
-  const cu=currentUser();
-  if(!cu){openMo('moLogin');return}
-  if(cu.type!=='user'){toast('⚠️ მხოლოდ მომხმარებელს შეუძლია მოთხოვნის შექმნა','','err');return}
-  const title=document.getElementById('qTitle').value.trim();
-  if(!title){toast('⚠️ სათაური შეიყვანე','','err');return}
-  let cat=document.getElementById('qCat').value;
-  if(!cat){toast('⚠️ კატეგორია აირჩიე','','err');return}
-  if(cat==='სხვა'){
-    const other=document.getElementById('qCatOther').value.trim();
-    if(other) cat='სხვა — '+other;
-  }
-  const req={
-    id:'r'+Date.now(),userId:cu.id,title,category:cat,
-    desc:document.getElementById('qDesc').value,
-    city:document.getElementById('qCity').value||'თბილისი',
-    budget:document.getElementById('qBudget').value,
-    urgency:document.getElementById('qUrg').value,
-    status:'open',time:'ახლახანს',offers:[],
-    media:[...reqMediaFiles]
-  };
-  state.requests.unshift(req);save();closeMo('moRequest');
-  reqMediaFiles=[];renderReqMediaGrid();
-  // Reset form
-  ['qTitle','qDesc','qCity','qBudget','qCatOther'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('qCat').value='';
-  document.getElementById('qCatOtherGroup').style.display='none';
-  toast('📋 მოთხოვნა გამოქვეყნდა!','ხელოსნები მალე გეწერებიან','ok');
-  renderRequestsPage();
-}
-
-// ====== REVIEW ======
-function openReviewModal(hid){
-  currentReviewHandymanId=hid;currentStars=0;setStar(0);
-  const h=state.users.find(u=>u.id===hid);
-  document.getElementById('reviewHandymanName').textContent=h?h.name+' '+h.surname:'';
-  document.getElementById('revText').value='';
-  openMo('moReview');
-}
-
-function setStar(n){
-  currentStars=n;
-  document.querySelectorAll('#starInp span').forEach((s,i)=>{
-    s.classList.toggle('lit',i<n);
-  });
-}
-
-function submitReview(){
-  const cu=currentUser();
-  if(!cu||!currentReviewHandymanId){return}
-  if(currentStars===0){toast('⚠️ ვარსკვლავი აირჩიე','','err');return}
-  // Check permission
-  const canReview=state.offers.some(o=>o.handymanId===currentReviewHandymanId&&o.status==='accepted'&&state.requests.find(r=>r.id===o.requestId&&r.userId===cu.id));
-  if(!canReview){toast('⚠️ მხოლოდ შეთავაზების მიღების შემდეგ','','err');return}
-  // Check if already reviewed
-  if(state.reviews.find(r=>r.reviewerId===cu.id&&r.handymanId===currentReviewHandymanId)){
-    toast('⚠️ შეფასება უკვე დატოვებული გაქვს','','err');return;
-  }
-  state.reviews.push({id:'rv'+Date.now(),reviewerId:cu.id,handymanId:currentReviewHandymanId,stars:currentStars,comment:document.getElementById('revText').value,date:'ახლახანს'});
-  save();closeMo('moReview');
-  toast('⭐ შეფასება გამოქვეყნდა!','','ok');
-  if(currentProfileId===currentReviewHandymanId) showProfile(currentProfileId);
-}
-
-// ====== VIP ======
-// ✅ FIX: selectVipDay is GLOBAL so onclick="" can find it
-function selectVipDay(days){
-  currentVipDays = days;
-  document.querySelectorAll('.vopt').forEach((v,i)=>{
-    v.style.borderColor = i===(days===1?0:1) ? 'var(--accent)' : 'var(--border)';
-    v.style.transform   = i===(days===1?0:1) ? 'scale(1.03)' : 'scale(1)';
-  });
-  const pr = currentVipType==='vipp' ? (days===1?4:18) : (days===1?2:10);
-  const priceEl = document.getElementById('vipTotalPrice');
-  const descEl  = document.getElementById('vipTotalDesc');
-  if(priceEl) priceEl.textContent = '₾'+pr;
-  if(descEl)  descEl.textContent  = days+' დღე · '+(currentVipType==='vipp'?'VIP+':'VIP');
-}
-
-function openVipModal(type){
-  const cu=currentUser();
-  if(!cu){openMo('moLogin');return}
-  if(cu.type==='user'){toast('⚠️ VIP მხოლოდ ხელოსნებისთვისაა','','err');return}
-  currentVipType = type;
-  currentVipDays = 1;
-  const isPlus   = type==='vipp';
-  const price1   = isPlus ? 4  : 2;
-  const price5   = isPlus ? 18 : 10;
-  const color    = isPlus ? 'var(--vipp)' : 'var(--vip)';
-
+// ========================================================
+// VIP PAYMENT — with company pricing
+// ========================================================
+function openVipModal(type) {
+  const cu = currentUser;
+  if (!cu) { openMo('moLogin'); return; }
+  if (cu.type === 'user') { toast('⚠️ VIP მხოლოდ ხელოსნებისთვისაა', '', 'err'); return; }
+  currentVipType = type; currentVipDays = 1;
+  const isPlus = type === 'vipp';
+  const isCompany = cu.type === 'company';
+  // Company pricing
+  const price1 = isCompany ? (isPlus ? 15 : 10) : (isPlus ? 4 : 2);
+  const price5 = isCompany ? (isPlus ? 60 : 40) : (isPlus ? 18 : 10);
+  const color = isPlus ? 'var(--vipp)' : 'var(--vip)';
   document.getElementById('vipModalTitle').textContent = isPlus ? '💜 VIP+ გაახლება' : '⭐ VIP გაახლება';
-  document.getElementById('vipModalSub').textContent   = isPlus ? 'ყოველთვის VIP-ზე მაღლა' : 'სიის სათავეში ჩვენება';
-
+  document.getElementById('vipModalSub').textContent = isCompany
+    ? (isPlus ? 'კომპ.: ყოველთვის VIP-ზე მაღლა' : 'კომპ.: სიის სათავეში')
+    : (isPlus ? 'ყოველთვის VIP-ზე მაღლა' : 'სიის სათავეში ჩვენება');
   document.getElementById('vipDayOptions').innerHTML = `
     <div onclick="selectVipDay(1)" class="vopt" style="flex:1;background:var(--s2);border:2px solid var(--accent);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:.2s;transform:scale(1.03)">
       <div style="font-size:22px;font-weight:900;color:${color}">₾${price1}</div>
@@ -2005,799 +2185,403 @@ function openVipModal(type){
     </div>
     <div onclick="selectVipDay(5)" class="vopt" style="flex:1;background:var(--s2);border:2px solid var(--border);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:.2s">
       <div style="font-size:22px;font-weight:900;color:${color}">₾${price5}</div>
-      <div style="font-size:12px;color:var(--t2);margin-top:4px">5 დღე <span style="background:rgba(46,204,113,.15);color:var(--ok);font-size:10px;padding:1px 5px;border-radius:4px;margin-left:3px">დაზოგე</span></div>
+      <div style="font-size:12px;color:var(--t2);margin-top:4px">5 დღე</div>
     </div>`;
-
-  // Init price display correctly for VIP vs VIP+
-  const priceEl = document.getElementById('vipTotalPrice');
-  const descEl  = document.getElementById('vipTotalDesc');
-  if(priceEl) priceEl.textContent = '₾'+price1;
-  if(descEl)  descEl.textContent  = '1 დღე · '+(isPlus?'VIP+':'VIP');
-
+  document.getElementById('vipTotalPrice').textContent = '₾' + price1;
+  document.getElementById('vipTotalDesc').textContent = '1 დღე · ' + (isPlus ? 'VIP+' : 'VIP');
   openMo('moVip');
 }
 
-// TBC Pay integration
-async function initTBCPayment(){
-  const cu=currentUser();
-  if(!cu) return;
-  const days=currentVipDays;
-  const price=currentVipType==='vipp'?(days===1?4:18):(days===1?2:10);
-  const label=currentVipType==='vipp'?'VIP+':'VIP';
+function selectVipDay(days) {
+  currentVipDays = days;
+  const cu = currentUser;
+  const isCompany = cu?.type === 'company';
+  const isPlus = currentVipType === 'vipp';
+  const pr = isCompany ? (isPlus ? (days === 1 ? 15 : 60) : (days === 1 ? 10 : 40))
+                       : (isPlus ? (days === 1 ? 4 : 18) : (days === 1 ? 2 : 10));
+  document.querySelectorAll('.vopt').forEach((v, i) => {
+    v.style.borderColor = i === (days === 1 ? 0 : 1) ? 'var(--accent)' : 'var(--border)';
+    v.style.transform = i === (days === 1 ? 0 : 1) ? 'scale(1.03)' : 'scale(1)';
+  });
+  document.getElementById('vipTotalPrice').textContent = '₾' + pr;
+  document.getElementById('vipTotalDesc').textContent = days + ' დღე · ' + (isPlus ? 'VIP+' : 'VIP');
+}
 
-  // Update button state
-  const btn=document.getElementById('vipPayBtn');
-  if(btn){btn.disabled=true;btn.innerHTML='⏳ მიმდინარეობს...';}
-
-  if(!CONFIG.TBC_PAY_CLIENT_ID || CONFIG.TBC_PAY_CLIENT_ID.startsWith('YOUR_')){
-    // DEMO mode — simulate successful payment
-    toast('🔄 TBC Pay [DEMO]','გადახდა სიმულირდება...','ok');
-    setTimeout(()=>{
-      confirmVipAfterPayment();
-      if(btn){btn.disabled=false;btn.innerHTML='💳 გადახდა TBC Pay-ით';}
-    }, 1500);
-    return;
-  }
-
-  // PRODUCTION: call your backend to create TBC Pay order
-  try{
-    // POST /api/tbc-create-order { amount: price*100, currency:'GEL', description: `VIP ${days}d` }
-    // Returns: { paymentId, redirectUrl }
-    const resp = await fetch('/api/tbc-create-order', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        amount: price * 100, // TBC uses tetri (cents)
-        currency: 'GEL',
-        description: `ხელოსანი.ge ${label} — ${days} დღე`,
-        userId: cu.id,
-        vipType: currentVipType,
-        vipDays: days,
-        returnUrl: CONFIG.SITE_URL+'/payment-success',
-        cancelUrl: CONFIG.SITE_URL+'/payment-cancel',
-      })
-    });
-    const data = await resp.json();
-    if(data.redirectUrl){
-      window.location.href = data.redirectUrl;
-    } else {
-      throw new Error(data.error || 'TBC Pay error');
-    }
-  }catch(e){
-    toast('⚠️ გადახდის შეცდომა', e.message, 'err');
-    if(btn){btn.disabled=false;btn.innerHTML='💳 გადახდა TBC Pay-ით';}
+async function initTBCPayment() {
+  const btn = document.getElementById('vipPayBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '⏳ მიმდინარეობს...'; }
+  try {
+    const data = await api('/payment/create-order', { method: 'POST', body: { vipType: currentVipType, days: currentVipDays } });
+    if (data.redirectUrl) window.location.href = data.redirectUrl;
+    else throw new Error('redirect URL missing');
+  } catch (e) {
+    toast('⚠️ გადახდის შეცდომა', e.error || e.message || '', 'err');
+    if (btn) { btn.disabled = false; btn.innerHTML = '💳 გადახდა TBC Pay-ით'; }
   }
 }
 
-// Called after successful TBC Pay callback (or demo)
-function confirmVipAfterPayment(){
-  const cu=currentUser();
-  if(!cu) return;
-  const days=currentVipDays;
-  const price=currentVipType==='vipp'?(days===1?4:18):(days===1?2:10);
-  const user=state.users.find(u=>u.id===cu.id);
-  user.vip={type:currentVipType,at:Date.now(),exp:Date.now()+86400000*days};
-  // ✅ Record VIP payment for analytics
-  if(!state.vipPayments) state.vipPayments=[];
-  state.vipPayments.push({
-    id:'vp'+Date.now(), userId:cu.id,
-    vipType:currentVipType, days, price,
-    paidAt:Date.now()
-  });
-  save();closeMo('moVip');
-  toast(`${currentVipType==='vipp'?'💜 VIP+':'⭐ VIP'} ჩართულია!`,`${days} დღე — ₾${price}. ახლა პირველი ხარ!`,'ok');
-  renderHandymen();
-  renderDashboard();
-}
+function buyVip(type, days) { openVipModal(type); setTimeout(() => selectVipDay(days), 100); }
 
-// Legacy alias (kept for any direct calls)
-function confirmVip(){ confirmVipAfterPayment(); }
-
-// ====== PORTFOLIO ======
-function loadPortfolio(){
-  const cu=currentUser();
-  if(!cu) return;
-  portFiles=[...(cu.portfolio||[])];
-  renderPortGrid();
-}
-
-function addPortfolioFiles(input){
-  const files=Array.from(input.files);
-  files.forEach(f=>{
-    const reader=new FileReader();
-    reader.onload=e=>{
-      portFiles.push({url:e.target.result,type:f.type.startsWith('video')?'video':'image'});
-      renderPortGrid();
-    };
-    reader.readAsDataURL(f);
-  });
-  input.value='';
-}
-
-function renderPortGrid(){
-  document.getElementById('portGrid').innerHTML=portFiles.map((p,i)=>`
-    <div class="port-item">
-      ${p.type==='video'?`<video src="${p.url}" style="width:100%;height:100%;object-fit:cover"></video>`:`<img src="${p.url}">`}
-      <button class="port-del" onclick="portFiles.splice(${i},1);renderPortGrid()">✕</button>
-    </div>`).join('');
-}
-
-function savePortfolio(){
-  const cu=currentUser();
-  if(!cu) return;
-  const user=state.users.find(u=>u.id===cu.id);
-  user.portfolio=portFiles;
-  save();closeMo('moPortfolio');
-  toast('✅ პორტფოლიო შენახულია!','','ok');
-  if(currentProfileId===cu.id) showProfile(cu.id);
-}
-
-// ====== LIGHTBOX ======
-function openLightbox(type, url){
-  const lb = document.getElementById('lightbox');
-  const content = document.getElementById('lbContent');
-  content.innerHTML = type==='video'
-    ? `<video src="${url}" controls autoplay style="max-width:90vw;max-height:88vh;border-radius:12px"></video>`
-    : `<img src="${url}" style="max-width:90vw;max-height:88vh;border-radius:12px;object-fit:contain">`;
-  lb.classList.add('open');
-  document.body.style.overflow='hidden';
-}
-function closeLightbox(){
-  document.getElementById('lightbox').classList.remove('open');
-  document.getElementById('lbContent').innerHTML='';
-  document.body.style.overflow='';
-}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLightbox();document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));}});
-
-// ====== EDIT DESCRIPTION ======
-function openEditDesc(){
-  const cu=currentUser();
-  if(!cu) return;
-  // populate edit spec select
-  initCats();
-  document.getElementById('editDescText').value=cu.desc||'';
-  document.getElementById('editSpecSelect').value=cu.specialty||'';
-  document.getElementById('editServices').value=(cu.services||[]).join(', ');
-  document.getElementById('editCity').value=cu.city||'';
+// ========================================================
+// PROFILE EDIT — with avatar & multi-specialty
+// ========================================================
+function openEditDesc() {
+  const cu = currentUser; if (!cu) return;
+  avatarFile = null;
+  // Avatar preview
+  const preview = document.getElementById('avatarPreview');
+  if (preview) {
+    preview.innerHTML = cu.avatar
+      ? `<img src="${sanitize(cu.avatar)}" style="width:100%;height:100%;object-fit:cover">`
+      : (cu.emoji || '🔧');
+  }
+  document.getElementById('editDescText').value = cu.desc || '';
+  document.getElementById('editServices').value = (cu.services || []).join(', ');
+  document.getElementById('editCity').value = cu.city || '';
+  // Multi-specialty checkboxes
+  if (cu.type !== 'user') {
+    selectedEditSpecialties = cu.specialties?.length ? [...cu.specialties] : (cu.specialty ? [cu.specialty] : []);
+    buildSpecCheckboxes('editSpecCheckboxes', selectedEditSpecialties, 'onEditSpecChange');
+    document.getElementById('editSpecGroup').style.display = 'block';
+  } else {
+    document.getElementById('editSpecGroup').style.display = 'none';
+  }
   openMo('moEditDesc');
 }
 
-function saveDesc(){
-  const cu=currentUser();
-  if(!cu) return;
-  const user=state.users.find(u=>u.id===cu.id);
-  user.desc=document.getElementById('editDescText').value.trim();
-  const spec=document.getElementById('editSpecSelect').value;
-  if(spec) user.specialty=spec;
-  const svcs=document.getElementById('editServices').value.trim();
-  user.services=svcs?svcs.split(',').map(s=>s.trim()).filter(Boolean):user.services;
-  const city=document.getElementById('editCity').value.trim();
-  if(city) user.city=city;
-  save();
-  closeMo('moEditDesc');
-  toast('✅ პროფილი განახლდა!','','ok');
-  if(currentProfileId===cu.id) showProfile(cu.id);
-}
-
-// ====== DELETE PORTFOLIO ITEM FROM PROFILE ======
-function deletePortfolioItem(index){
-  const cu=currentUser();
-  if(!cu) return;
-  const user=state.users.find(u=>u.id===cu.id);
-  if(!user||!user.portfolio) return;
-  user.portfolio.splice(index,1);
-  save();
-  toast('🗑️ წაიშალა','','ok');
-  showProfile(cu.id);
-}
-
-// ====== PASSWORD STRENGTH ======
-function checkPassStrength(val){
-  const bar=document.getElementById('psBar');
-  const lbl=document.getElementById('psLabel');
-  if(!bar) return;
-  if(!val){bar.className='ps-bar';lbl.textContent='';return}
-  let score=0;
-  if(val.length>=8) score++;
-  if(val.length>=12) score++;
-  if(/[A-Z]/.test(val)) score++;
-  if(/[0-9]/.test(val)) score++;
-  if(/[^A-Za-z0-9]/.test(val)) score++;
-  if(score<=2){bar.className='ps-bar weak';lbl.textContent='სუსტი პაროლი';}
-  else if(score<=3){bar.className='ps-bar mid';lbl.textContent='საშუალო პაროლი';}
-  else{bar.className='ps-bar strong';lbl.textContent='ძლიერი პაროლი ✓';}
-}
-
-// ====== MISC ======
-function openContactModal(hid){
-  const h=state.users.find(u=>u.id===hid);
-  if(!h) return;
-  // Simple contact popup
-  toast(`📞 ${h.name}`,`${h.phone}`,'ok');
-}
-
-function doSearch(){
-  const q=document.getElementById('heroSearch').value.toLowerCase().trim();
-  if(!q){nav('handymen');return}
-  nav('handymen');
-  setTimeout(()=>{
-    const match=CATS.find(c=>c.toLowerCase().includes(q)||q.includes(c.substring(0,4).toLowerCase()));
-    const fSpec=document.getElementById('fSpec');
-    if(match&&fSpec){fSpec.value=match;renderHandymen();}
-    else if(fSpec){fSpec.value='';renderHandymen();}
-  },100);
-}
-
-function filterCat(cat){
-  nav('handymen');
-  setTimeout(()=>{
-    const el=document.getElementById('fSpec');
-    if(el){el.value=cat;delete el.dataset.mainCatId;clearActivePill();renderHandymen();}
-  },100);
-}
-
-function filterMainCatBtn(catId, btnEl){
-  const el=document.getElementById('fSpec');
-  if(el){el.value='';el.dataset.mainCatId=catId;}
-  clearActivePill();
-  if(btnEl) btnEl.classList.add('active');
-  renderHandymen();
-}
-
-function clearCatFilter(btnEl){
-  const el=document.getElementById('fSpec');
-  if(el){el.value='';delete el.dataset.mainCatId;}
-  clearActivePill();
-  if(btnEl) btnEl.classList.add('active');
-  renderHandymen();
-}
-
-function clearActivePill(){
-  document.querySelectorAll('#mainCatPills .pill').forEach(p=>p.classList.remove('active'));
-}
-
-function renderMainCatPills(){
-  const el=document.getElementById('mainCatPills');
-  if(!el) return;
-  el.innerHTML='<span class="pill active" onclick="clearCatFilter(this)" style="font-size:11px">🔍 ყველა</span>'+
-    CATS_DATA.map(g=>`<span class="pill" onclick="filterMainCatBtn('${g.id}',this)" style="font-size:11px">${g.icon} ${g.name.replace(/^[^ ]+ /,'').trim()}</span>`).join('');
-}
-
-function openMo(id){document.getElementById(id).classList.add('open')}
-function closeMo(id){document.getElementById(id).classList.remove('open')}
-document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
-
-function toast(title,msg,type='ok'){
-  const t=document.createElement('div');
-  t.className=`toast ${type}`;
-  t.innerHTML=`<div class="tt">${title}</div>${msg?`<div class="tm">${msg}</div>`:''}`;
-  document.body.appendChild(t);
-  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(20px)';t.style.transition='.3s';setTimeout(()=>t.remove(),300)},3500);
-}
-
-function now(){
-  const d=new Date();
-  return d.getHours()+':'+(d.getMinutes()<10?'0':'')+d.getMinutes();
-}
-
-// ====== FORGOT PASSWORD ======
-let forgotCode = null;
-let forgotEmail = null;
-
-async function sendForgotCode(){
-  const email = document.getElementById('forgotEmail').value.trim();
-  if(!email){toast('⚠️ ელ-ფოსტა შეიყვანე','','err');return}
-  const user = state.users.find(u=>u.email===email);
-  if(!user){toast('⚠️ ეს ელ-ფოსტა არ არის რეგისტრირებული','','err');return}
-  forgotEmail = email;
-  forgotCode = String(Math.floor(100000+Math.random()*900000));
-  document.getElementById('forgotStep2text').textContent = `კოდი გამოგზავნილია ${email}-ზე`;
-  // Send via SendGrid
-  sendEmail(email,'ხელოსანი.ge — პაროლის აღდგენა',
-    emailVerifyTemplate(user.name||email, forgotCode)
-  ).then(sent=>{
-    if(!sent) toast('📧 აღდგენის კოდი',`კოდი: ${forgotCode} (SendGrid კონფ. არ არის)`,'ok');
-    else toast('📧 ელ-ფოსტა გაიგზავნა',`კოდი გაიგზავნა ${email}-ზე`,'ok');
-  });
-  document.getElementById('forgotPart1').style.display='none';
-  document.getElementById('forgotPart2').style.display='block';
-  ['fc1','fc2','fc3','fc4','fc5','fc6'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  setTimeout(()=>document.getElementById('fc1')?.focus(),300);
-}
-
-function vcNextForgot(el){
-  el.value=el.value.replace(/[^0-9]/g,'');
-  const code=['fc1','fc2','fc3','fc4','fc5','fc6'].map(id=>document.getElementById(id)?.value||'').join('');
-  if(code.length===6) setTimeout(()=>{},200);
-}
-
-function checkPassStrength2(val){
-  const bar=document.getElementById('psBar2');
-  const lbl=document.getElementById('psLabel2');
-  if(!bar) return;
-  if(!val){bar.className='ps-bar';lbl.textContent='';return}
-  let score=0;
-  if(val.length>=8) score++;
-  if(val.length>=12) score++;
-  if(/[A-Z]/.test(val)) score++;
-  if(/[0-9]/.test(val)) score++;
-  if(/[^A-Za-z0-9]/.test(val)) score++;
-  if(score<=2){bar.className='ps-bar weak';lbl.textContent='სუსტი პაროლი';}
-  else if(score<=3){bar.className='ps-bar mid';lbl.textContent='საშუალო პაროლი';}
-  else{bar.className='ps-bar strong';lbl.textContent='ძლიერი პაროლი ✓';}
-}
-
-async function confirmForgot(){
-  const entered=['fc1','fc2','fc3','fc4','fc5','fc6'].map(id=>document.getElementById(id)?.value||'').join('');
-  if(entered.length<6){toast('⚠️ 6-ნიშნა კოდი შეიყვანე','','err');return}
-  if(entered!==forgotCode){toast('⚠️ კოდი არასწორია','','err');return}
-  const np=document.getElementById('forgotNewPass').value;
-  const np2=document.getElementById('forgotNewPass2').value;
-  if(!np||np.length<8){toast('⚠️ პაროლი მინიმუმ 8 სიმბოლო','','err');return}
-  if(np!==np2){toast('⚠️ პაროლები არ ემთხვევა','','err');return}
-  const user=state.users.find(u=>u.email===forgotEmail);
-  if(!user){toast('⚠️ შეცდომა','','err');return}
-  user.pass = await hashPass(np); // ✅ FIX: hash the new password
-  save();
-  closeMo('moForgot');
-  toast('✅ პაროლი შეიცვალა!','ახლა შეგიძლია შეხვიდე','ok');
-  document.getElementById('forgotPart1').style.display='block';
-  document.getElementById('forgotPart2').style.display='none';
-  document.getElementById('forgotEmail').value='';
-  forgotCode=null;forgotEmail=null;
-  openMo('moLogin');
-}
-
-// ====== ADMIN / STAFF ======
-let adminTab = 'accounts';
-
-function renderAdmin(){
-  const cu = currentUser();
-  if(!cu||!(cu.type==='admin'||cu.type==='staff')) return;
-  const body = document.getElementById('adminBody');
-  const isAdmin = cu.type==='admin';
-
-  // Header info
-  document.getElementById('adminWelcome').textContent = cu.type==='admin'?`🛡️ ადმინ პანელი — ${cu.name}`:`👤 სტაფ პანელი — ${cu.name}`;
-
-  // Tabs
-  const allTabs = isAdmin
-    ? ['accounts','requests','offers','support','analytics','staff']
-    : ['support','accounts','requests'];
-  const tabLabels = {accounts:'👥 ანგარიშები',requests:'📋 მოთხოვნები',offers:'💬 შეთავაზებები',support:'🎧 სუპორტი',analytics:'📊 ანალიტიკა',staff:'👨‍💼 სტაფი'};
-
-  document.getElementById('adminTabs').innerHTML = allTabs.map(t=>
-    `<div class="tab ${adminTab===t?'active':''}" onclick="adminTab='${t}';renderAdmin()">${tabLabels[t]}</div>`
-  ).join('');
-
-  // Support notifications badge
-  const pendingSupport = (state.supportRequests||[]).filter(s=>s.status==='pending').length;
-  if(pendingSupport>0){
-    document.getElementById('adminTabs').innerHTML = document.getElementById('adminTabs').innerHTML.replace('🎧 სუპორტი',`🎧 სუპორტი <span style="background:#e74c3c;color:#fff;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;margin-left:4px">${pendingSupport}</span>`);
+async function saveDesc() {
+  const cu = currentUser; if (!cu) return;
+  // 1. Upload avatar if changed
+  if (avatarFile) {
+    const fd = new FormData(); fd.append('avatar', avatarFile);
+    try {
+      const res = await api('/users/avatar', { method: 'POST', body: fd });
+      if (currentUser) currentUser.avatar = res.avatar;
+    } catch (e) { toast('⚠️ ფოტო ვერ ატვირთა', e.error || '', 'err'); }
   }
-
-  if(adminTab==='analytics') renderAdminAnalytics(body);
-  else if(adminTab==='accounts') renderAdminAccounts(body);
-  else if(adminTab==='requests') renderAdminRequests(body);
-  else if(adminTab==='offers') renderAdminOffers(body);
-  else if(adminTab==='support') renderAdminSupport(body);
-  else if(adminTab==='staff') renderAdminStaff(body, isAdmin);
+  // 2. Update profile data
+  const desc = document.getElementById('editDescText').value.trim();
+  const svcs = document.getElementById('editServices').value.trim();
+  const services = svcs ? svcs.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const city = document.getElementById('editCity').value.trim();
+  const body = { desc, services, city: city || undefined };
+  if (cu.type !== 'user' && selectedEditSpecialties.length > 0) {
+    body.specialties = selectedEditSpecialties;
+    body.specialty = selectedEditSpecialties[0];
+  }
+  try {
+    const updated = await api('/users/me', { method: 'PATCH', body });
+    currentUser = { ...currentUser, ...updated };
+    closeMo('moEditDesc');
+    renderNav();
+    toast('✅ პროფილი განახლდა!', '', 'ok');
+    if (currentProfileId === cu.id) showProfile(cu.id);
+    avatarFile = null;
+  } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
 }
 
-function renderAdminAnalytics(body){
-  const users        = state.users.filter(u=>u.type==='user').length;
-  const handymen     = state.users.filter(u=>u.type==='handyman').length;
-  const companies    = state.users.filter(u=>u.type==='company').length;
-  const staffCount   = state.users.filter(u=>u.type==='staff').length;
-  const openReqs     = state.requests.filter(r=>r.status==='open').length;
-  const totalOffers  = state.offers.length;
-  const acceptedOffers = state.offers.filter(o=>o.status==='accepted').length;
-  const totalReviews = state.reviews.length;
-  const avgRating    = totalReviews ? (state.reviews.reduce((a,r)=>a+r.stars,0)/totalReviews).toFixed(1) : '-';
-  const blockedUsers = state.users.filter(u=>u.blocked).length;
+// ========================================================
+// PORTFOLIO
+// ========================================================
+function loadPortfolio() {
+  const cu = currentUser; if (!cu) return;
+  portFiles = [...(cu.portfolio || [])]; renderPortGrid();
+}
+function addPortfolioFiles(input) {
+  portFiles = [...portFiles, ...Array.from(input.files).map(f => ({
+    _file: f, url: URL.createObjectURL(f), type: f.type.startsWith('video') ? 'video' : 'image'
+  }))];
+  input.value = ''; renderPortGrid();
+}
+function renderPortGrid() {
+  document.getElementById('portGrid').innerHTML = portFiles.map((p, i) => `
+    <div class="port-item">
+      ${p.type === 'video' ? `<video src="${p.url}" style="width:100%;height:100%;object-fit:cover"></video>` : `<img src="${p.url}">`}
+      <button class="port-del" onclick="portFiles.splice(${i},1);renderPortGrid()">✕</button>
+    </div>`).join('');
+}
+async function savePortfolio() {
+  const newFiles = portFiles.filter(p => p._file);
+  if (newFiles.length) {
+    const fd = new FormData();
+    newFiles.forEach(p => fd.append('files', p._file));
+    try {
+      const res = await api('/users/portfolio', { method: 'POST', body: fd });
+      if (currentUser) currentUser.portfolio = res.portfolio;
+      closeMo('moPortfolio');
+      toast('✅ პორტფოლიო შენახულია!', '', 'ok');
+      if (currentProfileId === currentUser.id) showProfile(currentUser.id);
+    } catch (e) { toast('⚠️ ' + (e.error || 'ატვირთვა ვერ მოხდა'), '', 'err'); }
+  } else { closeMo('moPortfolio'); toast('✅ პორტფოლიო შენახულია!', '', 'ok'); }
+}
+async function deletePortfolioItem(index) {
+  try {
+    const res = await api('/users/portfolio/' + index, { method: 'DELETE' });
+    if (currentUser) currentUser.portfolio = res.portfolio;
+    toast('🗑️ წაიშალა', '', 'ok');
+    showProfile(currentUser.id);
+  } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
+}
 
-  // ✅ FIX: VIP revenue (from actual VIP purchases, not offer prices)
-  const vipPays      = state.vipPayments||[];
-  const vipRevenue   = vipPays.reduce((a,p)=>a+parseFloat(p.price||0),0);
-  const vipCount     = vipPays.length;
-  const vipActive    = state.users.filter(u=>vipActive2(u)).length;
-  const vipPlusCount = vipPays.filter(p=>p.vipType==='vipp').length;
+// ========================================================
+// ADMIN PANEL
+// ========================================================
+function renderAdmin() {
+  const cu = currentUser;
+  if (!cu || (cu.type !== 'admin' && cu.type !== 'staff')) return;
+  const isAdmin = cu.type === 'admin';
+  document.getElementById('adminWelcome').textContent = cu.type === 'admin' ? `🛡️ ადმინ — ${cu.name}` : `👤 სტაფ — ${cu.name}`;
+  const allTabs = isAdmin ? ['accounts','requests','support','analytics','staff'] : ['support','accounts','requests'];
+  const labels = {accounts:'👥 ანგარ.',requests:'📋 მოთხ.',support:'🎧 სუპ.',analytics:'📊 ანალ.',staff:'👨‍💼 სტაფი'};
+  document.getElementById('adminTabs').innerHTML = allTabs.map(t =>
+    `<div class="tab ${adminTab === t ? 'active' : ''}" onclick="adminTab='${t}';renderAdmin()">${labels[t]}</div>`
+  ).join('');
+  const body = document.getElementById('adminBody');
+  if (adminTab === 'analytics') renderAdminAnalytics(body);
+  else if (adminTab === 'accounts') renderAdminAccounts(body);
+  else if (adminTab === 'requests') renderAdminRequests(body);
+  else if (adminTab === 'support') renderAdminSupport(body);
+  else if (adminTab === 'staff') renderAdminStaff(body, isAdmin);
+}
 
-  // VIP revenue by type
-  const vipOnlyRev  = vipPays.filter(p=>p.vipType==='vip').reduce((a,p)=>a+parseFloat(p.price||0),0);
-  const vipPlusRev  = vipPays.filter(p=>p.vipType==='vipp').reduce((a,p)=>a+parseFloat(p.price||0),0);
+async function renderAdminAnalytics(body) {
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳...</div>';
+  try {
+    const a = await api('/admin/analytics');
+    body.innerHTML = `
+      <h3 style="margin-bottom:16px">📊 ანალიტიკა</h3>
+      <div class="dg" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr));margin-bottom:16px">
+        <div class="dc"><div class="dn">${a.users}</div><div class="dl">მომხ.</div></div>
+        <div class="dc"><div class="dn">${a.handymen}</div><div class="dl">ხელოს.</div></div>
+        <div class="dc"><div class="dn">${a.companies}</div><div class="dl">კომფ.</div></div>
+        <div class="dc"><div class="dn">${a.staff}</div><div class="dl">სტაფი</div></div>
+        <div class="dc"><div class="dn" style="color:var(--err)">${a.blockedUsers}</div><div class="dl">დაბლ.</div></div>
+        <div class="dc"><div class="dn">${a.openReqs}</div><div class="dl">ღია მოთხ.</div></div>
+        <div class="dc"><div class="dn">${a.acceptedOffers}</div><div class="dl">მიღ. შეთ.</div></div>
+        <div class="dc"><div class="dn">${a.totalReviews}</div><div class="dl">შეფ.</div></div>
+        <div class="dc"><div class="dn">${a.avgRating}★</div><div class="dl">საშ. რეიტ.</div></div>
+        <div class="dc"><div class="dn">${a.supportPending}</div><div class="dl">სუპ. მოლ.</div></div>
+        <div class="dc" style="border-color:rgba(255,107,43,.4)"><div class="dn" style="color:var(--ok)">₾${(a.vipRevenueTetri/100).toFixed(2)}</div><div class="dl">VIP შემ.</div></div>
+        <div class="dc"><div class="dn">${a.vipActive}</div><div class="dl">VIP აქტ.</div></div>
+      </div>`;
+  } catch (e) { body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>'; }
+}
 
-  body.innerHTML = `
-    <h3 style="margin-bottom:16px;font-size:16px;font-weight:700">📊 საიტის ანალიტიკა</h3>
-
-    <div style="margin-bottom:8px;font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px">👥 მომხმარებლები</div>
-    <div class="dg" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-bottom:20px">
-      <div class="dc"><div class="dn">${users}</div><div class="dl">მომხმარებელი</div></div>
-      <div class="dc"><div class="dn">${handymen}</div><div class="dl">ხელოსანი</div></div>
-      <div class="dc"><div class="dn">${companies}</div><div class="dl">კომპანია</div></div>
-      <div class="dc"><div class="dn">${staffCount}</div><div class="dl">სტაფი</div></div>
-      <div class="dc"><div class="dn" style="color:var(--err)">${blockedUsers}</div><div class="dl">დაბლოკილი</div></div>
-    </div>
-
-    <div style="margin-bottom:8px;font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px">📋 გარიგებები</div>
-    <div class="dg" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-bottom:20px">
-      <div class="dc"><div class="dn">${openReqs}</div><div class="dl">ღია მოთხოვნა</div></div>
-      <div class="dc"><div class="dn">${totalOffers}</div><div class="dl">სულ შეთავაზება</div></div>
-      <div class="dc"><div class="dn">${acceptedOffers}</div><div class="dl">მიღებული შეთ.</div></div>
-      <div class="dc"><div class="dn">${totalReviews}</div><div class="dl">შეფასება</div></div>
-      <div class="dc"><div class="dn">${avgRating}★</div><div class="dl">საშ. რეიტინგი</div></div>
-      <div class="dc"><div class="dn">${(state.supportRequests||[]).length}</div><div class="dl">სუპ. მოთხოვნა</div></div>
-    </div>
-
-    <div style="margin-bottom:8px;font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px">💰 VIP შემოსავალი (რეკლამა)</div>
-    <div class="dg" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-bottom:20px">
-      <div class="dc" style="border-color:rgba(255,107,43,.4)">
-        <div class="dn" style="color:var(--ok)">₾${vipRevenue.toFixed(2)}</div>
-        <div class="dl">სულ VIP შემოსავალი</div>
-      </div>
-      <div class="dc">
-        <div class="dn" style="color:var(--vip)">₾${vipOnlyRev.toFixed(2)}</div>
-        <div class="dl">⭐ VIP შემოსავალი</div>
-      </div>
-      <div class="dc">
-        <div class="dn" style="color:var(--vipp)">₾${vipPlusRev.toFixed(2)}</div>
-        <div class="dl">💜 VIP+ შემოსავალი</div>
-      </div>
-      <div class="dc"><div class="dn">${vipCount}</div><div class="dl">VIP ყიდვა სულ</div></div>
-      <div class="dc"><div class="dn">${vipPlusCount}</div><div class="dl">VIP+ ყიდვა</div></div>
-      <div class="dc"><div class="dn">${vipActive}</div><div class="dl">აქტიური VIP ახლა</div></div>
-    </div>
-
-    ${vipPays.length>0?`
-    <div class="ic" style="margin-bottom:20px">
-      <h3 style="font-size:13px;margin-bottom:12px">💳 VIP გადახდების ისტორია</h3>
-      <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
+async function renderAdminAccounts(body) {
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳...</div>';
+  try {
+    const users = await api('/admin/users');
+    body.innerHTML = `
+      <div style="margin-bottom:12px;font-size:12px;color:var(--t2)">${users.length} ანგარიში</div>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:520px">
         <thead><tr style="border-bottom:2px solid var(--border)">
-          <th style="text-align:left;padding:8px;color:var(--t2)">ხელოსანი</th>
-          <th style="text-align:left;padding:8px;color:var(--t2)">პაკეტი</th>
-          <th style="text-align:left;padding:8px;color:var(--t2)">ვადა</th>
-          <th style="text-align:right;padding:8px;color:var(--t2)">თანხა</th>
-          <th style="text-align:left;padding:8px;color:var(--t2)">თარიღი</th>
+          <th style="text-align:left;padding:10px 8px;color:var(--t2)">სახელი</th>
+          <th style="text-align:left;padding:10px 8px;color:var(--t2)">ტიპი</th>
+          <th style="text-align:left;padding:10px 8px;color:var(--t2)">ელ-ფოსტა</th>
+          <th style="text-align:left;padding:10px 8px;color:var(--t2)">სტ.</th>
+          <th style="text-align:left;padding:10px 8px;color:var(--t2)">მოქ.</th>
         </tr></thead>
-        <tbody>
-          ${[...vipPays].reverse().slice(0,20).map(p=>{
-            const u=state.users.find(x=>x.id===p.userId);
-            const d=new Date(p.paidAt);
-            const dateStr=d.toLocaleDateString('ka-GE')+' '+d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
-            return `<tr style="border-bottom:1px solid var(--border)">
-              <td style="padding:8px">${sanitize(u?u.name+' '+u.surname:'?')}</td>
-              <td style="padding:8px"><span style="color:${p.vipType==='vipp'?'var(--vipp)':'var(--vip)'};font-weight:700">${p.vipType==='vipp'?'💜 VIP+':'⭐ VIP'}</span></td>
-              <td style="padding:8px">${p.days} დღე</td>
-              <td style="padding:8px;text-align:right;color:var(--ok);font-weight:700">₾${p.price}</td>
-              <td style="padding:8px;color:var(--t2)">${dateStr}</td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-      </div>
-    </div>`:''}
-
-    <div class="ic" style="margin-top:4px">
-      <h3 style="margin-bottom:12px;font-size:13px">📈 ანგარიშების განაწილება</h3>
-      <div style="display:flex;gap:8px;align-items:flex-end;height:90px;margin-top:8px">
-        ${[['მომხმ.',users,'#ff6b2b'],['ხელოს.',handymen,'#ffb347'],['კომფ.',companies,'#3498db'],['სტაფი',staffCount,'#9b59b6']].map(([l,v,c])=>{
-          const max=Math.max(users,handymen,companies,staffCount,1);
-          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-            <div style="font-size:11px;font-weight:700;color:${c}">${v}</div>
-            <div style="width:100%;background:${c};border-radius:4px 4px 0 0;height:${Math.max(8,v/max*70)}px;transition:.3s"></div>
-            <div style="font-size:10px;color:var(--t2)">${l}</div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
-}
-
-// helper used inside template literal above
-function vipActive2(u){
-  if(!u.vip||u.vip.type==='none') return false;
-  return u.vip.exp > Date.now();
-}
-
-function renderAdminAccounts(body){
-  const filter = document.getElementById('adminAccFilter')?.value||'all';
-  let users = state.users.filter(u=>u.type!=='admin');
-  if(filter!=='all') users=users.filter(u=>u.type===filter);
-
-  body.innerHTML = `
-    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
-      <select id="adminAccFilter" onchange="renderAdmin()" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);outline:none">
-        <option value="all">ყველა ტიპი</option>
-        <option value="user">მომხმარებელი</option>
-        <option value="handyman">ხელოსანი</option>
-        <option value="company">კომპანია</option>
-        <option value="staff">სტაფი</option>
-      </select>
-      <span style="font-size:12px;color:var(--t2)">${users.length} ანგარიში</span>
-    </div>
-    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
-    <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:580px">
-      <thead><tr style="border-bottom:2px solid var(--border)">
-        <th style="text-align:left;padding:10px 8px;color:var(--t2);font-weight:600">სახელი</th>
-        <th style="text-align:left;padding:10px 8px;color:var(--t2);font-weight:600">ტიპი</th>
-        <th style="text-align:left;padding:10px 8px;color:var(--t2);font-weight:600">ელ-ფოსტა</th>
-        <th style="text-align:left;padding:10px 8px;color:var(--t2);font-weight:600">ტელ.</th>
-        <th style="text-align:left;padding:10px 8px;color:var(--t2);font-weight:600">სტატუსი</th>
-        <th style="text-align:left;padding:10px 8px;color:var(--t2);font-weight:600">მოქმ.</th>
-      </tr></thead>
-      <tbody>
-        ${users.map(u=>`
-        <tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="openAdminUserDetail('${u.id}')" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background=''">
-          <td style="padding:10px 8px"><div style="font-weight:600">${u.name} ${u.surname}</div>${u.specialty?`<div style="font-size:11px;color:var(--accent)">${u.specialty}</div>`:''}</td>
-          <td style="padding:10px 8px"><span class="badge ${u.type==='user'?'bt':u.type==='handyman'?'bv':''}" style="${u.type==='company'?'background:rgba(52,152,219,.12);color:#3498db':u.type==='staff'?'background:rgba(155,89,182,.12);color:#9b59b6':''}">${u.type==='user'?'მომხ.':u.type==='handyman'?'ხელოს.':u.type==='company'?'კომფ.':'სტაფი'}</span></td>
-          <td style="padding:10px 8px;color:var(--t2);font-size:12px">${u.email}</td>
-          <td style="padding:10px 8px;color:var(--t2);font-size:12px">${u.phone||'—'}</td>
-          <td style="padding:10px 8px">${u.blocked?'<span class="status" style="background:rgba(231,76,60,.15);color:#e74c3c">🚫 დაბლ.</span>':'<span class="status sa">✓ აქტ.</span>'}</td>
-          <td style="padding:10px 8px" onclick="event.stopPropagation()">
-            <button class="btn bs ${u.blocked?'bok':'berr'}" onclick="toggleBlock('${u.id}')">${u.blocked?'განბლ.':'დაბლ.'}</button>
-            <button class="btn bs" style="background:var(--err);color:#fff;margin-left:4px" onclick="deleteUser('${u.id}')">წაშ.</button>
+        <tbody>${users.map(u => `<tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="openAdminUserDetail('${u.id}')">
+          <td style="padding:10px 8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              ${u.avatar ? `<img src="${sanitize(u.avatar)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover">` : `<span>${u.emoji || '👤'}</span>`}
+              <div><div style="font-weight:600">${sanitize(u.name)} ${sanitize(u.surname || '')}</div>${u.specialty ? `<div style="font-size:11px;color:var(--accent)">${sanitize(u.specialty)}</div>` : ''}</div>
+            </div>
           </td>
-        </tr>`).join('')}
-      </tbody>
-    </table>
-    </div>`;
+          <td style="padding:10px 8px;font-size:11px;font-weight:700">${u.type}</td>
+          <td style="padding:10px 8px;color:var(--t2);font-size:12px">${sanitize(u.email)}</td>
+          <td style="padding:10px 8px">${u.blocked ? '🚫' : '<span style="color:var(--ok)">✓</span>'}</td>
+          <td style="padding:10px 8px" onclick="event.stopPropagation()">
+            <button class="btn bs ${u.blocked ? 'bok' : 'berr'}" onclick="toggleBlock('${u.id}')">${u.blocked ? 'განბ.' : 'დაბ.'}</button>
+            <button class="btn bs berr" style="margin-left:4px" onclick="deleteUser('${u.id}')">წაშ.</button>
+          </td>
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+  } catch (e) { body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>'; }
 }
 
-function renderAdminRequests(body){
-  body.innerHTML = `
-    <h3 style="margin-bottom:14px;font-size:15px;font-weight:700">📋 ყველა მოთხოვნა (${state.requests.length})</h3>
-    ${state.requests.length?state.requests.map(r=>{
-      const owner=state.users.find(u=>u.id===r.userId);
-      return `<div class="rcard">
-        <div class="rh"><div class="rt">${r.title}</div><span class="status ${r.status==='open'?'sn':'sa'}">${r.status==='open'?'ღია':'მიმდ.'}</span></div>
-        <div style="color:var(--t2);font-size:12px;margin-top:4px">${r.desc}</div>
-        <div class="rmeta">
-          <span class="tag">${r.category}</span><span class="tag">📍 ${r.city}</span>
-          ${r.budget?`<span class="tag">💰 ${r.budget}₾</span>`:''}
-          <span class="tag">👤 ${owner?owner.name+' '+owner.surname:'?'}</span>
-          <span class="tag">💬 ${r.offers.length} შეთავ.</span>
-        </div>
-        <div style="margin-top:10px">
-          <button class="btn bs berr" onclick="deleteRequest('${r.id}')">🗑️ წაშლა</button>
-        </div>
-      </div>`;
-    }).join(''):'<div class="empty"><div class="ei">📋</div><h3>მოთხოვნები არ არის</h3></div>'}`;
+async function renderAdminRequests(body) {
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳...</div>';
+  try {
+    const requests = await api('/admin/requests');
+    body.innerHTML = `<h3 style="margin-bottom:14px">📋 ყველა მოთხოვნა (${requests.length})</h3>` +
+      (requests.length ? requests.map(r => `<div class="rcard">
+        <div class="rh"><div class="rt">${sanitize(r.title)}</div><span class="status ${r.status === 'open' ? 'sn' : 'sa'}">${r.status === 'open' ? 'ღია' : 'მიმდ.'}</span></div>
+        <div class="rmeta"><span class="tag">${sanitize(r.category || '')}</span><span class="tag">📍 ${sanitize(r.city || '')}</span><span class="tag">💬 ${r._count?.offers || 0}</span></div>
+        <div style="margin-top:8px"><button class="btn bs berr" onclick="adminDeleteRequest('${r.id}')">🗑️ წაშლა</button></div>
+      </div>`).join('') : '<div class="empty"><div class="ei">📋</div><h3>მოთხ. არ არის</h3></div>');
+  } catch (e) { body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>'; }
 }
 
-function renderAdminOffers(body){
-  body.innerHTML = `
-    <h3 style="margin-bottom:14px;font-size:15px;font-weight:700">💬 ყველა შეთავაზება (${state.offers.length})</h3>
-    ${state.offers.length?state.offers.map(o=>{
-      const h=state.users.find(u=>u.id===o.handymanId);
-      const req=state.requests.find(r=>r.id===o.requestId);
-      return `<div class="oi">
-        <div>
-          <div style="font-weight:700">${req?.title||'მოთხოვნა'}</div>
-          <div style="color:var(--t2);font-size:12px">👤 ${h?h.name+' '+h.surname:'?'} · ${o.duration||''}</div>
-          <div style="font-size:12px;color:var(--t2);margin-top:4px">${o.comment||''}</div>
-        </div>
-        <div style="text-align:right">
-          <div class="oprice">₾${o.price}</div>
-          <span class="status ${o.status==='pending'?'sn':'sa'}">${o.status==='pending'?'მოლოდ.':'მიღ.'}</span>
-        </div>
-      </div>`;
-    }).join(''):'<div class="empty"><div class="ei">💬</div><h3>შეთავაზება არ არის</h3></div>'}`;
-}
-
-function renderAdminSupport(body){
-  const reqs = state.supportRequests||[];
-  body.innerHTML = `
-    <h3 style="margin-bottom:14px;font-size:15px;font-weight:700">🎧 სუპორტის მოთხოვნები (${reqs.length})</h3>
-    ${reqs.length?reqs.map(sr=>{
-      const user=state.users.find(u=>u.id===sr.userId);
-      return `<div class="rcard" style="cursor:pointer" onclick="openSupportChat('${sr.id}')">
+async function renderAdminSupport(body) {
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳...</div>';
+  try {
+    const reqs = await api('/admin/support');
+    body.innerHTML = `<h3 style="margin-bottom:14px">🎧 სუპ. მოთხოვნები (${reqs.length})</h3>` +
+      (reqs.length ? reqs.map(sr => `<div class="rcard" style="cursor:pointer" onclick="openSupportChat('${sr.id}')">
         <div class="rh">
           <div>
-            <div class="rt">👤 ${user?user.name+' '+user.surname:'მომხ.'} — ${user?.type==='user'?'მომხმარებელი':user?.type==='handyman'?'ხელოსანი':'კომპანია'}</div>
-            <div style="color:var(--t2);font-size:12px;margin-top:4px">${sr.lastMsg||'დაკავშირება ითხოვს'}</div>
+            <div class="rt">👤 ${sanitize(sr.user?.name || 'მომხ.')} ${sanitize(sr.user?.surname || '')} — ${sr.user?.type || ''}</div>
+            <div style="color:var(--t2);font-size:12px;margin-top:4px">${sanitize(sr.lastMsg || '')}</div>
           </div>
-          <span class="status ${sr.status==='pending'?'sn':sr.status==='active'?'sa':'sd'}">${sr.status==='pending'?'⏳ მოლ.':sr.status==='active'?'🔴 ცოც.':'✓ დახ.'}</span>
+          <span class="status ${sr.status === 'pending' ? 'sn' : sr.status === 'active' ? 'sa' : 'sd'}">${sr.status === 'pending' ? '⏳ მოლ.' : sr.status === 'active' ? '🔴 ცოც.' : '✓ დახ.'}</span>
         </div>
-        <div style="font-size:11px;color:var(--t2);margin-top:6px">${new Date(sr.createdAt).toLocaleString('ka-GE')}</div>
-        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap" onclick="event.stopPropagation()">
+        <div style="margin-top:8px;display:flex;gap:8px" onclick="event.stopPropagation()">
           <button class="btn bp bs" onclick="openSupportChat('${sr.id}')">💬 ჩატი</button>
-          <button class="btn bs berr" onclick="closeSupportRequest('${sr.id}')">✓ დახურვა</button>
+          <button class="btn bs berr" onclick="closeSupportRequest('${sr.id}')">✓ დახ.</button>
         </div>
-      </div>`;
-    }).join(''):'<div class="empty"><div class="ei">🎧</div><h3>სუპორტის მოთხოვნა არ არის</h3><p>როდესაც მომხმარებელი ოპერატორს ითხოვს, აქ გამოჩნდება</p></div>'}`;
+      </div>`).join('') : '<div class="empty"><div class="ei">🎧</div><h3>სუპ. მოთხ. არ არის</h3></div>');
+  } catch (e) { body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>'; }
 }
 
-function renderAdminStaff(body, isAdmin){
-  const staffList = state.users.filter(u=>u.type==='staff');
-  body.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-      <h3 style="font-size:15px;font-weight:700">👨‍💼 სტაფის ანგარიშები (${staffList.length})</h3>
-      ${isAdmin?`<button class="btn bp" onclick="openMo('moCreateStaff')">+ სტაფის შექმნა</button>`:''}
-    </div>
-    ${staffList.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
-      <thead><tr style="border-bottom:2px solid var(--border)">
-        <th style="text-align:left;padding:10px 8px;color:var(--t2)">სახელი</th>
-        <th style="text-align:left;padding:10px 8px;color:var(--t2)">ელ-ფოსტა</th>
-        <th style="text-align:left;padding:10px 8px;color:var(--t2)">ტელ.</th>
-        <th style="text-align:left;padding:10px 8px;color:var(--t2)">სტ.</th>
-        ${isAdmin?'<th style="text-align:left;padding:10px 8px;color:var(--t2)">მოქ.</th>':''}
-      </tr></thead>
-      <tbody>
-        ${staffList.map(s=>`<tr style="border-bottom:1px solid var(--border)">
-          <td style="padding:10px 8px"><div style="font-weight:600">${s.name} ${s.surname}</div></td>
-          <td style="padding:10px 8px;color:var(--t2);font-size:12px">${s.email}</td>
-          <td style="padding:10px 8px;color:var(--t2);font-size:12px">${s.phone||'—'}</td>
-          <td style="padding:10px 8px">${s.blocked?'<span style="color:#e74c3c;font-size:11px">🚫</span>':'<span style="color:var(--ok);font-size:11px">✓</span>'}</td>
-          ${isAdmin?`<td style="padding:10px 8px"><button class="btn bs ${s.blocked?'bok':'berr'}" onclick="toggleBlock('${s.id}');renderAdmin()">${s.blocked?'განბლ.':'დაბლ.'}</button> <button class="btn bs berr" onclick="deleteUser('${s.id}')">წაშ.</button></td>`:''}
-        </tr>`).join('')}
-      </tbody>
-    </table></div>`:
-    '<div class="empty"><div class="ei">👨‍💼</div><h3>სტაფი ჯერ არ არის</h3></div>'}`;
-}
-
-// Admin user detail modal
-function openAdminUserDetail(uid){
-  const u = state.users.find(x=>x.id===uid);
-  if(!u) return;
-  const myReqs = state.requests.filter(r=>r.userId===uid);
-  const myOffers = state.offers.filter(o=>o.handymanId===uid);
-  const myRevs = state.reviews.filter(r=>r.handymanId===uid||r.reviewerId===uid);
-  const cu = currentUser();
-  const canEdit = cu&&cu.type==='admin';
-
-  document.getElementById('adminUserDetailBody').innerHTML = `
-    <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap">
-      <div class="av" style="width:64px;height:64px;font-size:24px;background:${u.color||'var(--surface)'};color:var(--accent)">${u.emoji||'👤'}</div>
-      <div>
-        <div style="font-size:20px;font-weight:800">${u.name} ${u.surname}</div>
-        <div style="color:var(--accent);font-size:13px">${u.type==='user'?'მომხმარებელი':u.type==='handyman'?'ხელოსანი':u.type==='company'?'კომპანია':'სტაფი'} ${u.specialty?'· '+u.specialty:''}</div>
-        <div style="color:var(--t2);font-size:12px;margin-top:6px">📧 ${u.email} · 📞 ${u.phone||'—'} · 📍 ${u.city||'—'}</div>
-        ${u.blocked?'<div style="color:#e74c3c;font-size:12px;margin-top:4px">🚫 ანგარიში დაბლოკილია</div>':''}
+async function renderAdminStaff(body, isAdmin) {
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳...</div>';
+  try {
+    const users = await api('/admin/users?type=staff');
+    body.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <h3>👨‍💼 სტაფი (${users.length})</h3>
+        ${isAdmin ? `<button class="btn bp" onclick="openMo('moCreateStaff')">+ სტაფი</button>` : ''}
       </div>
-    </div>
-    ${u.desc?`<div class="ic" style="margin-bottom:14px"><h3 style="font-size:13px">📋 აღწერა</h3><p style="color:var(--t2);font-size:13px;margin-top:8px;line-height:1.7">${u.desc}</p></div>`:''}
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:16px">
-      <div class="dc"><div class="dn" style="font-size:22px">${myReqs.length}</div><div class="dl">მოთხოვნა</div></div>
-      <div class="dc"><div class="dn" style="font-size:22px">${myOffers.length}</div><div class="dl">შეთავ.</div></div>
-      <div class="dc"><div class="dn" style="font-size:22px">${myRevs.length}</div><div class="dl">შეფ.</div></div>
-      <div class="dc"><div class="dn" style="font-size:22px">${u.jobs||0}</div><div class="dl">სამ.</div></div>
-    </div>
-    ${myReqs.length?`<div class="ic" style="margin-bottom:14px"><h3 style="font-size:13px;margin-bottom:10px">📋 მოთხოვნები</h3>${myReqs.map(r=>`<div style="padding:8px 0;border-bottom:1px solid var(--border)"><div style="font-weight:600;font-size:13px">${r.title}</div><div style="color:var(--t2);font-size:11px">${r.category} · ${r.city} · ${r.offers.length} შეთ.</div></div>`).join('')}</div>`:''}
-    ${myOffers.length?`<div class="ic"><h3 style="font-size:13px;margin-bottom:10px">💬 შეთავაზებები</h3>${myOffers.map(o=>{const req=state.requests.find(r=>r.id===o.requestId);return `<div style="padding:8px 0;border-bottom:1px solid var(--border)"><div style="font-weight:600;font-size:13px">${req?.title||'—'}</div><div style="color:var(--accent);font-size:13px">₾${o.price} · <span class="status ${o.status==='pending'?'sn':'sa'}" style="font-size:10px">${o.status==='pending'?'მოლ.':'მიღ.'}</span></div></div>`;}).join('')}</div>`:''}
-    ${canEdit?`<div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn ${u.blocked?'bok':'berr'}" onclick="toggleBlock('${u.id}');closeMo('moAdminUserDetail');renderAdmin()">${u.blocked?'ანგარიშის განბლოკვა':'ანგარიშის დაბლოკვა'}</button>
-      <button class="btn berr" onclick="deleteUser('${u.id}');closeMo('moAdminUserDetail')">🗑️ ანგარიშის წაშლა</button>
-    </div>`:''}`;
+      ${users.length ? `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="border-bottom:2px solid var(--border)">
+          <th style="text-align:left;padding:10px 8px;color:var(--t2)">სახელი</th>
+          <th style="text-align:left;padding:10px 8px;color:var(--t2)">ელ-ფოსტა</th>
+          <th style="text-align:left;padding:10px 8px;color:var(--t2)">სტ.</th>
+          ${isAdmin ? '<th style="text-align:left;padding:10px 8px;color:var(--t2)">მოქ.</th>' : ''}
+        </tr></thead><tbody>
+        ${users.map(s => `<tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 8px"><div style="font-weight:600">${sanitize(s.name)} ${sanitize(s.surname || '')}</div></td>
+          <td style="padding:10px 8px;color:var(--t2);font-size:12px">${sanitize(s.email)}</td>
+          <td style="padding:10px 8px">${s.blocked ? '🚫' : '<span style="color:var(--ok)">✓</span>'}</td>
+          ${isAdmin ? `<td style="padding:10px 8px">
+            <button class="btn bs ${s.blocked ? 'bok' : 'berr'}" onclick="toggleBlock('${s.id}');renderAdmin()">${s.blocked ? 'განბ.' : 'დაბ.'}</button>
+            <button class="btn bs berr" onclick="deleteUser('${s.id}')">წაშ.</button>
+          </td>` : ''}
+        </tr>`).join('')}
+        </tbody></table></div>`
+      : '<div class="empty"><div class="ei">👨‍💼</div><h3>სტაფი ჯერ არ არის</h3></div>'}
+    `;
+  } catch (e) { body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>'; }
+}
+
+async function openAdminUserDetail(uid) {
+  const body = document.getElementById('adminUserDetailBody');
+  body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t2)">⏳...</div>';
   openMo('moAdminUserDetail');
+  try {
+    const u = await api('/admin/users/' + uid);
+    const canEdit = currentUser?.type === 'admin';
+    body.innerHTML = `
+      <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap">
+        ${u.avatar ? `<img src="${sanitize(u.avatar)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--accent)">` : `<div class="av" style="width:64px;height:64px;font-size:24px;background:var(--surface)">${sanitize(u.emoji || '👤')}</div>`}
+        <div>
+          <div style="font-size:20px;font-weight:800">${sanitize(u.name)} ${sanitize(u.surname || '')}</div>
+          <div style="color:var(--accent);font-size:13px">${u.type}${u.specialty ? ' · ' + sanitize(u.specialty) : ''}</div>
+          <div style="color:var(--t2);font-size:12px;margin-top:6px">📧 ${sanitize(u.email)}${u.phone ? ' · 📞 ' + sanitize(u.phone) : ''}${u.city ? ' · 📍 ' + sanitize(u.city) : ''}</div>
+          ${u.blocked ? '<div style="color:#e74c3c;font-size:12px;margin-top:4px">🚫 ანგარიში დაბლოკილია</div>' : ''}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-bottom:16px">
+        <div class="dc"><div class="dn">${u._count?.requests || 0}</div><div class="dl">მოთხ.</div></div>
+        <div class="dc"><div class="dn">${u._count?.offers || 0}</div><div class="dl">შეთ.</div></div>
+        <div class="dc"><div class="dn">${u.jobs || 0}</div><div class="dl">სამ.</div></div>
+      </div>
+      ${canEdit ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+        <button class="btn ${u.blocked ? 'bok' : 'berr'}" onclick="toggleBlock('${u.id}');closeMo('moAdminUserDetail');renderAdmin()">${u.blocked ? 'განბლოკვა' : 'დაბლოკვა'}</button>
+        <button class="btn berr" onclick="deleteUser('${u.id}');closeMo('moAdminUserDetail')">🗑️ წაშლა</button>
+      </div>` : ''}`;
+  } catch (e) { body.innerHTML = '<div style="color:var(--err)">' + sanitize(e.error || '') + '</div>'; }
 }
 
-function toggleBlock(uid){
-  const user=state.users.find(u=>u.id===uid);
-  if(!user) return;
-  user.blocked = !user.blocked;
-  save();
-  toast(user.blocked?'🚫 დაბლოკილია':'✅ განბლოკილია',user.name+' '+user.surname,'ok');
-  renderAdmin();
+async function toggleBlock(uid) {
+  try {
+    const data = await api('/admin/users/' + uid + '/block', { method: 'PATCH' });
+    toast(data.blocked ? '🚫 დაბლოკილია' : '✅ განბლოკილია', '', 'ok'); renderAdmin();
+  } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
+}
+async function deleteUser(uid) {
+  if (!confirm('ნამდვილად გინდა წაშალო?')) return;
+  try { await api('/admin/users/' + uid, { method: 'DELETE' }); toast('🗑️ ანგარიში წაიშალა', '', 'ok'); renderAdmin(); }
+  catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
+}
+async function adminDeleteRequest(rid) {
+  if (!confirm('ნამდვილად გინდა წაშალო?')) return;
+  try { await api('/admin/requests/' + rid, { method: 'DELETE' }); toast('🗑️ მოთხ. წაიშალა', '', 'ok'); renderAdmin(); }
+  catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
+}
+async function createStaff() {
+  const name = document.getElementById('newStaffName').value.trim();
+  const email = document.getElementById('newStaffEmail').value.trim();
+  const password = document.getElementById('newStaffPass').value;
+  const phone = document.getElementById('newStaffPhone').value.trim();
+  if (!name || !email || !password) { toast('⚠️ შეავსე ყველა ველი', '', 'err'); return; }
+  try {
+    await api('/admin/staff', { method: 'POST', body: { name, email, password, phone: phone || undefined } });
+    closeMo('moCreateStaff'); toast('✅ სტაფი შეიქმნა!', `${name} · ${email}`, 'ok');
+    adminTab = 'staff'; renderAdmin();
+  } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
 }
 
-function deleteUser(uid){
-  if(uid==='admin1'){toast('⛔ სისტემის ადმინის წაშლა შეუძლებელია','','err');return;}
-  if(!confirm('ნამდვილად გინდა წაშალო ეს ანგარიში?')) return;
-  state.users = state.users.filter(u=>u.id!==uid);
-  save();
-  toast('🗑️ ანგარიში წაიშალა','','ok');
-  renderAdmin();
-}
-
-function deleteRequest(rid){
-  state.requests = state.requests.filter(r=>r.id!==rid);
-  save();
-  toast('🗑️ მოთხოვნა წაიშალა','','ok');
-  renderAdmin();
-}
-
-// Staff creation
-async function createStaff(){
-  const name=document.getElementById('newStaffName').value.trim();
-  const email=document.getElementById('newStaffEmail').value.trim();
-  const pass=document.getElementById('newStaffPass').value;
-  const phone=document.getElementById('newStaffPhone').value.trim();
-  if(!name||!email||!pass){toast('⚠️ შეავსე ყველა ველი','','err');return}
-  if(state.users.find(u=>u.email===email)){toast('⚠️ ელ-ფოსტა უკვე გამოყენებულია','','err');return}
-  const passHash = await hashPass(pass);
-  const newStaff={id:'s'+Date.now(),name,surname:'',type:'staff',email,pass:passHash,phone,verified:true};
-  state.users.push(newStaff);save();
-  closeMo('moCreateStaff');
-  toast('✅ სტაფი შეიქმნა!',`${name} · ${email}`,'ok');
-  adminTab='staff';renderAdmin();
-}
-
-// Support chat
-let currentSupportId = null;
-function openSupportChat(sid){
+// ========================================================
+// SUPPORT CHAT — ADMIN SIDE (with message loading)
+// ========================================================
+async function openSupportChat(sid) {
   currentSupportId = sid;
-  const sr = (state.supportRequests||[]).find(s=>s.id===sid);
-  if(!sr) return;
-  sr.status='active';save();
-  const user = state.users.find(u=>u.id===sr.userId);
-  document.getElementById('supportChatTitle').textContent = user?`${user.name} ${user.surname} — სუპორტი`:'სუპორტი';
-  renderSupportChatMessages();
+  try { await api('/admin/support/' + sid + '/status', { method: 'PATCH', body: { status: 'active' } }); } catch (_) {}
+  document.getElementById('supportChatTitle').textContent = 'სუპ. #' + sid.slice(-6);
+  document.getElementById('supportChatBody').innerHTML = '<div style="text-align:center;padding:20px;color:var(--t2)">⏳...</div>';
   openMo('moSupportChat');
+  if (socket) socket.emit('joinSupport', sid);
+  // Load messages
+  try {
+    const reqs = await api('/admin/support');
+    const sr = reqs.find(r => r.id === sid);
+    if (sr && sr.messages) {
+      document.getElementById('supportChatBody').innerHTML = '';
+      renderSupportChatMessages(null, sr.messages);
+    } else {
+      document.getElementById('supportChatBody').innerHTML = '<div style="text-align:center;color:var(--t2);font-size:13px;padding:20px">ჩათი დაიწყო</div>';
+    }
+  } catch (_) {}
 }
 
-function renderSupportChatMessages(){
-  const sr = (state.supportRequests||[]).find(s=>s.id===currentSupportId);
-  if(!sr) return;
-  const msgs = sr.messages||[];
-  const cu = currentUser();
-  document.getElementById('supportChatBody').innerHTML = msgs.map(m=>{
-    const isOp = m.from==='operator';
-    return `<div class="msg ${isOp?'me':'them'}">${sanitize(m.text)}<div class="mtime">${sanitize(m.time)}</div></div>`;
-  }).join('') || '<div style="text-align:center;color:var(--t2);font-size:13px;padding:20px">ჩათი დაიწყო</div>';
-  const body=document.getElementById('supportChatBody');
-  body.scrollTop=body.scrollHeight;
+function renderSupportChatMessages(newMsg, allMsgs) {
+  const body = document.getElementById('supportChatBody'); if (!body) return;
+  if (allMsgs) {
+    body.innerHTML = allMsgs.map(m => `<div class="msg ${m.fromRole === 'operator' ? 'me' : 'them'}">${sanitize(m.content)}<div class="mtime">${new Date(m.createdAt || Date.now()).toLocaleTimeString('ka-GE', {hour:'2-digit',minute:'2-digit'})}</div></div>`).join('');
+    if (!allMsgs.length) body.innerHTML = '<div style="text-align:center;color:var(--t2);font-size:13px;padding:20px">ჩათი დაიწყო</div>';
+  } else if (newMsg) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + (newMsg.fromRole === 'operator' ? 'me' : 'them');
+    div.innerHTML = sanitize(newMsg.content) + `<div class="mtime">${new Date(newMsg.createdAt || Date.now()).toLocaleTimeString('ka-GE', {hour:'2-digit',minute:'2-digit'})}</div>`;
+    body.appendChild(div);
+  }
+  body.scrollTop = body.scrollHeight;
 }
 
-function sendSupportMsg(){
-  const text=document.getElementById('supportChatInput').value.trim();
-  if(!text) return;
-  const sr=(state.supportRequests||[]).find(s=>s.id===currentSupportId);
-  if(!sr) return;
-  if(!sr.messages) sr.messages=[];
-  sr.messages.push({from:'operator',text,time:now()});
-  save();
-  document.getElementById('supportChatInput').value='';
-  renderSupportChatMessages();
+function sendSupportMsg() {
+  const input = document.getElementById('supportChatInput');
+  const content = input?.value?.trim();
+  if (!content || !currentSupportId) return;
+  input.value = '';
+  if (socket && socket.connected) {
+    socket.emit('sendSupportMsg', { supportId: currentSupportId, content });
+    // Optimistic append
+    renderSupportChatMessages({ fromRole: 'operator', content, createdAt: new Date().toISOString() }, null);
+  }
 }
 
-function closeSupportRequest(sid){
-  const sr=(state.supportRequests||[]).find(s=>s.id===sid);
-  if(!sr) return;
-  sr.status='closed';save();
-  toast('✓ სუპორტი დახურულია','','ok');
-  renderAdmin();
+async function closeSupportRequest(sid) {
+  try {
+    await api('/admin/support/' + sid + '/status', { method: 'PATCH', body: { status: 'closed' } });
+    toast('✓ სუპ. დახურულია', '', 'ok'); renderAdmin();
+  } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
 }
 
-// ====== ARIA CHAT (xelosani.ge) ======
-let ariaOpen = false;
-let ariaMessages = [];
-let ariaLoading = false;
-let ariaSupportRequested = false;
-let currentSupportReqId = null;
-
-const ARIA_KNOWLEDGE = `შენ ხარ ARIA — ხელოსანი.ge-ის AI ასისტენტი. ეს საქართველოს #1 ხელოსნების პლატფორმაა.
-
-საიტი რა არის: პლატფორმა სადაც მომხმარებლები აქვეყნებენ სამუშაო მოთხოვნებს, ხელოსნები/კომპანიები კი აგზავნიან შეთავაზებებს.
-
-ანგარიშის ტიპები:
-- მომხმარებელი: ეძებს ხელოსანს, დებს მოთხოვნებს, ადარებს შეთავაზებებს
-- ხელოსანი: ასრულებს სამუშაოს, აქვს პროფილი/პორტფოლიო, გაგზავნის შეთავაზებებს
-- კომპანია: გუნდი/ბრიგადა, მუშაობს ხელოსნის მსგავსად
-- სტაფი: საიტის პერსონალი (იქმნება ადმინიდან)
-- ადმინი: სრული მართვა საიტისა
-
-VIP სისტემა:
-- VIP: 2₾/1 დღე ან 10₾/5 დღე — ჩანს სიის სათავეში
-- VIP+: 4₾/1 დღე ან 18₾/5 დღე — ყოველთვის VIP-ზე მაღლა
-
-ტარიფები ხელოსნებისთვის:
-- Start: უფასო, პირველი 3 თვე — 5 შეთავაზება/თვე
-- Pro: 30₾/თვე — შეუზღუდავი შეთავაზება, გამორჩეული პოზიცია
-- TOP: 70₾/თვე — TOP ბეჯი, მთავარ გვერდზე
-
-მომხმარებლებისთვის — სრულიად უფასო!
-
-მუშაობის პრინციპი:
-1. მომხმარებელი ქმნის ანგარიშს და აქვეყნებს სამუშაო მოთხოვნას
-2. ხელოსნები ხედავენ მოთხოვნას და გაგზავნიან შეთავაზებებს (ფასი, ვადა, კომენტარი)
-3. მომხმარებელი ადარებს შეთავაზებებს, ირჩევს სასურველ ხელოსანს
-4. იხსნება ჩათი — პირდაპირ ლაპარაკი
-5. სამუშაოს დასრულების შემდეგ მომხმარებელს შეუძლია შეფასება დატოვოს
-
-კონტაქტი/სუპორტი: support@xelosani.ge
-
-ყოველთვის პასუხობ ქართულად, მეგობრულად და ლაკონურად. თუ მომხმარებელი ოპერატორს ითხოვს ან დახმარება სჭირდება ჩვენი გუნდიდან, უთხარი "კარგი, ვაკავშირებ ოპერატორთან!" და დაამატე სიტყვა [OPERATOR_REQUEST] ბოლოში.`;
-
+// ========================================================
+// ARIA CHAT
+// ========================================================
 const ARIA_QUICK = [
   '🔧 როგორ მუშაობს საიტი?',
   '💰 ტარიფები ხელოსნებისთვის',
@@ -2806,183 +2590,162 @@ const ARIA_QUICK = [
   '🎧 ოპერატორთან დაკავშირება'
 ];
 
-const ARIA_CACHED = {
-  '🔧 როგორ მუშაობს საიტი?': `ხელოსანი.ge მარტივად მუშაობს! 🔧
-
-**მომხმარებლად:** შეხვიდი → გამოაქვეყნე მოთხოვნა → ხელოსნები გეწერებიან შეთავაზებებით → აირჩიე საუკეთესო → ილაპარაკე ჩათში!
-
-**ხელოსნად:** დარეგისტრირდი → შეავსე პროფილი/პორტფოლიო → ნახე ღია მოთხოვნები → გაგზავნე შეთავაზება → ივე სამუშაო!
-
-მომხმარებლებისთვის სრულიად **უფასო** — ხელოსნებისთვის პირველი 3 თვე უფასო! 🎉`,
-  '💰 ტარიფები ხელოსნებისთვის': `ხელოსნებისთვის ტარიფები: 💰
-
-🆓 **Start** — 0₾/თვე (3 თვე)
-→ 5 შეთავაზება/თვე, პროფილი, მოთხოვნების ნახვა
-
-⚡ **Pro** — 30₾/თვე
-→ შეუზღუდავი შეთავაზება, გამორჩეული პოზიცია, ვიდეო პორტფოლიო
-
-👑 **TOP** — 70₾/თვე
-→ Pro-ს ყველაფერი + TOP ბეჯი, მთავარ გვერდზე გამოჩენა
-
-**მომხმარებლებისთვის — ყოველთვის უფასო!** 🙌`,
-  '⭐ VIP სისტემა': `VIP სისტემა ხელოსნებს/კომპანიებს ეხება! ⭐
-
-**⭐ VIP** — 2₾/1 დღე · 10₾/5 დღე
-→ ჩანს სიის სათავეში ყველა ჩვეულებრივ ხელოსანზე მაღლა
-
-**💜 VIP+** — 4₾/1 დღე · 18₾/5 დღე
-→ ყოველთვის VIP-ზეც მაღლა — სიის ყველაზე მაღლა!
-
-ახალი გადამხდელი ყოველთვის გამოჩნდება შესაბამის ჯგუფში სათავეში 🔝`,
-  '📋 როგორ დავდო მოთხოვნა?': `მოთხოვნის დამატება ძალიან მარტივია! 📋
-
-1️⃣ შეხვიდი ანგარიშზე (მომხმარებლად)
-2️⃣ დააჭირე "+ მოთხოვნა" ღილაკს
-3️⃣ შეავსე: სათაური, კატეგორია, აღწერა, ქალაქი, ბიუჯეტი
-4️⃣ სურვილისამებრ დაამატე ფოტო/ვიდეო
-5️⃣ გამოაქვეყნე!
-
-ხელოსნები სწრაფად გეწერებიან შეთავაზებებით 🚀`,
-  '🎧 ოპერატორთან დაკავშირება': null  // will trigger operator request
-};
-
-function toggleAria(){
+function toggleAria() {
   ariaOpen = !ariaOpen;
-  document.getElementById('ariaWidget').style.display = ariaOpen?'flex':'none';
-  document.getElementById('ariaToggleBtn').textContent = ariaOpen?'✕':'💬';
-  if(ariaOpen && ariaMessages.length===0) ariaAddMsg('assistant','გამარჯობა! მე ვარ ARIA — ხელოსანი.ge-ის ასისტენტი 🔧\n\nდაგეხმარები ნებისმიერ კითხვაში! მაქვს ინფო საიტზე, ტარიფებზე, VIP-ზე და ყველაფერზე!');
+  document.getElementById('ariaWidget').style.display = ariaOpen ? 'flex' : 'none';
+  document.getElementById('ariaToggleBtn').textContent = ariaOpen ? '✕' : '💬';
+  if (ariaOpen && ariaMessages.length === 0) ariaAddMsg('assistant', 'გამარჯობა! მე ვარ ARIA — ხელოსანი.ge-ის ასისტენტი 🔧\n\nდაგეხმარები ნებისმიერ კითხვაში!');
 }
-
-function ariaAddMsg(role, text){
-  ariaMessages.push({role, text});
-  renderAriaMessages();
-}
-
-function renderAriaMessages(){
-  const body = document.getElementById('ariaMsgs');
-  if(!body) return;
-  body.innerHTML = ariaMessages.map(m=>`
-    <div style="display:flex;flex-direction:column;align-items:${m.role==='assistant'?'flex-start':'flex-end'};gap:3px;margin-bottom:10px">
-      ${m.role==='assistant'?'<div style="font-size:10px;color:#6B8BAE;margin-bottom:2px">🤖 ARIA</div>':''}
-      <div style="max-width:85%;padding:10px 13px;border-radius:${m.role==='assistant'?'14px 14px 14px 4px':'14px 14px 4px 14px'};background:${m.role==='assistant'?'var(--surface)':'var(--accent)'};color:${m.role==='assistant'?'var(--text)':'#fff'};font-size:13px;line-height:1.6;border:${m.role==='assistant'?'1px solid var(--border)':'none'};white-space:pre-wrap">${m.text}</div>
+function ariaAddMsg(role, text) { ariaMessages.push({role, text}); renderAriaMessages(); }
+function renderAriaMessages() {
+  const body = document.getElementById('ariaMsgs'); if (!body) return;
+  body.innerHTML = ariaMessages.map(m => `
+    <div style="display:flex;flex-direction:column;align-items:${m.role === 'assistant' ? 'flex-start' : 'flex-end'};gap:3px;margin-bottom:10px">
+      ${m.role === 'assistant' ? '<div style="font-size:10px;color:#6B8BAE;margin-bottom:2px">🤖 ARIA</div>' : ''}
+      <div style="max-width:85%;padding:10px 13px;border-radius:${m.role === 'assistant' ? '14px 14px 14px 4px' : '14px 14px 4px 14px'};background:${m.role === 'assistant' ? 'var(--surface)' : 'var(--accent)'};color:${m.role === 'assistant' ? 'var(--text)' : '#fff'};font-size:13px;line-height:1.6;border:${m.role === 'assistant' ? '1px solid var(--border)' : 'none'};white-space:pre-wrap">${m.text}</div>
     </div>`).join('');
   body.scrollTop = body.scrollHeight;
 }
-
-async function sendAriaMsg(text){
-  if(!text) text = document.getElementById('ariaInput')?.value?.trim();
-  if(!text || ariaLoading) return;
-  if(document.getElementById('ariaInput')) document.getElementById('ariaInput').value='';
+async function sendAriaMsg(text) {
+  if (!text) text = document.getElementById('ariaInput')?.value?.trim();
+  if (!text || ariaLoading) return;
+  if (document.getElementById('ariaInput')) document.getElementById('ariaInput').value = '';
   ariaAddMsg('user', text);
-
-  // Check cached
-  if(text === '🎧 ოპერატორთან დაკავშირება' || text.toLowerCase().includes('ოპერატ') || text.toLowerCase().includes('operator') || text.toLowerCase().includes('ადამიან') || text.toLowerCase().includes('ცოცხალ')){
-    await new Promise(r=>setTimeout(r,400));
-    ariaAddMsg('assistant','კარგი, ვაკავშირებ ოპერატორთან! ⏳\n\nთქვენი მოთხოვნა გადაეგზავნა სუპორტის გუნდს. მალე დაგიკავშირდებიან!');
-    triggerSupportRequest(text);
-    return;
+  if (text.toLowerCase().includes('ოპერატ') || text.toLowerCase().includes('operator') || text === '🎧 ოპერატორთან დაკავშირება') {
+    await new Promise(r => setTimeout(r, 400));
+    ariaAddMsg('assistant', 'ვაკავშირებ ოპერატორთან! ⏳\n\nთქვენი მოთხოვნა გადაეგზავნა სუპ. გუნდს!');
+    triggerSupportRequest(text); return;
   }
-
-  if(ARIA_CACHED[text]!==undefined){
-    await new Promise(r=>setTimeout(r,500));
-    ariaAddMsg('assistant', ARIA_CACHED[text]);
-    return;
-  }
-
-  ariaLoading=true;
-  ariaAddMsg('assistant','...');
-  renderAriaMessages();
-
-  try{
-    // ✅ Using Gemini API instead of Claude
-    const geminiKey = CONFIG.GEMINI_API_KEY;
-    if(!geminiKey || geminiKey.startsWith('YOUR_')){
-      ariaMessages.pop();
-      ariaAddMsg('assistant','⚠️ GEMINI_API_KEY კონფიგურირებული არ არის. CONFIG.GEMINI_API_KEY შეავსე.');
-      ariaLoading=false; return;
-    }
-    const historyMsgs = ariaMessages.slice(0,-1)
-      .filter(m=>m.text!=='...' && m.role!=='system')
-      .map(m=>({role:m.role==='assistant'?'model':'user', parts:[{text:m.text}]}));
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
-      {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          system_instruction:{parts:[{text:ARIA_KNOWLEDGE}]},
-          contents:[
-            ...historyMsgs,
-            {role:'user', parts:[{text}]}
-          ],
-          generationConfig:{maxOutputTokens:800,temperature:0.7}
-        })
-      }
-    );
-    const data=await resp.json();
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  ariaLoading = true; ariaAddMsg('assistant', '...');
+  try {
+    const history = ariaMessages.slice(0, -1).filter(m => m.text !== '...' && m.role !== 'system');
+    const geminiMsgs = history.map(m => ({role: m.role === 'assistant' ? 'model' : 'user', parts: [{text: m.text}]}));
+    geminiMsgs.push({role: 'user', parts: [{text}]});
+    const data = await api('/aria/chat', {method: 'POST', body: {messages: geminiMsgs}});
     ariaMessages.pop();
-
-    if(reply.includes('[OPERATOR_REQUEST]')){
-      ariaAddMsg('assistant', reply.replace('[OPERATOR_REQUEST]','').trim());
+    const reply = data.reply || '';
+    if (reply.includes('[OPERATOR_REQUEST]')) {
+      ariaAddMsg('assistant', reply.replace('[OPERATOR_REQUEST]', '').trim());
       triggerSupportRequest(text);
     } else {
-      ariaAddMsg('assistant', reply||'ბოდიში, ვერ გავიგე. სცადე ხელახლა!');
+      ariaAddMsg('assistant', reply || 'ბოდიში, ვერ გავიგე. სცადე ხელახლა!');
     }
-  } catch(e){
-    ariaMessages.pop();
-    ariaAddMsg('assistant','⚠️ კავშირის შეცდომა. გთხოვ სცადე ხელახლა ან დაგვიკავშირდი: support@xelosani.ge');
-  }
-  ariaLoading=false;
+  } catch (e) { ariaMessages.pop(); ariaAddMsg('assistant', '⚠️ კავშ. შეცდ. support@xelosani.ge'); }
+  ariaLoading = false;
 }
-
-function triggerSupportRequest(userMsg){
-  const cu = currentUser();
-  if(!cu){
-    setTimeout(()=>ariaAddMsg('assistant','💡 სუპორტთან ლაივ კომუნიკაციისთვის გთხოვ ჯერ შეხვიდე ანგარიშზე!'),300);
-    return;
+async function triggerSupportRequest(userMsg) {
+  const cu = currentUser;
+  if (!cu) { setTimeout(() => ariaAddMsg('assistant', '💡 შეხვიდე ანგარიშზე ოპ.-სთან ლაივ კომ.-სთვის!'), 300); return; }
+  try {
+    const sr = await api('/admin/support', { method: 'POST', body: { message: userMsg } });
+    currentUserSupportId = sr.id;
+    if (socket) socket.emit('joinSupport', sr.id);
+  } catch (e) {
+    if (e.status === 409) ariaAddMsg('assistant', 'ოპ. უკვე ამოხ.! 🎧 გთხ. დაიცადო.');
   }
-  if(!state.supportRequests) state.supportRequests=[];
-  const existing = state.supportRequests.find(s=>s.userId===cu.id&&s.status!=='closed');
-  if(existing){
-    ariaAddMsg('assistant','ოპერატორი უკვე ამოხმარებულია! 🎧 გთმოვ დაიცადო, მალე გიპასუხებენ.');
-    return;
-  }
-  const sr={
-    id:'sr'+Date.now(),
-    userId:cu.id,
-    status:'pending',
-    lastMsg:userMsg.substring(0,100),
-    messages:[{from:'user',text:userMsg,time:now()}],
-    createdAt:Date.now()
-  };
-  state.supportRequests.push(sr);
-  currentSupportReqId=sr.id;
-  save();
-  toast('🎧 სუპორტი შეტყობინება',`${cu.name}-ს სჭირდება დახმარება`,'ok');
 }
+function ariaKeydown(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAriaMsg(); } }
 
-function ariaKeydown(e){
-  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAriaMsg();}
+// ========================================================
+// MISC UI
+// ========================================================
+function openMo(id) { document.getElementById(id)?.classList.add('open'); }
+function closeMo(id) { document.getElementById(id)?.classList.remove('open'); }
+document.querySelectorAll('.mo').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeLightbox(); document.querySelectorAll('.mo.open').forEach(m => m.classList.remove('open')); } });
+
+function toast(title, msg, type = 'ok') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<div class="tt">${title}</div>${msg ? `<div class="tm">${msg}</div>` : ''}`;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(20px)'; t.style.transition = '.3s'; setTimeout(() => t.remove(), 300); }, 3500);
 }
+function openLightbox(type, url) {
+  document.getElementById('lbContent').innerHTML = type === 'video'
+    ? `<video src="${url}" controls autoplay style="max-width:90vw;max-height:88vh;border-radius:12px"></video>`
+    : `<img src="${url}" style="max-width:90vw;max-height:88vh;border-radius:12px;object-fit:contain">`;
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lbContent').innerHTML = '';
+  document.body.style.overflow = '';
+}
+function doSearch() {
+  const q = document.getElementById('heroSearch').value.toLowerCase().trim();
+  nav('handymen');
+  if (q) setTimeout(() => {
+    const el = document.getElementById('fSpec');
+    const match = CATS.find(c => c.toLowerCase().includes(q));
+    if (match && el) { el.value = match; renderHandymen(); }
+  }, 100);
+}
+function filterCat(cat) { nav('handymen'); setTimeout(() => { const el = document.getElementById('fSpec'); if (el) { el.value = cat; delete el.dataset.mainCatId; renderHandymen(); } }, 100); }
+function filterMainCat(catId) { nav('handymen'); setTimeout(() => { const el = document.getElementById('fSpec'); if (el) { el.value = ''; el.dataset.mainCatId = catId; renderHandymen(); } }, 100); }
+function filterMainCatBtn(catId, btnEl) { const el = document.getElementById('fSpec'); if (el) { el.value = ''; el.dataset.mainCatId = catId; } clearActivePill(); if (btnEl) btnEl.classList.add('active'); renderHandymen(); }
+function clearCatFilter(btnEl) { const el = document.getElementById('fSpec'); if (el) { el.value = ''; delete el.dataset.mainCatId; } clearActivePill(); if (btnEl) btnEl.classList.add('active'); renderHandymen(); }
+function clearActivePill() { document.querySelectorAll('#mainCatPills .pill').forEach(p => p.classList.remove('active')); }
+function renderMainCatPills() {
+  const el = document.getElementById('mainCatPills'); if (!el) return;
+  el.innerHTML = '<span class="pill active" onclick="clearCatFilter(this)" style="font-size:11px">🔍 ყველა</span>' +
+    CATS_DATA.map(g => `<span class="pill" onclick="filterMainCatBtn('${g.id}',this)" style="font-size:11px">${g.icon} ${g.name}</span>`).join('');
+}
+function buildCatOptgroups(firstOptionHTML) {
+  return firstOptionHTML + CATS_DATA.map(g =>
+    `<optgroup label="${g.icon} ${g.name}">${g.subs.map(s => `<option value="${s}">${s}</option>`).join('')}</optgroup>`
+  ).join('') + '<option value="სხვა">🔩 სხვა</option>';
+}
+function initCats() {
+  ['fSpec','rCat','qCat','rSpec'].forEach(id => {
+    const el = document.getElementById(id); if (!el) return;
+    const first = el.options[0]?.outerHTML || '';
+    el.innerHTML = buildCatOptgroups(first);
+  });
+  const hp = document.getElementById('heroPills');
+  if (hp) hp.innerHTML = CATS_DATA.map(g => `<div class="pill" onclick="filterMainCat('${g.id}')">${g.icon} ${g.name}</div>`).join('');
+  renderMainCatPills();
+}
+function checkPassStrength(val) {
+  const bar = document.getElementById('psBar'), lbl = document.getElementById('psLabel');
+  if (!bar) return; if (!val) { bar.className = 'ps-bar'; lbl.textContent = ''; return; }
+  let s = 0; if (val.length >= 8) s++; if (val.length >= 12) s++; if (/[A-Z]/.test(val)) s++; if (/[0-9]/.test(val)) s++; if (/[^A-Za-z0-9]/.test(val)) s++;
+  if (s <= 2) { bar.className = 'ps-bar weak'; lbl.textContent = 'სუსტი'; }
+  else if (s <= 3) { bar.className = 'ps-bar mid'; lbl.textContent = 'საშ.'; }
+  else { bar.className = 'ps-bar strong'; lbl.textContent = 'ძლიერი ✓'; }
+}
+function checkPassStrength2(val) {
+  const bar = document.getElementById('psBar2'), lbl = document.getElementById('psLabel2');
+  if (!bar) return; checkPassStrength.call({bar, lbl}, val);
+}
+function now() { const d = new Date(); return d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes(); }
 
-// ====== INIT ======
-initCats();
-renderNav();
-renderHomeGrid();
-setRegType('user');
-// Render ARIA quick buttons
-(function(){
-  const el = document.getElementById('ariaQuickBtns');
-  if(el) el.innerHTML = ARIA_QUICK.map(q=>
-    `<button onclick="sendAriaMsg('${q}')" style="padding:5px 10px;background:var(--surface);border:1px solid var(--border);border-radius:50px;font-size:11px;color:var(--t2);cursor:pointer;white-space:nowrap;transition:.2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--t2)'">${q}</button>`
+// ========================================================
+// INIT
+// ========================================================
+(async function init() {
+  initCats();
+  // ARIA quick buttons
+  const ariaEl = document.getElementById('ariaQuickBtns');
+  if (ariaEl) ariaEl.innerHTML = ARIA_QUICK.map(q =>
+    `<button onclick="sendAriaMsg('${q.replace(/'/g, "\\'")}')" style="padding:5px 10px;background:var(--surface);border:1px solid var(--border);border-radius:50px;font-size:11px;color:var(--t2);cursor:pointer;white-space:nowrap;transition:.2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--t2)'">${q}</button>`
   ).join('');
-  if(el) el.style.cssText='display:flex;gap:6px;flex-wrap:wrap';
+
+  // Load current user from token
+  const token = getToken();
+  if (token) {
+    try {
+      currentUser = await api('/auth/me');
+      initSocket();
+      if (currentUser.type === 'admin' || currentUser.type === 'staff') nav('admin');
+    } catch (e) { clearToken(); currentUser = null; }
+  }
+  renderNav();
+  renderHomeGrid();
+  setRegType('user');
 })();
-// Auto-nav to admin if already logged in as admin/staff
-const _cu = currentUser();
-if(_cu&&(_cu.type==='admin'||_cu.type==='staff')) nav('admin');
+
 </script>
 </body>
 </html>

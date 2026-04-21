@@ -3,7 +3,7 @@ const express = require('express');
 const prisma = require('../utils/prisma');
 const { requireAuth } = require('../middleware/auth');
 const { upload, handleCloudinaryUpload } = require('../middleware/upload');
-const { deleteFile } = require('../utils/cloudinary');
+const { deleteFile, uploadBuffer } = require('../utils/cloudinary');
 
 const router = express.Router();
 
@@ -22,7 +22,10 @@ function buildHandymanWhere(query) {
     type: { in: ['handyman', 'company'] },
     blocked: false,
   };
-  if (query.specialty) where.specialty = query.specialty;
+  if (query.specialty) {
+    // Support comma-separated multi-specialty: check if specialty contains the filter
+    where.specialty = { contains: query.specialty, mode: 'insensitive' };
+  }
   if (query.city) where.city = { contains: query.city, mode: 'insensitive' };
   if (query.q) {
     where.OR = [
@@ -42,18 +45,17 @@ router.get('/handymen', async (req, res) => {
       where,
       select: {
         id: true, name: true, surname: true, type: true,
-        specialty: true, city: true, desc: true, services: true,
-        emoji: true, color: true, verified: true, jobs: true,
+        specialty: true, specialties: true,
+        city: true, desc: true, services: true,
+        emoji: true, color: true, avatar: true,
+        verified: true, jobs: true,
         vipType: true, vipExpiresAt: true, vipActivatedAt: true,
         portfolio: true, createdAt: true,
-        reviewsReceived: {
-          select: { stars: true },
-        },
+        reviewsReceived: { select: { stars: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    // Filter by min rating if requested
     const minRating = parseFloat(req.query.minRating);
     let result = handymen;
     if (minRating > 0) {
@@ -64,7 +66,7 @@ router.get('/handymen', async (req, res) => {
       });
     }
 
-    // Sort: vipp > vip > rating
+    // Sort: vipp > vip > rating (companies with VIP float to top of their type)
     result.sort((a, b) => {
       const wa = vipActive(a) ? (a.vipType === 'vipp' ? 2 : 1) : 0;
       const wb = vipActive(b) ? (b.vipType === 'vipp' ? 2 : 1) : 0;
@@ -111,19 +113,28 @@ router.get('/:id', async (req, res) => {
 // PATCH /api/users/me — update own profile
 router.patch('/me', requireAuth, async (req, res) => {
   try {
-    const { name, surname, phone, specialty, desc, services, city, emoji } = req.body;
+    const { name, surname, phone, specialty, specialties, desc, services, city, emoji } = req.body;
     const data = {};
     if (name !== undefined) data.name = String(name).trim();
     if (surname !== undefined) data.surname = String(surname).trim();
     if (phone !== undefined) data.phone = phone || null;
-    if (specialty !== undefined) data.specialty = specialty || null;
     if (desc !== undefined) data.desc = desc || null;
-    if (services !== undefined) {
-      data.services = Array.isArray(services)
-        ? services.map(String) : String(services).split(',').map((s) => s.trim()).filter(Boolean);
-    }
     if (city !== undefined) data.city = city || null;
     if (emoji !== undefined) data.emoji = emoji || '🔧';
+
+    // Multi-specialty: specialties array → store primary in specialty, full array in specialties
+    if (specialties !== undefined && Array.isArray(specialties)) {
+      data.specialties = specialties;
+      data.specialty = specialties[0] || null; // primary for display/filtering
+    } else if (specialty !== undefined) {
+      data.specialty = specialty || null;
+    }
+
+    if (services !== undefined) {
+      data.services = Array.isArray(services)
+        ? services.map(String)
+        : String(services).split(',').map((s) => s.trim()).filter(Boolean);
+    }
 
     const updated = await prisma.user.update({
       where: { id: req.user.id },
@@ -136,6 +147,45 @@ router.patch('/me', requireAuth, async (req, res) => {
   }
 });
 
+// POST /api/users/avatar — upload profile photo
+router.post(
+  '/avatar',
+  requireAuth,
+  upload.single('avatar'),
+  async (req, res) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: 'ფოტო ვერ მოიძებნა' });
+
+      // Delete old avatar if exists
+      const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+      if (user.avatar && user.avatar.includes('cloudinary')) {
+        // Extract public_id from URL if possible
+        try {
+          const parts = user.avatar.split('/');
+          const file = parts[parts.length - 1];
+          const publicId = 'xelosani/avatars/' + file.split('.')[0];
+          await deleteFile(publicId, 'image');
+        } catch (_) {}
+      }
+
+      const result = await uploadBuffer(req.file.buffer, {
+        folder: 'xelosani/avatars',
+        resource_type: 'image',
+        transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }],
+      });
+
+      const updated = await prisma.user.update({
+        where: { id: req.user.id },
+        data: { avatar: result.secure_url },
+      });
+      res.json({ avatar: updated.avatar });
+    } catch (err) {
+      console.error('[USERS] avatar upload error:', err.message);
+      res.status(500).json({ error: 'ატვირთვა ვერ მოხდა' });
+    }
+  }
+);
+
 // POST /api/users/portfolio — upload portfolio files
 router.post(
   '/portfolio',
@@ -147,8 +197,6 @@ router.post(
       const user = await prisma.user.findUnique({ where: { id: req.user.id } });
       const existing = Array.isArray(user.portfolio) ? user.portfolio : [];
       const newFiles = req.uploadedFiles || [];
-
-      // Max 20 portfolio items
       const combined = [...existing, ...newFiles].slice(0, 20);
       const updated = await prisma.user.update({
         where: { id: req.user.id },
@@ -170,9 +218,7 @@ router.delete('/portfolio/:index', requireAuth, async (req, res) => {
     const portfolio = Array.isArray(user.portfolio) ? [...user.portfolio] : [];
     if (idx < 0 || idx >= portfolio.length)
       return res.status(404).json({ error: 'ინდექსი ვერ მოიძებნა' });
-
     const [removed] = portfolio.splice(idx, 1);
-    // Delete from Cloudinary
     if (removed?.publicId) {
       await deleteFile(removed.publicId, removed.type === 'video' ? 'video' : 'image');
     }

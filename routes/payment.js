@@ -16,10 +16,18 @@ const { sendEmail, vipConfirmTemplate } = require('../utils/email');
 
 const router = express.Router();
 
-// VIP pricing table
+// VIP pricing table (tetri)
+// handyman: VIP=2₾/day, VIP+=4₾/day
+// company:  VIP=10₾/day, VIP+=15₾/day
 const VIP_PRICES = {
-  vip:  { 1: 200, 5: 1000 }, // tetri (2₾, 10₾)
-  vipp: { 1: 400, 5: 1800 }, // tetri (4₾, 18₾)
+  handyman: {
+    vip:  { 1: 200,  5: 1000 },
+    vipp: { 1: 400,  5: 1800 },
+  },
+  company: {
+    vip:  { 1: 1000, 5: 4000 },
+    vipp: { 1: 1500, 5: 6000 },
+  },
 };
 
 // POST /api/payment/create-order — initiate VIP payment
@@ -36,7 +44,8 @@ router.post('/create-order', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'VIP ტიპი ან ვადა არასწორია' });
     }
     const daysN = parseInt(days);
-    const amount = VIP_PRICES[vipType][daysN];
+    const priceTable = req.user.type === 'company' ? VIP_PRICES.company : VIP_PRICES.handyman;
+    const amount = priceTable[vipType][daysN];
     const merchantOrderId = uuidv4();
     const description = `ხელოსანი.ge ${vipType === 'vipp' ? 'VIP+' : 'VIP'} — ${daysN} დღე`;
 
