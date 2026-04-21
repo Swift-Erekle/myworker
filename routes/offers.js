@@ -16,6 +16,22 @@ router.post('/', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'მოთხოვნის ID და ფასი სავალდებულოა' });
     }
 
+    // ── Plan limit check: Start = 5 offers/month ────────────────
+    const userPlan = req.user.plan || 'start';
+    if (userPlan === 'start') {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthlyCount = await prisma.offer.count({
+        where: { handymanId: req.user.id, createdAt: { gte: startOfMonth } },
+      });
+      if (monthlyCount >= 5) {
+        return res.status(403).json({
+          error: 'Start ტარიფის 5 შეთ./თვე ამოგეწურა. Pro ან TOP ტარიფზე გადასვლა საჭიროა.',
+          upgradeRequired: true,
+        });
+      }
+    }
+
     const request = await prisma.request.findUnique({ where: { id: requestId } });
     if (!request) return res.status(404).json({ error: 'მოთხოვნა ვერ მოიძებნა' });
     if (request.status !== 'open') {

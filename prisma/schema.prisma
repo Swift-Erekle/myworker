@@ -38,6 +38,11 @@ model User {
   portfolio      Json      @default("[]")   // [{url, type, publicId}]
   avatar         String?                    // profile photo URL
   specialties    String[]  @default([])     // multiple specialties
+  // ── Subscription plan ───────────────────────────────
+  plan                 String    @default("start")   // start, pro, top
+  planExpiresAt        DateTime?                       // when paid plan expires
+  trialExpiresAt       DateTime?                       // 3-month trial end
+  usedFreeTrial        Boolean   @default(false)       // trial already used
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -49,8 +54,9 @@ model User {
   chatsAsUser     Chat[]    @relation("user")
   chatsAsHandyman Chat[]    @relation("handyman")
   supportRequests SupportRequest[]
-  vipPayments     VipPayment[]
-  messages        Message[]   // messages sent by this user (excludes system msgs)
+  vipPayments          VipPayment[]
+  subscriptionPayments SubscriptionPayment[]
+  messages             Message[]   // messages sent by this user (excludes system msgs)
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -195,4 +201,21 @@ model VerifyCode {
   expiresAt DateTime
 
   @@index([expiresAt]) // ინდექსი ვადაგასული კოდების გასაწმენდად
+}
+// ─────────────────────────────────────────────────────────────
+// სუბსქრიფცია (subscription payments — Pro/Top monthly plans)
+// ─────────────────────────────────────────────────────────────
+model SubscriptionPayment {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan        String   // pro, top
+  amount      Int      // tetri (2900 = 29₾)
+  status      String   @default("pending") // pending, paid, failed
+  tbcOrderId  String?
+  tbcPayId    String?
+  periodStart DateTime?
+  periodEnd   DateTime?
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
 }

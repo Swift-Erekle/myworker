@@ -48,13 +48,22 @@ router.post('/chat', ariaLimiter, async (req, res) => {
     }
 
     // Sanitize: only allow user/model roles, limit history
-    const safeMessages = messages
+    let safeMessages = messages
       .filter((m) => m.role === 'user' || m.role === 'model')
       .slice(-20) // last 20 turns max
       .map((m) => ({
         role: m.role,
         parts: [{ text: String(m.parts?.[0]?.text || m.text || '').substring(0, 2000) }],
       }));
+
+    // CRITICAL FIX: Gemini requires conversation to START with 'user' role.
+    // Remove any leading 'model' messages (caused by ARIA greeting being added first).
+    while (safeMessages.length > 0 && safeMessages[0].role === 'model') {
+      safeMessages.shift();
+    }
+    if (safeMessages.length === 0) {
+      return res.status(400).json({ error: 'messages სავალდებულოა' });
+    }
 
     const body = {
       system_instruction: { parts: [{ text: ARIA_SYSTEM }] },

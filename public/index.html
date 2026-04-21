@@ -469,7 +469,8 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
     <div class="fb" style="flex-direction:column;gap:10px">
       <div id="mainCatPills" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <select id="fSpec" onchange="delete document.getElementById('fSpec').dataset.mainCatId;clearActivePill();renderHandymen()" style="min-width:180px"><option value="">— სპეციალობა —</option></select>
+        <select id="fCatMain" onchange="updateFSubCatOpts();renderHandymen()" style="min-width:150px"><option value="">— პროფ. —</option></select>
+        <select id="fCatSub" onchange="renderHandymen()" style="min-width:150px"><option value="">— ქვე-კ. —</option></select>
         <select id="fRating" onchange="renderHandymen()"><option value="">ნებისმიერი</option><option value="4.5">★ 4.5+</option><option value="4.0">★ 4.0+</option></select>
         <button class="btn bg bs" onclick="clearCatFilter()" style="font-size:11px">✕ გასუფთ.</button>
       </div>
@@ -690,11 +691,13 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
     <h2>📋 მოთხოვნის დამატება</h2><div class="sub">ხელოსნები გეწერებიან შეთავაზებებით</div>
     <div class="fg"><label>სათაური</label><input id="qTitle" placeholder="მაგ: სამზარეულოში გაჟონვა"></div>
     <div class="fg">
-      <label>კატეგორია</label>
-      <select id="qCat" onchange="toggleOtherCat()"><option value="">— კატეგორია —</option></select>
-      <div style="font-size:11px;color:var(--t2);margin-top:4px">სუბ-კატეგორია არჩეულია დ dropdown-დან</div>
+      <label>კატეგ. — მთავარი</label>
+      <select id="qCatMain" onchange="updateQSubCatOpts()"><option value="">— პროფ. —</option></select>
     </div>
-    <div class="fg" id="qCatOtherGroup" style="display:none"><label>კონკრეტული სამუშაო</label><input id="qCatOther" placeholder="მაგ: ელექტრო გამათბობლის შეკეთება"></div>
+    <div class="fg" id="qCatSubGroup" style="display:none">
+      <label>ქვე-კატეგ. (სურვილისამებრ)</label>
+      <select id="qCatSub"><option value="">— ქვე-კ. —</option></select>
+    </div>
     <div class="fg"><label>აღწერა</label><textarea id="qDesc" placeholder="დეტალები — რაც უფრო ვრცლად, მით უკეთ..."></textarea></div>
     <div class="fr">
       <div class="fg"><label>ქალაქი / უბანი</label><input id="qCity" placeholder="ვაკე, თბილისი"></div>
@@ -1623,20 +1626,22 @@ async function renderHandymen() {
   grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳ იტვირთება...</div>';
   if (companiesGrid) companiesGrid.innerHTML = '';
 
-  const spec = document.getElementById('fSpec')?.value || '';
+  const mainCat = document.getElementById('fCatMain')?.value || '';
+  const subCat = document.getElementById('fCatSub')?.value || '';
   const minRating = document.getElementById('fRating')?.value || '';
-  const mainCatId = document.getElementById('fSpec')?.dataset?.mainCatId || '';
 
   try {
     let url = '/users/handymen?';
-    if (spec) url += `specialty=${encodeURIComponent(spec)}&`;
+    if (mainCat) url += `specialty=${encodeURIComponent(mainCat)}&`;
     if (minRating) url += `minRating=${minRating}&`;
     let all = await api(url);
-    if (mainCatId) {
-      const group = CATS_DATA.find(g => g.id === mainCatId);
-      if (group) all = all.filter(h => {
-        const specs = h.specialties?.length ? h.specialties : [h.specialty];
-        return specs.some(s => group.name === s);
+    // Sub-category client-side filter
+    if (subCat) {
+      all = all.filter(h => {
+        const services = Array.isArray(h.services) ? h.services : [];
+        const firstWord = subCat.split(' ')[0].toLowerCase();
+        return services.some(s => s.toLowerCase().includes(firstWord)) ||
+               (h.specialty && h.specialty.toLowerCase().includes(firstWord));
       });
     }
 
@@ -1900,7 +1905,9 @@ async function submitRequest() {
   if (!cu) { openMo('moLogin'); return; }
   if (cu.type !== 'user') { toast('⚠️ მხოლოდ მომხმარებელს შეუძლია', '', 'err'); return; }
   const title = document.getElementById('qTitle').value.trim();
-  let cat = document.getElementById('qCat').value;
+  const qMain = document.getElementById('qCatMain')?.value || '';
+  const qSub = document.getElementById('qCatSub')?.value || '';
+  let cat = qSub || qMain;
   if (!title) { toast('⚠️ სათაური შეიყვანე', '', 'err'); return; }
   if (!cat) { toast('⚠️ კატეგორია აირჩიე', '', 'err'); return; }
   if (cat === 'სხვა') {
@@ -1918,9 +1925,10 @@ async function submitRequest() {
     await api('/requests', { method: 'POST', body: fd });
     closeMo('moRequest');
     reqMediaInputFiles = []; renderReqMediaGrid();
-    ['qTitle','qDesc','qCity','qBudget','qCatOther'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-    document.getElementById('qCat').value = '';
-    document.getElementById('qCatOtherGroup').style.display = 'none';
+    ['qTitle','qDesc','qCity','qBudget'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const qm = document.getElementById('qCatMain'); if (qm) qm.value = '';
+    const qs = document.getElementById('qCatSub'); if (qs) qs.innerHTML = '<option value="">— ქვე-კ. —</option>';
+    const qsg = document.getElementById('qCatSubGroup'); if (qsg) qsg.style.display = 'none';
     toast('📋 მოთხოვნა გამოქვეყნდა!', 'ხელოსნები მალე გეწერებიან', 'ok');
     renderRequests();
   } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
@@ -2128,7 +2136,6 @@ async function renderDashboard() {
         </div>` : ''}
 
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
-          <button class="btn bp bs" onclick="nav('requests')">📋 მოთხ.</button>
           <button class="btn bvip bs" onclick="openVipModal('vip')">⭐ VIP ${vip1Price}₾</button>
           <button class="btn bvipp bs" onclick="openVipModal('vipp')">💜 VIP+ ${vipp1Price}₾</button>
           <button class="btn bo bs" onclick="showProfile('${cu2.id}')">👤 პროფ.</button>
@@ -2912,7 +2919,11 @@ async function sendAriaMsg(text) {
     } else {
       ariaAddMsg('assistant', reply || 'ბოდიში, ვერ გავიგე. სცადე ხელახლა!');
     }
-  } catch (e) { ariaMessages.pop(); ariaAddMsg('assistant', '⚠️ კავშ. შეცდ. support@xelosani.ge'); }
+  } catch (e) {
+    ariaMessages.pop();
+    const errMsg = e?.error || (typeof e === 'string' ? e : '');
+    ariaAddMsg('assistant', '⚠️ შეცდომა: ' + (errMsg || 'კავშირი ვერ მოხდა') + '\n\nდახმარება: support@xelosani.ge');
+  }
   ariaLoading = false;
 }
 async function triggerSupportRequest(userMsg) {
@@ -2945,114 +2956,66 @@ async function renderCardPage() {
   if (cu.type === 'user') { nav('dashboard'); return; }
   const body = document.getElementById('cardPageBody');
   if (!body) return;
-  savedCard = loadSavedCard();
   const cu2 = await api('/auth/me').catch(() => cu);
+  currentUser = cu2;
   const prices = PLAN_PRICES[cu2.type] || PLAN_PRICES.handyman;
   const plan = cu2.plan || 'start';
+  const planExpired = cu2.planExpiresAt && new Date(cu2.planExpiresAt) < new Date();
+  const hasActivePlan = plan !== 'start' && !planExpired;
 
-  if (savedCard) {
-    body.innerHTML = `
-      <div style="margin-bottom:24px">
-        <!-- Saved card visual -->
-        <div class="card-visual">
-          <div class="card-brand">💳</div>
-          <div class="card-chip">
-            <div style="width:12px;height:8px;border:1px solid rgba(0,0,0,.25);border-radius:2px"></div>
-          </div>
-          <div class="card-number-display">${formatCardDisplay(savedCard.number)}</div>
-          <div class="card-bottom">
-            <div>
-              <div class="card-label-sm">ბარათის მფლობელი</div>
-              <div class="card-value">${sanitize(savedCard.name.toUpperCase())}</div>
-            </div>
-            <div>
-              <div class="card-label-sm">ვადა</div>
-              <div class="card-value">${sanitize(savedCard.expiry)}</div>
-            </div>
-          </div>
-        </div>
-        <div style="margin-top:16px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;display:flex;justify-content:space-between;align-items:center">
+  body.innerHTML = `
+    <div style="padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:24px">
+      <div style="font-size:12px;color:var(--t2);margin-bottom:8px">მიმდინარე ტარიფი</div>
+      <div style="font-size:22px;font-weight:800;margin-bottom:8px">${getPlanBadge(cu2)}</div>
+      ${hasActivePlan ? `<div style="font-size:12px;color:var(--t2)">ვადა: <strong style="color:var(--text)">${new Date(cu2.planExpiresAt).toLocaleDateString('ka-GE')}-მდე</strong></div>` : ''}
+      ${plan === 'start' && cu2.trialExpiresAt ? `<div style="font-size:12px;color:var(--t2)">ტრიალი: <strong style="color:var(--ok)">${new Date(cu2.trialExpiresAt).toLocaleDateString('ka-GE')}-მდე</strong></div>` : ''}
+    </div>
+    <div style="margin-bottom:8px;font-size:14px;font-weight:700;color:var(--t2)">ტარიფის შეძენა</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="padding:16px;border-radius:12px;border:2px solid rgba(255,107,43,.4);background:rgba(255,107,43,.06)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
           <div>
-            <div style="font-size:13px;font-weight:700">მიბმული ბარათი</div>
-            <div style="font-size:12px;color:var(--t2);margin-top:2px">**** **** **** ${savedCard.number.slice(-4)}</div>
+            <div style="font-weight:800;font-size:16px">⚡ Pro</div>
+            <div style="font-size:12px;color:var(--t2);margin-top:3px">ულიმ. შეთ. · გამ. პოზ. · 30 დღე</div>
           </div>
-          <button class="btn berr bs" onclick="confirmDeleteCard()">🗑 წაშლა</button>
+          <div style="font-size:20px;font-weight:800;color:var(--accent)">${prices.pro / 100}₾<span style="font-size:12px;font-weight:400;color:var(--t2)">/თვე</span></div>
         </div>
-      </div>
-      <div style="padding:16px;background:rgba(46,204,113,.08);border:1px solid rgba(46,204,113,.3);border-radius:12px;margin-bottom:20px">
-        <div style="font-weight:700;margin-bottom:4px">✅ ავტო-გადახდა ჩართულია</div>
-        <div style="font-size:13px;color:var(--t2)">მიმდინარე ტარიფი: <strong style="color:var(--text)">${plan.toUpperCase()}</strong>${plan !== 'start' ? ` · ${plan === 'pro' ? prices.pro : prices.top}₾ ყოველ 30 დღეში` : ''}</div>
-      </div>
-      <button class="btn bp" style="width:100%;justify-content:center" onclick="nav('dashboard')">← დაფაზე დაბრუნება</button>
-    `;
-  } else {
-    body.innerHTML = `
-      <div style="margin-bottom:20px">
-        <div style="font-size:15px;font-weight:700;margin-bottom:6px">💳 ბარათის მიბმა</div>
-        <div style="font-size:13px;color:var(--t2);margin-bottom:20px">მიაბი ბარათი ავტომატური ყოველთვიური გადახდისთვის</div>
-
-        <!-- Live card preview -->
-        <div class="card-visual" id="cardPreview">
-          <div class="card-brand" id="cardBrandIcon">💳</div>
-          <div class="card-chip">
-            <div style="width:12px;height:8px;border:1px solid rgba(0,0,0,.25);border-radius:2px"></div>
-          </div>
-          <div class="card-number-display" id="cardNumDisplay">•••• •••• •••• ••••</div>
-          <div class="card-bottom">
-            <div>
-              <div class="card-label-sm">ბარათის მფლობელი</div>
-              <div class="card-value" id="cardNameDisplay">სახელი გვარი</div>
-            </div>
-            <div>
-              <div class="card-label-sm">ვადა</div>
-              <div class="card-value" id="cardExpDisplay">MM/YY</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card-form-wrap">
-        <div class="fg" style="margin-bottom:14px">
-          <label style="font-size:11px;color:var(--t2);font-weight:600;display:block;margin-bottom:6px">ბარათის ნომერი</label>
-          <input id="cardNumInp" type="text" inputmode="numeric" maxlength="19"
-            placeholder="0000 0000 0000 0000"
-            oninput="formatCardInput(this)"
-            style="width:100%;padding:13px 16px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;font-size:16px;outline:none;letter-spacing:2px;font-family:monospace;transition:.2s"
-            onfocus="this.style.borderColor='rgba(255,255,255,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.12)'">
-        </div>
-        <div class="fg" style="margin-bottom:14px">
-          <label style="font-size:11px;color:var(--t2);font-weight:600;display:block;margin-bottom:6px">ბარათის მფლობელი</label>
-          <input id="cardNameInp" type="text" maxlength="26"
-            placeholder="GIORGI BERIDZE"
-            oninput="this.value=this.value.toUpperCase();document.getElementById('cardNameDisplay').textContent=this.value||'სახელი გვარი'"
-            style="width:100%;padding:13px 16px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;font-size:14px;outline:none;text-transform:uppercase;transition:.2s;font-family:inherit"
-            onfocus="this.style.borderColor='rgba(255,255,255,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.12)'">
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="fg" style="margin-bottom:0">
-            <label style="font-size:11px;color:var(--t2);font-weight:600;display:block;margin-bottom:6px">ვადა (MM/YY)</label>
-            <input id="cardExpInp" type="text" inputmode="numeric" maxlength="5"
-              placeholder="MM/YY"
-              oninput="formatExpiry(this)"
-              style="width:100%;padding:13px 16px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;font-size:15px;outline:none;font-family:monospace;transition:.2s"
-              onfocus="this.style.borderColor='rgba(255,255,255,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.12)'">
-          </div>
-          <div class="fg" style="margin-bottom:0">
-            <label style="font-size:11px;color:var(--t2);font-weight:600;display:block;margin-bottom:6px">CVV / CVC</label>
-            <input id="cardCvvInp" type="password" inputmode="numeric" maxlength="4"
-              placeholder="•••"
-              style="width:100%;padding:13px 16px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;font-size:15px;outline:none;font-family:monospace;transition:.2s"
-              onfocus="this.style.borderColor='rgba(255,255,255,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.12)'">
-          </div>
-        </div>
-        <button class="btn bp" onclick="saveCard()" style="width:100%;justify-content:center;margin-top:20px;font-size:15px;padding:13px">
-          🔒 ბარათის მიბმა
+        <button class="btn bp" style="width:100%;justify-content:center;padding:12px" onclick="bindCardAndSubscribe('pro')">
+          💳 ბარათის მიბმა — Pro
         </button>
-        <div style="text-align:center;margin-top:10px;font-size:11px;color:rgba(255,255,255,.4)">🔐 დაცულია SSL 256-bit დაშიფვრით</div>
       </div>
-    `;
+      <div style="padding:16px;border-radius:12px;border:2px solid rgba(168,85,247,.4);background:rgba(168,85,247,.06)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <div>
+            <div style="font-weight:800;font-size:16px">🔝 TOP</div>
+            <div style="font-size:12px;color:var(--t2);margin-top:3px">TOP ბეჯი · ავტო VIP+ · ულიმ. შეთ.</div>
+          </div>
+          <div style="font-size:20px;font-weight:800;color:var(--vipp)">${prices.top / 100}₾<span style="font-size:12px;font-weight:400;color:var(--t2)">/თვე</span></div>
+        </div>
+        <button class="btn" style="width:100%;justify-content:center;padding:12px;background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(99,102,241,.2));border:1px solid rgba(168,85,247,.5);color:var(--vipp)" onclick="bindCardAndSubscribe('top')">
+          💳 ბარათის მიბმა — TOP
+        </button>
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--t2);text-align:center;margin-top:16px">🔐 გადამისამართება TBC Pay-ზე · SSL 256-bit დაშიფვრა</p>
+    <button class="btn bg" style="width:100%;justify-content:center;margin-top:12px" onclick="nav('dashboard')">← დაფაზე დაბრუნება</button>
+  `;
+}
+
+async function bindCardAndSubscribe(plan) {
+  const btn = event.currentTarget;
+  const origText = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '⏳ TBC Pay-ზე გადამისამართება...';
+  try {
+    const data = await api('/payment/subscribe', { method: 'POST', body: { plan } });
+    if (data.redirectUrl) window.location.href = data.redirectUrl;
+    else throw new Error('No redirect URL');
+  } catch (e) {
+    btn.disabled = false; btn.innerHTML = origText;
+    toast('⚠️ ' + (e.error || 'გადახდის შეცდომა'), '', 'err');
   }
 }
+
 
 function formatCardInput(inp) {
   let v = inp.value.replace(/\D/g, '').slice(0, 16);
@@ -3104,24 +3067,13 @@ function confirmDeleteCard() {
 async function choosePlan(plan) {
   const cu = currentUser;
   if (!cu) return;
-  if (plan === 'start') {
-    if (cu.usedFreeTrial) { toast('⚠️ Start ტარიფი უკვე გამოყენებული გაქვს', '', 'err'); return; }
-    closeMo('moUpgrade');
-    toast('✅ Start ტარიფი ჩართულია', '3 თვე უფასო · 5 შეთ./თვე', 'ok');
-    return;
-  }
-  // For paid plan: check if card exists
   closeMo('moUpgrade');
-  savedCard = loadSavedCard();
-  if (!savedCard) {
-    toast('💳 ჯერ ბარათი მიაბი', 'ავტო-გადახდისთვის ბარათი საჭიროა', 'ok');
-    setTimeout(() => nav('my-card'), 800);
+  if (plan === 'start') {
+    toast('ℹ️ Start ტარიფი', '3 თვე უფასო · 5 შეთ./თვე. შეძენა არ სჭირდება!', 'ok');
     return;
   }
-  const prices = PLAN_PRICES[cu.type] || PLAN_PRICES.handyman;
-  const amount = plan === 'pro' ? prices.pro : prices.top;
-  toast(`✅ ${plan.toUpperCase()} ტარიფი ჩართულია!`, `${amount}₾ ჩამოიჭრება ყოველ 30 დღეში`, 'ok');
-  renderDashboard();
+  // Redirect to TBC Pay for payment
+  nav('my-card');
 }
 
 // ========================================================
@@ -3189,15 +3141,20 @@ function doSearch() {
   const q = document.getElementById('heroSearch').value.toLowerCase().trim();
   nav('handymen');
   if (q) setTimeout(() => {
-    const el = document.getElementById('fSpec');
-    const match = CATS.find(c => c.toLowerCase().includes(q));
-    if (match && el) { el.value = match; renderHandymen(); }
+    const match = CATS_DATA.find(g => g.name.toLowerCase().includes(q) || g.subs.some(s => s.toLowerCase().includes(q)));
+    if (match) {
+      const m = document.getElementById('fCatMain'); if (m) { m.value = match.name; updateFSubCatOpts(); }
+      // Also check if specific sub matches
+      const sub = match.subs.find(s => s.toLowerCase().includes(q));
+      if (sub) { const s = document.getElementById('fCatSub'); if (s) s.value = sub; }
+    }
+    renderHandymen();
   }, 100);
 }
-function filterCat(cat) { nav('handymen'); setTimeout(() => { const el = document.getElementById('fSpec'); if (el) { el.value = cat; delete el.dataset.mainCatId; renderHandymen(); } }, 100); }
-function filterMainCat(catId) { nav('handymen'); setTimeout(() => { const el = document.getElementById('fSpec'); if (el) { el.value = ''; el.dataset.mainCatId = catId; renderHandymen(); } }, 100); }
-function filterMainCatBtn(catId, btnEl) { const el = document.getElementById('fSpec'); if (el) { el.value = ''; el.dataset.mainCatId = catId; } clearActivePill(); if (btnEl) btnEl.classList.add('active'); renderHandymen(); }
-function clearCatFilter(btnEl) { const el = document.getElementById('fSpec'); if (el) { el.value = ''; delete el.dataset.mainCatId; } clearActivePill(); if (btnEl) btnEl.classList.add('active'); renderHandymen(); }
+function filterCat(cat) { nav('handymen'); setTimeout(() => { const el = document.getElementById('fCatMain'); if (el) { el.value = cat; delete el.dataset.mainCatId; renderHandymen(); } }, 100); }
+function filterMainCat(catId) { nav('handymen'); setTimeout(() => { const el = document.getElementById('fCatMain'); if (el) { el.value = ''; el.dataset.mainCatId = catId; renderHandymen(); } }, 100); }
+function filterMainCatBtn(catId, btnEl) { const el = document.getElementById('fCatMain'); if (el) { el.value = ''; el.dataset.mainCatId = catId; } clearActivePill(); if (btnEl) btnEl.classList.add('active'); renderHandymen(); }
+function clearCatFilter(btnEl) { const el = document.getElementById('fCatMain'); if (el) { el.value = ''; delete el.dataset.mainCatId; } clearActivePill(); if (btnEl) btnEl.classList.add('active'); renderHandymen(); }
 function clearActivePill() { document.querySelectorAll('#mainCatPills .pill').forEach(p => p.classList.remove('active')); }
 function renderMainCatPills() {
   const el = document.getElementById('mainCatPills'); if (!el) return;
@@ -3209,12 +3166,41 @@ function buildCatOptgroups(firstOptionHTML) {
     `<optgroup label="${g.icon} ${g.name}">${g.subs.map(s => `<option value="${s}">${s}</option>`).join('')}</optgroup>`
   ).join('') + '<option value="სხვა">🔩 სხვა</option>';
 }
+function updateQSubCatOpts() {
+  const main = document.getElementById('qCatMain')?.value;
+  const sub = document.getElementById('qCatSub');
+  const grp = document.getElementById('qCatSubGroup');
+  if (!sub || !grp) return;
+  sub.innerHTML = '<option value="">— ქვე-კ. —</option>';
+  if (!main) { grp.style.display = 'none'; return; }
+  const group = CATS_DATA.find(g => g.name === main);
+  if (group) {
+    group.subs.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sub.appendChild(o); });
+    grp.style.display = 'block';
+  } else { grp.style.display = 'none'; }
+}
+
+function updateFSubCatOpts() {
+  const main = document.getElementById('fCatMain')?.value;
+  const sub = document.getElementById('fCatSub');
+  if (!sub) return;
+  sub.innerHTML = '<option value="">— ყველა ქვე-კ. —</option>';
+  if (!main) return;
+  const group = CATS_DATA.find(g => g.name === main);
+  if (group) group.subs.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sub.appendChild(o); });
+}
+
 function initCats() {
-  ['fSpec','rCat','qCat','rSpec'].forEach(id => {
+  // fCatMain and qCatMain — main category dropdowns
+  ['fCatMain', 'qCatMain'].forEach(id => {
     const el = document.getElementById(id); if (!el) return;
-    const first = el.options[0]?.outerHTML || '';
-    el.innerHTML = buildCatOptgroups(first);
+    el.innerHTML = '<option value="">— პროფ. —</option>' +
+      CATS_DATA.map(g => `<option value="${g.name}">${g.icon} ${g.name}</option>`).join('');
   });
+  // rCat — request filter (category list for requests page filter)
+  const rCat = document.getElementById('rCat');
+  if (rCat) rCat.innerHTML = '<option value="">ყველა კ.</option>' +
+    CATS_DATA.map(g => `<optgroup label="${g.icon} ${g.name}">${g.subs.map(s=>`<option value="${s}">${s}</option>`).join('')}</optgroup>`).join('') + '<option value="">სხვა</option>';
   const hp = document.getElementById('heroPills');
   if (hp) hp.innerHTML = CATS_DATA.map(g => `<div class="pill" onclick="filterMainCat('${g.id}')">${g.icon} ${g.name}</div>`).join('');
   renderMainCatPills();
