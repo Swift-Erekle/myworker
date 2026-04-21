@@ -1,0 +1,195 @@
+// prisma/schema.prisma
+// ხელოსანი.ge – სრული მონაცემთა ბაზის სქემა
+// გენერირებულია backend-ისა და frontend state-ის მიხედვით
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────
+// მომხმარებლები (users, handymen, companies, staff, admin)
+// ─────────────────────────────────────────────────────────────
+model User {
+  id             String    @id @default(cuid())
+  name           String
+  surname        String?
+  email          String    @unique
+  phone          String?
+  password       String    // bcrypt hash
+  type           String    // user, handyman, company, staff, admin
+  specialty      String?   // სპეციალობა (ხელოსნებისთვის)
+  city           String?
+  desc           String?   // აღწერა
+  services       Json      @default("[]")   // მასივი, მაგ: ["გაყვანილობა", "განათება"]
+  emoji          String    @default("🔧")
+  color          String    @default("#22222f")
+  verified       Boolean   @default(false)  // ადმინის მიერ გადამოწმება
+  emailVerified  Boolean   @default(false)  // ელ-ფოსტის დადასტურება
+  jobs           Int       @default(0)      // შესრულებული სამუშაოების რაოდენობა
+  vipType        String    @default("none") // vip, vipp, none
+  vipExpiresAt   DateTime?                  // ვადის გასვლის დრო
+  vipActivatedAt DateTime?                  // ბოლო გააქტიურების დრო (სორტირებისთვის)
+  blocked        Boolean   @default(false)
+  portfolio      Json      @default("[]")   // [{url, type, publicId}]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  requests        Request[]
+  offers          Offer[]
+  reviewsReceived Review[]  @relation("handyman")
+  reviewsGiven    Review[]  @relation("reviewer")
+  chatsAsUser     Chat[]    @relation("user")
+  chatsAsHandyman Chat[]    @relation("handyman")
+  supportRequests SupportRequest[]
+  vipPayments     VipPayment[]
+  messages        Message[]
+}
+
+// ─────────────────────────────────────────────────────────────
+// მოთხოვნები (requests)
+// ─────────────────────────────────────────────────────────────
+model Request {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title      String
+  category   String   // მთავარი კატეგორია ან ქვეკატეგორია
+  desc       String?
+  city       String
+  budget     Int?
+  urgency    String   @default("normal") // normal, urgent
+  status     String   @default("open")   // open, in_progress, completed
+  media      Json     @default("[]")     // [{url, type}]
+  createdAt  DateTime @default(now())
+
+  offers Offer[]
+}
+
+// ─────────────────────────────────────────────────────────────
+// შეთავაზებები (offers)
+// ─────────────────────────────────────────────────────────────
+model Offer {
+  id          String   @id @default(cuid())
+  requestId   String
+  request     Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  handymanId  String
+  handyman    User     @relation(fields: [handymanId], references: [id], onDelete: Cascade)
+  price       Int      // ფასი (ლარი)
+  duration    String?  // მაგ: "2-3 საათი"
+  comment     String?
+  status      String   @default("pending") // pending, accepted, rejected
+  createdAt   DateTime @default(now())
+
+  chat Chat?   // one-to-one (optional)
+
+  @@unique([requestId, handymanId]) // თავიდან აცილებს დუბლიკატ შეთავაზებებს
+}
+
+// ─────────────────────────────────────────────────────────────
+// ჩათები (chats)
+// ─────────────────────────────────────────────────────────────
+model Chat {
+  id          String   @id @default(cuid())
+  offerId     String   @unique
+  offer       Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  requestId   String   // denormalized for quick access
+  userId      String
+  user        User     @relation("user", fields: [userId], references: [id])
+  handymanId  String
+  handyman    User     @relation("handyman", fields: [handymanId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messages Message[]
+}
+
+// ─────────────────────────────────────────────────────────────
+// შეტყობინებები (messages) – ცალკე მოდელი, არა JSON blob
+// ─────────────────────────────────────────────────────────────
+model Message {
+  id        String   @id @default(cuid())
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  fromId    String
+  from      User     @relation(fields: [fromId], references: [id])
+  type      String   @default("text") // text, image, video, voice
+  content   String   // text or URL
+  createdAt DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────
+// შეფასებები (reviews)
+// ─────────────────────────────────────────────────────────────
+model Review {
+  id          String   @id @default(cuid())
+  reviewerId  String
+  reviewer    User     @relation("reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  handymanId  String
+  handyman    User     @relation("handyman", fields: [handymanId], references: [id], onDelete: Cascade)
+  stars       Int      // 1-5
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  @@unique([reviewerId, handymanId]) // ერთმა მომხმარებელმა ერთ ხელოსანს მხოლოდ ერთი შეფასება
+}
+
+// ─────────────────────────────────────────────────────────────
+// სუპორტის მოთხოვნები (support requests)
+// ─────────────────────────────────────────────────────────────
+model SupportRequest {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    String   @default("pending") // pending, active, closed
+  lastMsg   String?  // ბოლო შეტყობინების პრევიუ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages SupportMessage[]
+}
+
+// ─────────────────────────────────────────────────────────────
+// სუპორტის შეტყობინებები
+// ─────────────────────────────────────────────────────────────
+model SupportMessage {
+  id               String         @id @default(cuid())
+  supportRequestId String
+  supportRequest   SupportRequest @relation(fields: [supportRequestId], references: [id], onDelete: Cascade)
+  fromRole         String         // user, operator
+  content          String
+  createdAt        DateTime       @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────
+// VIP გადახდები (payment records)
+// ─────────────────────────────────────────────────────────────
+model VipPayment {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vipType     String   // vip, vipp
+  days        Int      // 1 ან 5
+  amount      Int      // თანხა თეთრებში (200 = 2₾)
+  status      String   @default("pending") // pending, paid, failed
+  tbcOrderId  String?  // ჩვენი მხრიდან გენერირებული order ID
+  tbcPayId    String?  // TBC-ს მიერ დაბრუნებული payId
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────
+// ელ-ფოსტის ვერიფიკაციისა და პაროლის აღდგენის კოდები
+// ─────────────────────────────────────────────────────────────
+model VerifyCode {
+  email     String   @id
+  code      String
+  type      String   // verify, reset
+  expiresAt DateTime
+
+  @@index([expiresAt]) // ინდექსი ვადაგასული კოდების გასაწმენდად
+}
