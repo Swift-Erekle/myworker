@@ -1,10 +1,6 @@
-// routes/auth.js
-// BUG FIX (DeepSeek):
-// 1. global.verifyCodes map — lost on restart, no TTL cleanup → replaced with DB table (VerifyCode)
-// 2. Missing emailVerifyTemplate import
-// 3. No input validation
-// 4. Missing rate limiting
-
+// ╔═══════════════════════════════════════════════╗
+// ║  ამ ფაილის სწორი მდებარეობა: routes/auth.js  ║
+// ╚═══════════════════════════════════════════════╝
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -17,13 +13,13 @@ const router = express.Router();
 
 // Rate limiters
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 min
+  windowMs: 15 * 60 * 1000,
   max: 10,
   message: { error: 'ძალიან ბევრი მცდელობა. 15 წუთში ისევ სცადე.' },
 });
 const codeLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 min
-  max: 3,
+  windowMs: 60 * 1000,
+  max: 5,
   message: { error: 'ძალიან ბევრი კოდის გაგზავნა. 1 წუთში ისევ სცადე.' },
 });
 
@@ -43,7 +39,7 @@ function safeUser(u) {
 }
 
 async function saveCode(email, code, type) {
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
   await prisma.verifyCode.upsert({
     where: { email },
     update: { code, type, expiresAt },
@@ -57,7 +53,6 @@ async function checkCode(email, code, type) {
   if (record.type !== type) return false;
   if (record.code !== code) return false;
   if (record.expiresAt < new Date()) return false;
-  // Delete after use
   await prisma.verifyCode.delete({ where: { email } });
   return true;
 }
@@ -80,8 +75,22 @@ router.post('/register', authLimiter, async (req, res) => {
     if ((userType === 'handyman' || userType === 'company') && !specialty)
       return res.status(400).json({ error: 'სპეციალობა სავალდებულოა ხელოსნებისთვის' });
 
-    const exists = await prisma.user.findUnique({ where: { email } });
+    // Email uniqueness check
+    const exists = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
     if (exists) return res.status(409).json({ error: 'ეს ელ-ფოსტა უკვე გამოყენებულია' });
+
+    // Phone uniqueness check — per account type (same phone can be used across different types)
+    const cleanPhone = (phone || '').trim();
+    if (cleanPhone) {
+      const phoneExists = await prisma.user.findFirst({
+        where: { phone: cleanPhone, type: userType },
+      });
+      if (phoneExists) {
+        return res.status(409).json({
+          error: 'ეს ტელეფონის ნომერი უკვე გამოყენებულია. სხვა ნომერი შეიყვანე.',
+        });
+      }
+    }
 
     const hashed = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
@@ -89,7 +98,7 @@ router.post('/register', authLimiter, async (req, res) => {
         name: name.trim(),
         surname: (surname || '').trim(),
         email: email.toLowerCase().trim(),
-        phone: (phone || '').trim() || null,
+        phone: cleanPhone || null,
         password: hashed,
         type: userType,
         specialty: specialty || null,
@@ -101,8 +110,16 @@ router.post('/register', authLimiter, async (req, res) => {
 
     // Send email verification code
     const code = generateCode();
-    await saveCode(email, code, 'verify');
-    await sendEmail(email, 'ხელოსანი.ge — ვერიფიკაციის კოდი', emailVerifyTemplate(name, code));
+    await saveCode(user.email, code, 'verify');
+    const sent = await sendEmail(
+      user.email,
+      'ხელოსანი.ge — ვერიფიკაციის კოდი',
+      emailVerifyTemplate(user.name, code)
+    );
+    if (!sent) {
+      // Email not configured — log code for dev/demo environments
+      console.log(`[AUTH] DEMO verify code for ${user.email}: ${code}`);
+    }
 
     res.status(201).json({ userId: user.id, message: 'კოდი გაიგზავნა ელ-ფოსტაზე' });
   } catch (err) {
@@ -141,7 +158,8 @@ router.post('/resend', codeLimiter, async (req, res) => {
     if (user.emailVerified) return res.status(400).json({ error: 'ელ-ფოსტა უკვე დადასტურებულია' });
     const code = generateCode();
     await saveCode(email.toLowerCase(), code, 'verify');
-    await sendEmail(email, 'ხელოსანი.ge — ვერიფიკაციის კოდი', emailVerifyTemplate(user.name, code));
+    const sent = await sendEmail(email, 'ხელოსანი.ge — ვერიფიკაციის კოდი', emailVerifyTemplate(user.name, code));
+    if (!sent) console.log(`[AUTH] DEMO resend code for ${email}: ${code}`);
     res.json({ message: 'კოდი ხელახლა გაიგზავნა' });
   } catch (err) {
     res.status(500).json({ error: 'სერვერის შეცდომა' });
@@ -161,6 +179,23 @@ router.post('/login', authLimiter, async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ error: 'ელ-ფოსტა ან პაროლი არასწორია' });
 
+    // If email not verified → auto-resend code and ask user to verify
+    if (!user.emailVerified) {
+      const code = generateCode();
+      await saveCode(user.email, code, 'verify');
+      const sent = await sendEmail(
+        user.email,
+        'ხელოსანი.ge — ვერიფიკაციის კოდი',
+        emailVerifyTemplate(user.name, code)
+      );
+      if (!sent) console.log(`[AUTH] DEMO login-verify code for ${user.email}: ${code}`);
+      return res.status(403).json({
+        error: 'ელ-ფოსტა დაუდასტურებელია. კოდი ხელახლა გამოიგზავნა.',
+        needsVerification: true,
+        email: user.email,
+      });
+    }
+
     const token = signToken(user.id);
     res.json({ token, user: safeUser(user) });
   } catch (err) {
@@ -174,12 +209,12 @@ router.post('/forgot', codeLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     const user = await prisma.user.findUnique({ where: { email: email?.toLowerCase()?.trim() } });
-    // Always return OK to prevent email enumeration
     if (!user) return res.json({ message: 'კოდი გაიგზავნა (თუ ანგარიში არსებობს)' });
 
     const code = generateCode();
     await saveCode(email.toLowerCase(), code, 'reset');
-    await sendEmail(email, 'ხელოსანი.ge — პაროლის აღდგენა', passwordResetTemplate(user.name, code));
+    const sent = await sendEmail(email, 'ხელოსანი.ge — პაროლის აღდგენა', passwordResetTemplate(user.name, code));
+    if (!sent) console.log(`[AUTH] DEMO forgot code for ${email}: ${code}`);
     res.json({ message: 'კოდი გაიგზავნა ელ-ფოსტაზე' });
   } catch (err) {
     console.error('[AUTH] forgot error:', err.message);

@@ -1,4 +1,7 @@
-// routes/chat.js
+// ╔══════════════════════════════════════════════════╗
+// ║  ამ ფაილის სწორი მდებარეობა: routes/chat.js    ║
+// ╚══════════════════════════════════════════════════╝
+// FIX: chatUser/chatHandyman → user/handyman (Prisma schema field names)
 const express = require('express');
 const prisma = require('../utils/prisma');
 const { requireAuth } = require('../middleware/auth');
@@ -6,19 +9,20 @@ const { upload, handleCloudinaryUpload } = require('../middleware/upload');
 
 const router = express.Router();
 
+// Shared select for chat participants
+const PARTICIPANT_SELECT = { id: true, name: true, surname: true, emoji: true, avatar: true };
+
 // GET /api/chat/mine — get all chats for current user
 router.get('/mine', requireAuth, async (req, res) => {
   try {
-    const where =
-      req.user.type === 'user'
-        ? { userId: req.user.id }
-        : { handymanId: req.user.id };
+    const isUser = req.user.type === 'user';
+    const where = isUser ? { userId: req.user.id } : { handymanId: req.user.id };
 
     const chats = await prisma.chat.findMany({
       where,
       include: {
-        chatUser: { select: { id: true, name: true, surname: true, emoji: true } },
-        chatHandyman: { select: { id: true, name: true, surname: true, emoji: true } },
+        user:     { select: PARTICIPANT_SELECT },
+        handyman: { select: PARTICIPANT_SELECT },
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1,
@@ -38,14 +42,14 @@ router.get('/mine', requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/chat/:id — get chat with messages
+// GET /api/chat/:id — get single chat with messages
 router.get('/:id', requireAuth, async (req, res) => {
   try {
     const chat = await prisma.chat.findUnique({
       where: { id: req.params.id },
       include: {
-        chatUser: { select: { id: true, name: true, surname: true, emoji: true } },
-        chatHandyman: { select: { id: true, name: true, surname: true, emoji: true } },
+        user:     { select: PARTICIPANT_SELECT },
+        handyman: { select: PARTICIPANT_SELECT },
         offer: {
           include: { request: { select: { id: true, title: true } } },
         },
@@ -74,7 +78,7 @@ router.get('/:id/messages', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'წვდომა აკრძალულია' });
     }
 
-    const cursor = req.query.before; // message ID for pagination
+    const cursor = req.query.before;
     const take = parseInt(req.query.take) || 50;
 
     const messages = await prisma.message.findMany({
@@ -91,7 +95,7 @@ router.get('/:id/messages', requireAuth, async (req, res) => {
   }
 });
 
-// POST /api/chat/:id/messages — send text message (alternative to socket)
+// POST /api/chat/:id/messages — send text message (REST fallback if socket unavailable)
 router.post('/:id/messages', requireAuth, async (req, res) => {
   try {
     const chat = await prisma.chat.findUnique({ where: { id: req.params.id } });
@@ -116,7 +120,6 @@ router.post('/:id/messages', requireAuth, async (req, res) => {
       data: { updatedAt: new Date() },
     });
 
-    // Emit to socket room if socket.io is available
     const io = req.app.get('io');
     if (io) io.to(`chat:${req.params.id}`).emit('newMessage', msg);
 
@@ -126,7 +129,7 @@ router.post('/:id/messages', requireAuth, async (req, res) => {
   }
 });
 
-// POST /api/chat/:id/upload — upload file to chat (image/video/voice)
+// POST /api/chat/:id/upload — upload file to chat
 router.post(
   '/:id/upload',
   requireAuth,

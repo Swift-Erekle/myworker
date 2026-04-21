@@ -2006,7 +2006,7 @@ async function renderDashboard() {
 
 function chatItem(c) {
   const cu = currentUser;
-  const other = cu.type === 'user' ? c.chatHandyman : c.chatUser;
+  const other = cu.type === 'user' ? c.handyman : c.user;
   const lastMsg = c.messages?.[0];
   const avatarHtml = other?.avatar
     ? `<img src="${sanitize(other.avatar)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">`
@@ -2046,7 +2046,7 @@ async function loadChatMessages() {
   try {
     const chat = await api('/chat/' + chatId);
     const cu = currentUser;
-    const other = cu.id === chat.userId ? chat.chatHandyman : chat.chatUser;
+    const other = cu.id === chat.userId ? chat.handyman : chat.user;
     document.getElementById('chatTitle').textContent = `${other?.name || ''} ${other?.surname || ''}`;
     document.getElementById('chatSub').textContent = chat.offer?.request?.title || '';
     renderMessages(chat.messages || []);
