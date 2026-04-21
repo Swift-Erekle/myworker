@@ -1,6 +1,11 @@
 // prisma/schema.prisma
-// ხელოსანი.ge – სრული მონაცემთა ბაზის სქემა
-// გენერირებულია backend-ისა და frontend state-ის მიხედვით
+// ════════════════════════════════════════════════════════════════
+// FIXES vs previous version:
+// 1. Message.fromId → String? (nullable) — fixes FK violation
+//    when system messages use fromId: 'system' (no real user)
+// 2. Message.from removed FK relation — system msg safe
+// 3. Added subscriptionStatus field to User
+// ════════════════════════════════════════════════════════════════
 
 generator client {
   provider = "prisma-client-js"
@@ -12,7 +17,7 @@ datasource db {
 }
 
 // ─────────────────────────────────────────────────────────────
-// მომხმარებლები (users, handymen, companies, staff, admin)
+// მომხმარებლები
 // ─────────────────────────────────────────────────────────────
 model User {
   id             String    @id @default(cuid())
@@ -20,151 +25,186 @@ model User {
   surname        String?
   email          String    @unique
   phone          String?
-  password       String    // bcrypt hash
+  password       String
   type           String    // user, handyman, company, staff, admin
-  specialty      String?   // სპეციალობა (ხელოსნებისთვის)
+  specialty      String?
+  specialties    String[]  @default([])
   city           String?
-  desc           String?   // აღწერა
-  services       Json      @default("[]")   // მასივი, მაგ: ["გაყვანილობა", "განათება"]
+  desc           String?
+  services       Json      @default("[]")
   emoji          String    @default("🔧")
   color          String    @default("#22222f")
-  verified       Boolean   @default(false)  // ადმინის მიერ გადამოწმება
-  emailVerified  Boolean   @default(false)  // ელ-ფოსტის დადასტურება
-  jobs           Int       @default(0)      // შესრულებული სამუშაოების რაოდენობა
-  vipType        String    @default("none") // vip, vipp, none
-  vipExpiresAt   DateTime?                  // ვადის გასვლის დრო
-  vipActivatedAt DateTime?                  // ბოლო გააქტიურების დრო (სორტირებისთვის)
+  avatar         String?
+  verified       Boolean   @default(false)
+  emailVerified  Boolean   @default(false)
+  jobs           Int       @default(0)
   blocked        Boolean   @default(false)
-  portfolio      Json      @default("[]")   // [{url, type, publicId}]
-  avatar         String?                    // profile photo URL
-  specialties    String[]  @default([])     // multiple specialties
-  // ── Subscription plan ───────────────────────────────
-  plan                 String    @default("start")   // start, pro, top
-  planExpiresAt        DateTime?                       // when paid plan expires
-  trialExpiresAt       DateTime?                       // 3-month trial end
-  usedFreeTrial        Boolean   @default(false)       // trial already used
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  portfolio      Json      @default("[]")
+
+  // ── VIP ────────────────────────────────────────────────────
+  vipType        String    @default("none")  // none, vip, vipp
+  vipExpiresAt   DateTime?
+  vipActivatedAt DateTime?
+
+  // ── Subscription plan ──────────────────────────────────────
+  plan               String    @default("start")  // start, pro, top
+  planExpiresAt      DateTime?                     // null = no paid plan active
+  trialExpiresAt     DateTime?                     // null = trial not started
+  usedFreeTrial      Boolean   @default(false)
+  subscriptionStatus String    @default("active")  // active, expired, cancelled
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   // Relations
-  requests        Request[]
-  offers          Offer[]
-  reviewsReceived Review[]  @relation("handyman")
-  reviewsGiven    Review[]  @relation("reviewer")
-  chatsAsUser     Chat[]    @relation("user")
-  chatsAsHandyman Chat[]    @relation("handyman")
-  supportRequests SupportRequest[]
+  requests             Request[]
+  offers               Offer[]
+  reviewsReceived      Review[]             @relation("handyman")
+  reviewsGiven         Review[]             @relation("reviewer")
+  chatsAsUser          Chat[]               @relation("user")
+  chatsAsHandyman      Chat[]               @relation("handyman")
+  supportRequests      SupportRequest[]
   vipPayments          VipPayment[]
   subscriptionPayments SubscriptionPayment[]
-  messages             Message[]   // messages sent by this user (excludes system msgs)
+
+  @@index([type])
+  @@index([email])
 }
 
 // ─────────────────────────────────────────────────────────────
-// მოთხოვნები (requests)
+// ვერიფიკაციის კოდები
+// ─────────────────────────────────────────────────────────────
+model VerifyCode {
+  email     String   @id
+  code      String
+  type      String   // verify, reset
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// მოთხოვნები
 // ─────────────────────────────────────────────────────────────
 model Request {
-  id         String   @id @default(cuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title      String
-  category   String   // მთავარი კატეგორია ან ქვეკატეგორია
-  desc       String?
-  city       String
-  budget     Int?
-  urgency    String   @default("normal") // normal, urgent
-  status     String   @default("open")   // open, in_progress, completed
-  media      Json     @default("[]")     // [{url, type}]
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  category  String
+  desc      String?
+  city      String   @default("თბილისი")
+  budget    Int?
+  urgency   String   @default("normal")
+  status    String   @default("open")  // open, in_progress, completed
+  media     Json     @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   offers Offer[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([category])
 }
 
 // ─────────────────────────────────────────────────────────────
-// შეთავაზებები (offers)
+// შეთავაზებები
 // ─────────────────────────────────────────────────────────────
 model Offer {
-  id          String   @id @default(cuid())
-  requestId   String
-  request     Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
-  handymanId  String
-  handyman    User     @relation(fields: [handymanId], references: [id], onDelete: Cascade)
-  price       Int      // ფასი (ლარი)
-  duration    String?  // მაგ: "2-3 საათი"
-  comment     String?
-  status      String   @default("pending") // pending, accepted, rejected
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  requestId  String
+  request    Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  handymanId String
+  handyman   User     @relation(fields: [handymanId], references: [id], onDelete: Cascade)
+  price      Int
+  duration   String?
+  comment    String?
+  status     String   @default("pending")  // pending, accepted, rejected
+  createdAt  DateTime @default(now())
 
-  chat Chat?   // one-to-one (optional)
+  chat Chat?
 
-  @@unique([requestId, handymanId]) // თავიდან აცილებს დუბლიკატ შეთავაზებებს
+  @@unique([requestId, handymanId])
+  @@index([handymanId])
+  @@index([requestId])
 }
 
 // ─────────────────────────────────────────────────────────────
-// ჩათები (chats)
+// ჩათები
 // ─────────────────────────────────────────────────────────────
 model Chat {
-  id          String   @id @default(cuid())
-  offerId     String   @unique
-  offer       Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
-  requestId   String   // denormalized for quick access
-  userId      String
-  user        User     @relation("user", fields: [userId], references: [id])
-  handymanId  String
-  handyman    User     @relation("handyman", fields: [handymanId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  offerId    String   @unique
+  offer      Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  requestId  String
+  userId     String
+  user       User     @relation("user",     fields: [userId],     references: [id])
+  handymanId String
+  handyman   User     @relation("handyman", fields: [handymanId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   messages Message[]
+
+  @@index([userId])
+  @@index([handymanId])
 }
 
 // ─────────────────────────────────────────────────────────────
-// შეტყობინებები (messages) – ცალკე მოდელი, არა JSON blob
-// ─────────────────────────────────────────────────────────────
+// შეტყობინებები
+// ════════════════════════════════════════════════════════════════
+// BUG FIX: fromId is now String? (nullable) so system messages
+// (fromId: null, type: 'system') don't violate FK constraints.
+// Previous: fromId String + User? relation → PostgreSQL FK error
+// ════════════════════════════════════════════════════════════════
 model Message {
   id        String   @id @default(cuid())
   chatId    String
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  fromId    String
-  from      User?    @relation(fields: [fromId], references: [id])   // nullable: 'system' messages have no user
-  type      String   @default("text") // text, image, video, voice
-  content   String   // text or URL
+  fromId    String?  // null = system message; userId otherwise
+  type      String   @default("text")  // text, image, video, voice, system
+  content   String
   createdAt DateTime @default(now())
+
+  @@index([chatId])
+  @@index([fromId])
 }
 
 // ─────────────────────────────────────────────────────────────
-// შეფასებები (reviews)
+// შეფასებები
 // ─────────────────────────────────────────────────────────────
 model Review {
-  id          String   @id @default(cuid())
-  reviewerId  String
-  reviewer    User     @relation("reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
-  handymanId  String
-  handyman    User     @relation("handyman", fields: [handymanId], references: [id], onDelete: Cascade)
-  stars       Int      // 1-5
-  comment     String?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  reviewerId String
+  reviewer   User     @relation("reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  handymanId String
+  handyman   User     @relation("handyman", fields: [handymanId], references: [id], onDelete: Cascade)
+  stars      Int
+  comment    String?
+  createdAt  DateTime @default(now())
 
-  @@unique([reviewerId, handymanId]) // ერთმა მომხმარებელმა ერთ ხელოსანს მხოლოდ ერთი შეფასება
+  @@unique([reviewerId, handymanId])
+  @@index([handymanId])
 }
 
 // ─────────────────────────────────────────────────────────────
-// სუპორტის მოთხოვნები (support requests)
+// სუპორტი
 // ─────────────────────────────────────────────────────────────
 model SupportRequest {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status    String   @default("pending") // pending, active, closed
-  lastMsg   String?  // ბოლო შეტყობინების პრევიუ
+  status    String   @default("pending")  // pending, active, closed
+  lastMsg   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   messages SupportMessage[]
+
+  @@index([status])
 }
 
-// ─────────────────────────────────────────────────────────────
-// სუპორტის შეტყობინებები
-// ─────────────────────────────────────────────────────────────
 model SupportMessage {
   id               String         @id @default(cuid())
   supportRequestId String
@@ -175,47 +215,42 @@ model SupportMessage {
 }
 
 // ─────────────────────────────────────────────────────────────
-// VIP გადახდები (payment records)
+// VIP გადახდები
 // ─────────────────────────────────────────────────────────────
 model VipPayment {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vipType     String   // vip, vipp
-  days        Int      // 1 ან 5
-  amount      Int      // თანხა თეთრებში (200 = 2₾)
-  status      String   @default("pending") // pending, paid, failed
-  tbcOrderId  String?  // ჩვენი მხრიდან გენერირებული order ID
-  tbcPayId    String?  // TBC-ს მიერ დაბრუნებული payId
-  paidAt      DateTime?
-  createdAt   DateTime @default(now())
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vipType    String    // vip, vipp
+  days       Int
+  amount     Int       // tetri (200 = 2₾)
+  status     String    @default("pending")  // pending, paid, failed
+  tbcOrderId String?   @unique
+  tbcPayId   String?
+  paidAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+  @@index([status])
 }
 
 // ─────────────────────────────────────────────────────────────
-// ელ-ფოსტის ვერიფიკაციისა და პაროლის აღდგენის კოდები
-// ─────────────────────────────────────────────────────────────
-model VerifyCode {
-  email     String   @id
-  code      String
-  type      String   // verify, reset
-  expiresAt DateTime
-
-  @@index([expiresAt]) // ინდექსი ვადაგასული კოდების გასაწმენდად
-}
-// ─────────────────────────────────────────────────────────────
-// სუბსქრიფცია (subscription payments — Pro/Top monthly plans)
+// სუბსქრიფციის გადახდები (Pro / Top)
 // ─────────────────────────────────────────────────────────────
 model SubscriptionPayment {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan        String   // pro, top
-  amount      Int      // tetri (2900 = 29₾)
-  status      String   @default("pending") // pending, paid, failed
-  tbcOrderId  String?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan        String    // pro, top
+  amount      Int       // tetri (2900 = 29₾)
+  status      String    @default("pending")  // pending, paid, failed
+  tbcOrderId  String?   @unique
   tbcPayId    String?
   periodStart DateTime?
   periodEnd   DateTime?
   paidAt      DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+  @@index([status])
 }
