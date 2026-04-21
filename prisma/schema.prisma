@@ -50,7 +50,7 @@ model User {
   chatsAsHandyman Chat[]    @relation("handyman")
   supportRequests SupportRequest[]
   vipPayments     VipPayment[]
-  messages        Message[]
+  messages        Message[]   // messages sent by this user (excludes system msgs)
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -119,7 +119,7 @@ model Message {
   chatId    String
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
   fromId    String
-  from      User     @relation(fields: [fromId], references: [id])
+  from      User?    @relation(fields: [fromId], references: [id])   // nullable: 'system' messages have no user
   type      String   @default("text") // text, image, video, voice
   content   String   // text or URL
   createdAt DateTime @default(now())

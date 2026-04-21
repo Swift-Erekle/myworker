@@ -19,6 +19,8 @@ const paymentRoutes = require('./routes/payment');
 const ariaRoutes = require('./routes/aria');
 
 const app = express();
+// Fix: trust reverse-proxy headers (needed for express-rate-limit behind nginx/Railway/Render)
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 
 const io = new Server(server, {
