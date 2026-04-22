@@ -1478,7 +1478,7 @@ async function doLogin() {
     initSocket();
   } catch (e) {
     // Unverified email: backend re-sent a code, open verify modal
-    if (e.emailNotVerified) {
+    if (e.needsVerification) {
       pendingRegEmail = e.email || email;
       closeMo('moLogin');
       document.getElementById('verifySubText').textContent = `კოდი გამოგზავნილია ${pendingRegEmail}-ზე. შეიყვანე:`;
@@ -2842,36 +2842,131 @@ async function renderAdminAnalytics(body) {
   } catch (e) { body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>'; }
 }
 
+// ── Admin accounts state ──────────────────────────────────────
+let _adminUsers = [];
+let _adminTypeFilter = 'all';
+let _adminPlanFilter = 'all';
+
+function _planBadge(u) {
+  const now = new Date();
+  // VIP / VIP+
+  const vipOk = u.vipType && u.vipType !== 'none' && u.vipExpiresAt && new Date(u.vipExpiresAt) > now;
+  // Plan
+  const planOk = u.plan && u.plan !== 'start' && u.planExpiresAt && new Date(u.planExpiresAt) > now;
+  const trialOk = u.plan === 'start' && u.trialExpiresAt && new Date(u.trialExpiresAt) > now;
+
+  let badges = '';
+  if (u.plan === 'top' && planOk)
+    badges += `<span style="background:rgba(255,215,0,.15);color:#f1c40f;border:1px solid rgba(255,215,0,.3);padding:2px 7px;border-radius:50px;font-size:10px;font-weight:700">🔝 TOP</span> `;
+  else if (u.plan === 'pro' && planOk)
+    badges += `<span style="background:rgba(52,152,219,.15);color:#3498db;border:1px solid rgba(52,152,219,.3);padding:2px 7px;border-radius:50px;font-size:10px;font-weight:700">⚡ Pro</span> `;
+  else if (trialOk)
+    badges += `<span style="background:rgba(46,204,113,.1);color:#2ecc71;border:1px solid rgba(46,204,113,.25);padding:2px 7px;border-radius:50px;font-size:10px;font-weight:700">🆓 Trial</span> `;
+  else if (u.plan === 'start')
+    badges += `<span style="background:rgba(120,120,140,.1);color:var(--t2);border:1px solid var(--border);padding:2px 7px;border-radius:50px;font-size:10px">Start</span> `;
+
+  if (vipOk && u.vipType === 'vipp')
+    badges += `<span style="background:rgba(155,89,182,.15);color:#9b59b6;border:1px solid rgba(155,89,182,.3);padding:2px 7px;border-radius:50px;font-size:10px;font-weight:700">💜 VIP+</span>`;
+  else if (vipOk)
+    badges += `<span style="background:rgba(255,165,0,.15);color:#f39c12;border:1px solid rgba(255,165,0,.3);padding:2px 7px;border-radius:50px;font-size:10px;font-weight:700">⭐ VIP</span>`;
+
+  return badges || `<span style="color:var(--t2);font-size:11px">—</span>`;
+}
+
+function _adminApplyFilters() {
+  const now = new Date();
+  return _adminUsers.filter(u => {
+    // Type filter
+    if (_adminTypeFilter !== 'all' && u.type !== _adminTypeFilter) return false;
+    // Plan filter
+    if (_adminPlanFilter === 'pro') {
+      return u.plan === 'pro' && u.planExpiresAt && new Date(u.planExpiresAt) > now;
+    }
+    if (_adminPlanFilter === 'top') {
+      return u.plan === 'top' && u.planExpiresAt && new Date(u.planExpiresAt) > now;
+    }
+    if (_adminPlanFilter === 'vip') {
+      return u.vipType === 'vip' && u.vipExpiresAt && new Date(u.vipExpiresAt) > now;
+    }
+    if (_adminPlanFilter === 'vipp') {
+      return u.vipType === 'vipp' && u.vipExpiresAt && new Date(u.vipExpiresAt) > now;
+    }
+    if (_adminPlanFilter === 'paid') {
+      const hasPlan = (u.plan === 'pro' || u.plan === 'top') && u.planExpiresAt && new Date(u.planExpiresAt) > now;
+      const hasVip = u.vipType && u.vipType !== 'none' && u.vipExpiresAt && new Date(u.vipExpiresAt) > now;
+      return hasPlan || hasVip;
+    }
+    return true;
+  });
+}
+
+function _renderAccountsTable(body) {
+  const filtered = _adminApplyFilters();
+  const typeLabels = { all:'ყველა', user:'👤 მომხ.', handyman:'🔧 ხელოს.', company:'🏢 კომ.' };
+  const planLabels = { all:'ყველა ტარიფი', pro:'⚡ Pro', top:'🔝 TOP', vip:'⭐ VIP', vipp:'💜 VIP+', paid:'💳 გადახდილი' };
+
+  body.innerHTML = `
+    <!-- Filter bar -->
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center">
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${['all','user','handyman','company'].map(t =>
+          `<button class="btn bs${_adminTypeFilter===t?' bp':' bg'}" style="font-size:11px"
+            onclick="_adminTypeFilter='${t}';_renderAccountsTable(document.getElementById('adminBody'))"
+          >${typeLabels[t]}</button>`
+        ).join('')}
+      </div>
+      <div style="width:1px;height:24px;background:var(--border);margin:0 4px"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${['all','pro','top','vip','vipp','paid'].map(p =>
+          `<button class="btn bs${_adminPlanFilter===p?' bp':' bg'}" style="font-size:11px"
+            onclick="_adminPlanFilter='${p}';_renderAccountsTable(document.getElementById('adminBody'))"
+          >${planLabels[p]}</button>`
+        ).join('')}
+      </div>
+    </div>
+    <!-- Count -->
+    <div style="margin-bottom:10px;font-size:12px;color:var(--t2)">
+      <strong style="color:var(--text);font-size:15px">${filtered.length}</strong> ანგარიში
+      ${_adminTypeFilter!=='all'||_adminPlanFilter!=='all' ? `<span style="color:var(--accent)"> (ფილტრი: ${typeLabels[_adminTypeFilter]} · ${planLabels[_adminPlanFilter]})</span>` : `<span style="color:var(--t2)"> სულ</span>`}
+    </div>
+    <!-- Table -->
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:620px">
+      <thead><tr style="border-bottom:2px solid var(--border)">
+        <th style="text-align:left;padding:10px 8px;color:var(--t2)">სახელი</th>
+        <th style="text-align:left;padding:10px 8px;color:var(--t2)">ტიპი</th>
+        <th style="text-align:left;padding:10px 8px;color:var(--t2)">ელ-ფოსტა</th>
+        <th style="text-align:left;padding:10px 8px;color:var(--t2)">ტარიფი</th>
+        <th style="text-align:left;padding:10px 8px;color:var(--t2)">სტ.</th>
+        <th style="text-align:left;padding:10px 8px;color:var(--t2)">მოქ.</th>
+      </tr></thead>
+      <tbody>${filtered.length ? filtered.map(u => `<tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="openAdminUserDetail('${u.id}')">
+        <td style="padding:10px 8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            ${u.avatar ? `<img src="${sanitize(u.avatar)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover">` : `<span>${u.emoji || '👤'}</span>`}
+            <div>
+              <div style="font-weight:600">${sanitize(u.name)} ${sanitize(u.surname || '')}</div>
+              ${u.specialty ? `<div style="font-size:11px;color:var(--accent)">${sanitize(u.specialty)}</div>` : ''}
+            </div>
+          </div>
+        </td>
+        <td style="padding:10px 8px;font-size:11px;font-weight:700;color:var(--t2)">${u.type}</td>
+        <td style="padding:10px 8px;color:var(--t2);font-size:12px">${sanitize(u.email)}</td>
+        <td style="padding:10px 8px">${_planBadge(u)}</td>
+        <td style="padding:10px 8px">${u.blocked ? '🚫' : '<span style="color:var(--ok)">✓</span>'}</td>
+        <td style="padding:10px 8px" onclick="event.stopPropagation()">
+          <button class="btn bs ${u.blocked ? 'bok' : 'berr'}" onclick="toggleBlock('${u.id}')">${u.blocked ? 'განბ.' : 'დაბ.'}</button>
+          <button class="btn bs berr" style="margin-left:4px" onclick="deleteUser('${u.id}')">წაშ.</button>
+        </td>
+      </tr>`).join('') : `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--t2)">ანგარიში ვერ მოიძებნა</td></tr>`}
+      </tbody>
+    </table></div>`;
+}
+
 async function renderAdminAccounts(body) {
   body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳...</div>';
   try {
-    const users = await api('/admin/users');
-    body.innerHTML = `
-      <div style="margin-bottom:12px;font-size:12px;color:var(--t2)">${users.length} ანგარიში</div>
-      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:520px">
-        <thead><tr style="border-bottom:2px solid var(--border)">
-          <th style="text-align:left;padding:10px 8px;color:var(--t2)">სახელი</th>
-          <th style="text-align:left;padding:10px 8px;color:var(--t2)">ტიპი</th>
-          <th style="text-align:left;padding:10px 8px;color:var(--t2)">ელ-ფოსტა</th>
-          <th style="text-align:left;padding:10px 8px;color:var(--t2)">სტ.</th>
-          <th style="text-align:left;padding:10px 8px;color:var(--t2)">მოქ.</th>
-        </tr></thead>
-        <tbody>${users.map(u => `<tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="openAdminUserDetail('${u.id}')">
-          <td style="padding:10px 8px">
-            <div style="display:flex;align-items:center;gap:8px">
-              ${u.avatar ? `<img src="${sanitize(u.avatar)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover">` : `<span>${u.emoji || '👤'}</span>`}
-              <div><div style="font-weight:600">${sanitize(u.name)} ${sanitize(u.surname || '')}</div>${u.specialty ? `<div style="font-size:11px;color:var(--accent)">${sanitize(u.specialty)}</div>` : ''}</div>
-            </div>
-          </td>
-          <td style="padding:10px 8px;font-size:11px;font-weight:700">${u.type}</td>
-          <td style="padding:10px 8px;color:var(--t2);font-size:12px">${sanitize(u.email)}</td>
-          <td style="padding:10px 8px">${u.blocked ? '🚫' : '<span style="color:var(--ok)">✓</span>'}</td>
-          <td style="padding:10px 8px" onclick="event.stopPropagation()">
-            <button class="btn bs ${u.blocked ? 'bok' : 'berr'}" onclick="toggleBlock('${u.id}')">${u.blocked ? 'განბ.' : 'დაბ.'}</button>
-            <button class="btn bs berr" style="margin-left:4px" onclick="deleteUser('${u.id}')">წაშ.</button>
-          </td>
-        </tr>`).join('')}</tbody>
-      </table></div>`;
+    _adminUsers = await api('/admin/users');
+    _renderAccountsTable(body);
   } catch (e) { body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>'; }
 }
 
@@ -2947,26 +3042,122 @@ async function openAdminUserDetail(uid) {
   try {
     const u = await api('/admin/users/' + uid);
     const canEdit = currentUser?.type === 'admin';
+    const now = new Date();
+
+    // ── Subscription status ──
+    const planOk = u.plan && u.plan !== 'start' && u.planExpiresAt && new Date(u.planExpiresAt) > now;
+    const trialOk = u.plan === 'start' && u.trialExpiresAt && new Date(u.trialExpiresAt) > now;
+    const trialExp = u.plan === 'start' && u.trialExpiresAt && new Date(u.trialExpiresAt) <= now;
+    const vipOk = u.vipType && u.vipType !== 'none' && u.vipExpiresAt && new Date(u.vipExpiresAt) > now;
+
+    function fdate(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleDateString('ka-GE', { day:'numeric', month:'short', year:'numeric' });
+    }
+    function ftime(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleString('ka-GE', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+
+    // ── Plan block ──
+    let planHtml = '';
+    if (u.type === 'handyman' || u.type === 'company') {
+      const planColor = u.plan === 'top' ? '#f1c40f' : u.plan === 'pro' ? '#3498db' : 'var(--t2)';
+      const planLabel = u.plan === 'top' ? '🔝 TOP' : u.plan === 'pro' ? '⚡ Pro' : '🆓 Start';
+      planHtml = `
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">📋 ტარიფი</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+            <div><span style="color:var(--t2)">ტარიფი:</span>
+              <strong style="color:${planColor};margin-left:6px">${planLabel}</strong>
+            </div>
+            <div><span style="color:var(--t2)">სტატუსი:</span>
+              <strong style="margin-left:6px;color:${planOk?'var(--ok)':trialOk?'#2ecc71':trialExp?'#e74c3c':'var(--t2)'}">${
+                planOk ? '✅ აქტიური' : trialOk ? '🆓 Trial' : trialExp ? '❌ ვადაგ.' : '—'
+              }</strong>
+            </div>
+            ${u.planExpiresAt ? `<div><span style="color:var(--t2)">ვადა:</span> <strong style="margin-left:6px">${fdate(u.planExpiresAt)}</strong></div>` : ''}
+            ${u.trialExpiresAt ? `<div><span style="color:var(--t2)">Trial ვადა:</span> <strong style="margin-left:6px">${fdate(u.trialExpiresAt)}</strong></div>` : ''}
+            <div><span style="color:var(--t2)">ავტო-განახ.:</span>
+              <strong style="margin-left:6px">${u.autoRenew ? '✅ ჩართული' : '—'}</strong>
+            </div>
+          </div>
+          ${vipOk ? `
+          <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+            <div><span style="color:var(--t2)">VIP:</span>
+              <strong style="margin-left:6px;color:${u.vipType==='vipp'?'#9b59b6':'#f39c12'}">${u.vipType==='vipp'?'💜 VIP+':'⭐ VIP'}</strong>
+            </div>
+            <div><span style="color:var(--t2)">VIP ვადა:</span> <strong style="margin-left:6px">${fdate(u.vipExpiresAt)}</strong></div>
+          </div>` : ''}
+        </div>`;
+    }
+
+    // ── Payment history ──
+    const payments = u.vipPayments || [];
+    let payHtml = '';
+    if (payments.length) {
+      const total = payments.filter(p => p.status === 'paid').reduce((s, p) => s + (p.amount || 0), 0);
+      payHtml = `
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px">💳 გადახდების ისტორია</div>
+            <div style="font-size:13px;font-weight:700;color:var(--accent)">სულ: ₾${(total/100).toFixed(2)}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            ${payments.map(p => {
+              const typeLabel = p.type === 'subscription_pro' ? '⚡ Pro გამოწ.'
+                : p.type === 'subscription_top' ? '🔝 TOP გამოწ.'
+                : p.type === 'card_bind' ? '💳 ბარათის მიბმა'
+                : p.type === 'vip' ? '⭐ VIP'
+                : p.type === 'vipp' ? '💜 VIP+'
+                : p.type || '—';
+              const stColor = p.status === 'paid' ? 'var(--ok)' : p.status === 'pending' ? '#f39c12' : '#e74c3c';
+              const stLabel = p.status === 'paid' ? '✅ გადახდ.' : p.status === 'pending' ? '⏳ მოლ.' : '❌ გაუქ.';
+              return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--surface);border-radius:8px;font-size:12px">
+                <div>
+                  <div style="font-weight:600">${typeLabel}</div>
+                  <div style="color:var(--t2);font-size:11px;margin-top:2px">${ftime(p.createdAt)}</div>
+                  ${p.days ? `<div style="color:var(--t2);font-size:11px">${p.days} დღე</div>` : ''}
+                </div>
+                <div style="text-align:right">
+                  <div style="font-weight:700;font-size:14px;color:var(--accent)">₾${((p.amount||0)/100).toFixed(2)}</div>
+                  <div style="color:${stColor};font-size:11px;margin-top:2px">${stLabel}</div>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+    }
+
     body.innerHTML = `
-      <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap">
+      <!-- Header -->
+      <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap">
         ${u.avatar ? `<img src="${sanitize(u.avatar)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--accent)">` : `<div class="av" style="width:64px;height:64px;font-size:24px;background:var(--surface)">${sanitize(u.emoji || '👤')}</div>`}
         <div>
           <div style="font-size:20px;font-weight:800">${sanitize(u.name)} ${sanitize(u.surname || '')}</div>
           <div style="color:var(--accent);font-size:13px">${u.type}${u.specialty ? ' · ' + sanitize(u.specialty) : ''}</div>
-          <div style="color:var(--t2);font-size:12px;margin-top:6px">📧 ${sanitize(u.email)}${u.phone ? ' · 📞 ' + sanitize(u.phone) : ''}${u.city ? ' · 📍 ' + sanitize(u.city) : ''}</div>
+          <div style="color:var(--t2);font-size:12px;margin-top:4px">📧 ${sanitize(u.email)}${u.phone ? ' · 📞 ' + sanitize(u.phone) : ''}${u.city ? ' · 📍 ' + sanitize(u.city) : ''}</div>
+          <div style="color:var(--t2);font-size:11px;margin-top:2px">🗓️ გაწევრ.: ${fdate(u.createdAt)} · ${u.emailVerified ? '✅ ვერ.' : '⚠️ დაუდ.'}</div>
           ${u.blocked ? '<div style="color:#e74c3c;font-size:12px;margin-top:4px">🚫 ანგარიში დაბლოკილია</div>' : ''}
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-bottom:16px">
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:14px">
         <div class="dc"><div class="dn">${u._count?.requests || 0}</div><div class="dl">მოთხ.</div></div>
         <div class="dc"><div class="dn">${u._count?.offers || 0}</div><div class="dl">შეთ.</div></div>
         <div class="dc"><div class="dn">${u.jobs || 0}</div><div class="dl">სამ.</div></div>
+        ${u.reviewsReceived?.length ? `<div class="dc"><div class="dn">${u.reviewsReceived.length}</div><div class="dl">შეფ.</div></div>` : ''}
       </div>
-      ${canEdit ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+      <!-- Plan + VIP -->
+      ${planHtml}
+      <!-- Payments -->
+      ${payHtml}
+      <!-- Actions -->
+      ${canEdit ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
         <button class="btn ${u.blocked ? 'bok' : 'berr'}" onclick="toggleBlock('${u.id}');closeMo('moAdminUserDetail');renderAdmin()">${u.blocked ? 'განბლოკვა' : 'დაბლოკვა'}</button>
         <button class="btn berr" onclick="deleteUser('${u.id}');closeMo('moAdminUserDetail')">🗑️ წაშლა</button>
       </div>` : ''}`;
-  } catch (e) { body.innerHTML = '<div style="color:var(--err)">' + sanitize(e.error || '') + '</div>'; }
+  } catch (e) { body.innerHTML = '<div style="color:var(--err)">' + sanitize(e.error || 'შეცდომა') + '</div>'; }
 }
 
 async function toggleBlock(uid) {

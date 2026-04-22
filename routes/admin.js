@@ -76,7 +76,10 @@ router.get('/users', async (req, res) => {
       select: {
         id: true, name: true, surname: true, email: true, phone: true,
         type: true, specialty: true, city: true, blocked: true,
-        verified: true, jobs: true, vipType: true, vipExpiresAt: true, createdAt: true,
+        verified: true, emailVerified: true, jobs: true,
+        vipType: true, vipExpiresAt: true, vipActivatedAt: true,
+        plan: true, planExpiresAt: true, trialExpiresAt: true,
+        autoRenew: true, createdAt: true,
         _count: { select: { requests: true, offers: true } },
       },
       orderBy: { createdAt: 'desc' },
