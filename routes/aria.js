@@ -27,13 +27,11 @@ VIP სისტემა:
 - VIP+: 4₾/1 დღე ან 18₾/5 დღე — ყოველთვის VIP-ზე მაღლა
 
 ტარიფები ხელოსნებისთვის:
-- Start: 0₾, 3 თვე უფასო (5 შეთავაზება/თვეში), ვადის გასვლის შემდეგ — Pro ან TOP
+- Start: 0₾ — 3 თვე უფასო, 5 შეთავაზება/თვეში
 - Pro: 29₾/თვე — ულიმიტო შეთავაზებები, გაუმჯობესებული პოზიცია
-- TOP: 69₾/თვე — ყველაფერი რაც Pro-ს აქვს + ავტო VIP+ (ყოველ დღე ავტო-განახლება, პირველი ადგილი)
+- TOP: 69₾/თვე — ყველაფერი + ავტო VIP+ ყოველ დღე (ყოველ დღე პირველი)
 
-ბარათის მიბმა: TOP და Pro ტარიფებისთვის შეგიძლიათ ბარათი მიაბათ ავტო-განახლებისთვის.
 მომხმარებლებისთვის: სრულიად უფასო.
-
 კონტაქტი: support@xelosani.ge
 
 პასუხობ ყოველთვის ქართულად, მეგობრულად და ლაკონურად.
@@ -60,6 +58,7 @@ router.post('/chat', ariaLimiter, async (req, res) => {
         parts: [{ text: String(m.parts?.[0]?.text || m.text || '').substring(0, 2000) }],
       }));
 
+    // Gemini requires conversation to start with 'user' role
     while (safeMessages.length > 0 && safeMessages[0].role === 'model') {
       safeMessages.shift();
     }
@@ -76,9 +75,9 @@ router.post('/chat', ariaLimiter, async (req, res) => {
       },
     };
 
-    // ✅ Updated to Gemini 2.5 Flash
+    // ✅ Gemini 2.5 Flash
     const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
