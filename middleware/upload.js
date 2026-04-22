@@ -22,13 +22,21 @@ const upload = multer({
  * Usage: router.post('/upload', upload.array('files', 10), handleCloudinaryUpload, handler)
  */
 async function handleCloudinaryUpload(req, res, next) {
-  if (!req.files || req.files.length === 0) {
+  // Normalize: upload.single() sets req.file, upload.array() sets req.files.
+  // Merge them so both paths work.
+  const files = req.files && req.files.length
+    ? req.files
+    : req.file
+    ? [req.file]
+    : [];
+
+  if (files.length === 0) {
     req.uploadedFiles = [];
     return next();
   }
   try {
     const results = await Promise.all(
-      req.files.map((file) => {
+      files.map((file) => {
         const isVideo = file.mimetype.startsWith('video');
         const isAudio = file.mimetype.startsWith('audio');
         return uploadBuffer(file.buffer, {
@@ -40,8 +48,8 @@ async function handleCloudinaryUpload(req, res, next) {
     req.uploadedFiles = results.map((r, i) => ({
       url: r.secure_url,
       publicId: r.public_id,
-      type: req.files[i].mimetype.startsWith('video') ? 'video'
-          : req.files[i].mimetype.startsWith('audio') ? 'voice'
+      type: files[i].mimetype.startsWith('video') ? 'video'
+          : files[i].mimetype.startsWith('audio') ? 'voice'
           : 'image',
     }));
     next();

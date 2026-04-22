@@ -422,6 +422,28 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
 .card-label-sm{font-size:9px;opacity:.7;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
 .card-value{font-size:13px;font-weight:700}
 .card-brand{position:absolute;top:16px;right:18px;font-size:28px}
+
+/* ── Request card media preview ────────────────────────── */
+.rcard-clickable{cursor:pointer;transition:transform .15s ease, border-color .15s ease}
+.rcard-clickable:hover{transform:translateY(-2px);border-color:rgba(255,107,43,.4)}
+.rcard-clickable:active{transform:translateY(0)}
+.rcard-media{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px}
+.rcard-media:has(.rcard-media-item:only-child){grid-template-columns:1fr}
+.rcard-media-item{position:relative;aspect-ratio:16/11;border-radius:8px;overflow:hidden;background:var(--s2)}
+.rcard-media-item img,.rcard-media-item video{width:100%;height:100%;object-fit:cover;display:block}
+.rcard-media-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:36px;height:36px;background:rgba(0,0,0,.55);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;pointer-events:none}
+.rcard-media-more{position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:800;pointer-events:none}
+
+/* ── Request detail modal media gallery ────────────────── */
+.rd-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:12px}
+.rd-gallery-item{aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--s2);cursor:pointer;position:relative}
+.rd-gallery-item img,.rd-gallery-item video{width:100%;height:100%;object-fit:cover;display:block}
+.rd-gallery-item .vid-ind{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;background:rgba(0,0,0,.55);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;pointer-events:none}
+.rd-section{margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+.rd-info-row{display:flex;justify-content:space-between;padding:8px 0;font-size:14px}
+.rd-info-row span:first-child{color:var(--t2)}
+.rd-info-row span:last-child{color:var(--text);font-weight:600;max-width:60%;text-align:right;word-break:break-word}
+
 </style>
 </head>
 <body>
@@ -445,7 +467,7 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
     <div class="stats-row">
       <div class="stat"><div class="sn">247+</div><div class="sl">ხელოსანი</div></div>
       <div class="stat"><div class="sn">1,840</div><div class="sl">შესრულებული</div></div>
-      <div class="stat"><div class="sn">4.9★</div><div class="sl">საშ. რეიტინგი</div></div>
+      <div class="stat"><div class="sn">4.9★</div><div class="sl">საშუალო რეიტინგი</div></div>
     </div>
   </div>
 
@@ -467,10 +489,8 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
     <div class="cards-grid" id="homeGrid"></div>
   </div>
 
-  <div style="background:linear-gradient(135deg,rgba(255,107,43,.1),rgba(255,179,71,.06));border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:56px 20px;text-align:center">
-    <h2 style="font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:10px">ხელოსანი ხარ?</h2>
-    <p style="color:var(--t2);font-size:15px;margin-bottom:24px">დარეგისტრირდი უფასოდ — პირველი 3 თვე სრულიად უფასო!</p>
-    <button class="btn bp" style="font-size:15px;padding:13px 28px" onclick="openMo('moRegister');setRegType('handyman')">🔧 დარეგისტრირება</button>
+  <div id="heroHandymanCTA" style="background:linear-gradient(135deg,rgba(255,107,43,.1),rgba(255,179,71,.06));border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:56px 20px;text-align:center">
+    <!-- Content rendered dynamically by renderHeroCTA() based on login state -->
   </div>
   <footer><div style="font-size:20px;font-weight:800;margin-bottom:6px">ხელოსანი<span style="color:var(--accent)">.ge</span></div>© 2025 xelosani.ge</footer>
 </div>
@@ -482,10 +502,10 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
     <div class="fb" style="flex-direction:column;gap:10px">
       <div id="mainCatPills" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <select id="fCatMain" onchange="updateFSubCatOpts();renderHandymen()" style="min-width:150px"><option value="">— პროფ. —</option></select>
+        <select id="fCatMain" onchange="updateFSubCatOpts();renderHandymen()" style="min-width:150px"><option value="">— პროფესია —</option></select>
         <select id="fCatSub" onchange="renderHandymen()" style="min-width:150px"><option value="">— ქვე-კ. —</option></select>
         <select id="fRating" onchange="renderHandymen()"><option value="">ნებისმიერი</option><option value="4.5">★ 4.5+</option><option value="4.0">★ 4.0+</option></select>
-        <button class="btn bg bs" onclick="clearCatFilter()" style="font-size:11px">✕ გასუფთ.</button>
+        <button class="btn bg bs" onclick="clearCatFilter()" style="font-size:11px">✕ გასუფთავება</button>
       </div>
     </div>
     <!-- Featured companies section (only shown if any company has VIP) -->
@@ -526,10 +546,10 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
       <div class="fb" style="flex-direction:column;gap:10px">
         <div id="reqCatPills" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-          <select id="rCatMain" onchange="updateReqSubCatOpts();renderRequests()" style="min-width:150px"><option value="">— პროფ. —</option></select>
+          <select id="rCatMain" onchange="updateReqSubCatOpts();renderRequests()" style="min-width:150px"><option value="">— პროფესია —</option></select>
           <select id="rCatSub" onchange="renderRequests()" style="min-width:150px"><option value="">— ქვე-კ. —</option></select>
           <select id="rUrg" onchange="renderRequests()"><option value="">ყველა</option><option value="urgent">გადაუდებელი</option><option value="normal">ჩვეულებრივი</option></select>
-          <button class="btn bg bs" onclick="clearReqCatFilter()" style="font-size:11px">✕ გასუფთ.</button>
+          <button class="btn bg bs" onclick="clearReqCatFilter()" style="font-size:11px">✕ გასუფთავება</button>
         </div>
       </div>
       <div id="requestsGrid"></div>
@@ -568,7 +588,7 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
       <div class="ic">
         <h3>📊 სტატისტიკა</h3>
         <div style="display:flex;flex-direction:column;gap:14px">
-          <div><div style="font-size:28px;font-weight:800;color:var(--accent)" id="pRating">-</div><div style="color:var(--t2);font-size:12px">საშ. რეიტინგი</div></div>
+          <div><div style="font-size:28px;font-weight:800;color:var(--accent)" id="pRating">-</div><div style="color:var(--t2);font-size:12px">საშუალო რეიტინგი</div></div>
           <div><div style="font-size:28px;font-weight:800;color:var(--accent)" id="pRevN">0</div><div style="color:var(--t2);font-size:12px">შეფასება</div></div>
           <div><div style="font-size:28px;font-weight:800;color:var(--accent)" id="pJobs">0</div><div style="color:var(--t2);font-size:12px">სამუშაო</div></div>
         </div>
@@ -659,7 +679,7 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
   <div class="modal relative">
     <button class="mc" onclick="closeMo('moLogin')">✕</button>
     <h2>შესვლა</h2><div class="sub">შედი შენს ანგარიშზე</div>
-    <div class="fg"><label>ელ-ფოსტა</label><input id="liEmail" type="email" name="email" autocomplete="email" placeholder="you@email.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="fg"><label>ელ-ფოსტა</label><input id="liელ-ფოსტა" type="email" name="email" autocomplete="email" placeholder="you@email.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <div class="fg"><label>პაროლი</label><input id="liPass" type="password" name="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="btn bp" style="width:100%;justify-content:center" onclick="doLogin()">შესვლა</button>
     <div style="text-align:center;margin-top:10px;font-size:12px"><a style="color:var(--accent);cursor:pointer" onclick="closeMo('moLogin');openMo('moForgot')">🔑 პაროლი დამავიწყდა</a></div>
@@ -688,23 +708,23 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <!-- Left: main profession chips -->
         <div>
-          <div style="font-size:11px;color:var(--t2);margin-bottom:5px;font-weight:600">📂 პროფ.</div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:5px;font-weight:600">📂 პროფესია</div>
           <div id="rProfChips" style="display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto;padding:4px;border:1px solid var(--border);border-radius:9px;background:var(--bg)"></div>
         </div>
         <!-- Right: sub-categories -->
         <div>
-          <div style="font-size:11px;color:var(--t2);margin-bottom:5px;font-weight:600">🔩 ქვე-კატ. (სურვ.)</div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:5px;font-weight:600">🔩 ქვეკატეგორია (სურვილისამებრ)</div>
           <div id="rSubCats" style="display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto;padding:4px;border:1px solid var(--border);border-radius:9px;background:var(--bg)">
-            <div style="color:var(--t2);font-size:11px;padding:8px;text-align:center">← პროფ. აირჩიე</div>
+            <div style="color:var(--t2);font-size:11px;padding:8px;text-align:center">← პროფესია აირჩიე</div>
           </div>
         </div>
       </div>
       <div style="font-size:11px;color:var(--t2);margin-top:4px">პირველი მონიშნული = მთავარი სპეციალობა</div>
     </div>
     <div class="fg"><label>ტელეფონი</label><input id="rPhone" placeholder="+995 5XX XXX XXX"></div>
-    <div class="fg"><label>ელ-ფოსტა</label><input id="rEmail" type="email" placeholder="you@email.com"></div>
+    <div class="fg"><label>ელ-ფოსტა</label><input id="rელ-ფოსტა" type="email" placeholder="you@email.com"></div>
     <div class="fg">
-      <label>პაროლი (მინ. 8 სიმბოლო)</label>
+      <label>პაროლი (მინიმუმ 8 სიმბოლო)</label>
       <input id="rPass" type="password" placeholder="••••••••" oninput="checkPassStrength(this.value)">
       <div class="ps-bar" id="psBar"></div>
       <div class="ps-label" id="psLabel"></div>
@@ -729,7 +749,7 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
       <label>ქვე-კატეგორია (სურვილისამებრ) — <span id="qCatSubLabel" style="color:var(--t2)"></span></label>
       <div id="qSubGrid" class="spec-grid" style="max-height:160px"></div>
     </div>
-    <div class="fg"><label>აღწერა</label><textarea id="qDesc" placeholder="დეტალები — რაც უფრო ვრცლად, მით უკეთ..."></textarea></div>
+    <div class="fg"><label>აღწერა</label><textarea id="qDesc" placeholder="დეტალები — რაც უფრო ვრცლად დაწერთ, მით უკეთ..."></textarea></div>
     <div class="fr">
       <div class="fg"><label>ქალაქი / უბანი</label><input id="qCity" placeholder="ვაკე, თბილისი"></div>
       <div class="fg"><label>ბიუჯეტი (₾)</label><input id="qBudget" type="number" placeholder="200"></div>
@@ -769,6 +789,47 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
     <div id="offersList"></div>
   </div>
 </div>
+
+<!-- ════════════════════════════════════════════════════
+     REQUEST DETAIL MODAL
+     Full request view with all media + actions
+════════════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════════════════
+     EDIT OFFER MODAL
+     Handyman edits their own pending offer
+════════════════════════════════════════════════════ -->
+<div class="mo" id="moEditOffer">
+  <div class="modal">
+    <button class="mc" onclick="closeMo('moEditOffer')">✕</button>
+    <h2>✏️ შეთავაზების რედაქტირება</h2>
+    <div class="sub">შეცვალე ფასი, ვადა ან კომენტარი</div>
+    <input type="hidden" id="editOfferId">
+    <div class="fg">
+      <label>ფასი (₾)</label>
+      <input type="number" id="editOfferPrice" min="1" placeholder="მაგ: 150">
+    </div>
+    <div class="fg">
+      <label>შესრულების ვადა</label>
+      <input type="text" id="editOfferDuration" placeholder="მაგ: 2 დღე">
+    </div>
+    <div class="fg">
+      <label>კომენტარი</label>
+      <textarea id="editOfferComment" rows="3" placeholder="დამატებითი ინფორმაცია..."></textarea>
+    </div>
+    <button class="btn bp" style="width:100%;justify-content:center" onclick="saveEditOffer()">💾 შენახვა</button>
+  </div>
+</div>
+
+<div class="mo" id="moReqDetail">
+  <div class="modal wide">
+    <button class="mc" onclick="closeMo('moReqDetail')">✕</button>
+    <div id="moReqDetailBody">
+      <div style="text-align:center;padding:40px;color:var(--t2)">⏳ იტვირთება...</div>
+    </div>
+  </div>
+</div>
+
+
 
 <!-- REVIEW -->
 <div class="mo" id="moReview">
@@ -825,7 +886,7 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
             <div style="font-weight:800;font-size:15px">✓ Start — უფასო</div>
-            <div style="font-size:12px;color:var(--t2);margin-top:3px">3 თვე · 5 შეთ./თვე · ახლა გაიარე, მოგვიანებით განაახლე</div>
+            <div style="font-size:12px;color:var(--t2);margin-top:3px">3 თვე უფასო · 5 შეთავაზება თვეში · ახლა გაიარე, მოგვიანებით განაახლე</div>
           </div>
           <div style="font-size:20px;font-weight:800;color:var(--ok)">0₾</div>
         </div>
@@ -835,7 +896,7 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <div>
             <div style="font-weight:800;font-size:15px">⚡ Pro</div>
-            <div style="font-size:12px;color:var(--t2);margin-top:3px">ულიმ. შეთ. · გამ. პოზ. · ავტო-განახლება 30 დღეში</div>
+            <div style="font-size:12px;color:var(--t2);margin-top:3px">ულიმიტო შეთავაზებები · გაუმჯობესებული პოზიცია · ავტო-განახლება 30 დღეში</div>
           </div>
           <div style="font-size:20px;font-weight:800;color:var(--accent)" id="planSelProPrice">29₾/თვე</div>
         </div>
@@ -848,7 +909,7 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <div>
             <div style="font-weight:800;font-size:15px">🔝 TOP</div>
-            <div style="font-size:12px;color:var(--t2);margin-top:3px">ყოვ. VIP+ · ულიმ. შეთ. · TOP ბეჯი · ავტო-განახლება</div>
+            <div style="font-size:12px;color:var(--t2);margin-top:3px">ყოველდღე VIP+ · ულიმიტო შეთავაზებები · TOP ბეჯი · ავტო-განახლება</div>
           </div>
           <div style="font-size:20px;font-weight:800;color:var(--vipp)" id="planSelTopPrice">69₾/თვე</div>
         </div>
@@ -886,7 +947,7 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
     <h2>🔑 პაროლის აღდგენა</h2>
     <div class="sub" id="forgotStep1">შეიყვანე შენი ელ-ფოსტა — გამოგვიგზავნით აღდგენის კოდს</div>
     <div id="forgotPart1">
-      <div class="fg"><label>ელ-ფოსტა</label><input id="forgotEmail" type="email" placeholder="you@email.com" onkeydown="if(event.key==='Enter')sendForgotCode()"></div>
+      <div class="fg"><label>ელ-ფოსტა</label><input id="forgotელ-ფოსტა" type="email" placeholder="you@email.com" onkeydown="if(event.key==='Enter')sendForgotCode()"></div>
       <button class="btn bp" style="width:100%;justify-content:center" onclick="sendForgotCode()">კოდის გაგზავნა</button>
     </div>
     <div id="forgotPart2" style="display:none">
@@ -924,7 +985,7 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
             📷 ფოტოს ატვირთვა
             <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="previewAvatar(this)">
           </label>
-          <div style="font-size:11px;color:var(--t2);margin-top:4px">JPG, PNG · მაქს. 5MB</div>
+          <div style="font-size:11px;color:var(--t2);margin-top:4px">JPG, PNG · მაქსიმუმ 5MB</div>
         </div>
       </div>
     </div>
@@ -933,13 +994,13 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
       <label>პროფესია(ები) <span style="color:var(--t2);font-weight:400">— აირჩიე ერთი ან მეტი</span></label>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div>
-          <div style="font-size:11px;color:var(--t2);margin-bottom:5px;font-weight:600">📂 პროფ.</div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:5px;font-weight:600">📂 პროფესია</div>
           <div id="editProfChips" style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;padding:4px;border:1px solid var(--border);border-radius:9px;background:var(--bg)"></div>
         </div>
         <div>
-          <div style="font-size:11px;color:var(--t2);margin-bottom:5px;font-weight:600">🔩 ქვე-კატ. (სურვ.)</div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:5px;font-weight:600">🔩 ქვეკატეგორია (სურვილისამებრ)</div>
           <div id="editSubCats" style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;padding:4px;border:1px solid var(--border);border-radius:9px;background:var(--bg)">
-            <div style="color:var(--t2);font-size:11px;padding:8px;text-align:center">← პროფ. აირჩიე</div>
+            <div style="color:var(--t2);font-size:11px;padding:8px;text-align:center">← პროფესია აირჩიე</div>
           </div>
         </div>
       </div>
@@ -998,7 +1059,7 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
     <h2>👨‍💼 სტაფის შექმნა</h2>
     <div class="sub">ახალი სტაფის ანგარიშის შექმნა</div>
     <div class="fg"><label>სახელი</label><input id="newStaffName" placeholder="სახელი"></div>
-    <div class="fg"><label>ელ-ფოსტა</label><input id="newStaffEmail" type="email" placeholder="staff@xelosani.ge"></div>
+    <div class="fg"><label>ელ-ფოსტა</label><input id="newStaffელ-ფოსტა" type="email" placeholder="staff@xelosani.ge"></div>
     <div class="fg"><label>ტელეფონი</label><input id="newStaffPhone" placeholder="+995 5XX XXX XXX"></div>
     <div class="fg"><label>პაროლი</label><input id="newStaffPass" type="password" placeholder="••••••••"></div>
     <button class="btn bp" style="width:100%;justify-content:center" onclick="createStaff()">შექმნა</button>
@@ -1040,7 +1101,7 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
     </div>
     <div class="chat-footer">
       <div class="chat-input-row">
-        <textarea id="userSupportInput" placeholder="შეტყობინება სუპ. გუნდს..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendUserSupportMsg()}"></textarea>
+        <textarea id="userSupportInput" placeholder="შეტყობინება სუპორტის გუნდს..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendUserSupportMsg()}"></textarea>
         <div class="cib" style="background:var(--accent);border-color:var(--accent)" onclick="sendUserSupportMsg()">➤</div>
       </div>
     </div>
@@ -1057,20 +1118,20 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
       <div id="upgStartBtn" style="display:none">
         <div style="padding:14px 16px;border-radius:12px;border:2px solid rgba(46,204,113,.4);background:rgba(46,204,113,.06);cursor:pointer;transition:.2s" onclick="choosePlan('start')">
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><div style="font-weight:800;font-size:15px">✓ Start</div><div style="font-size:12px;color:var(--t2);margin-top:3px">3 თვე უფასო · 5 შეთ./თვე (ერთჯერ)</div></div>
+            <div><div style="font-weight:800;font-size:15px">✓ Start</div><div style="font-size:12px;color:var(--t2);margin-top:3px">3 თვე უფასო · 5 შეთავაზება თვეში (ერთჯერადი)</div></div>
             <div style="font-size:20px;font-weight:800;color:var(--ok)">0₾</div>
           </div>
         </div>
       </div>
       <div style="padding:14px 16px;border-radius:12px;border:2px solid rgba(255,107,43,.45);background:rgba(255,107,43,.07);cursor:pointer;transition:.2s" onclick="choosePlan('pro')">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><div style="font-weight:800;font-size:15px">⚡ Pro</div><div style="font-size:12px;color:var(--t2);margin-top:3px">ულიმ. შეთ. · გამ. პოზ. · ავტო-განახლება</div></div>
+          <div><div style="font-weight:800;font-size:15px">⚡ Pro</div><div style="font-size:12px;color:var(--t2);margin-top:3px">ულიმიტო შეთავაზებები · გაუმჯობესებული პოზიცია · ავტო-განახლება</div></div>
           <div style="font-size:18px;font-weight:800;color:var(--accent)" id="upgProPrice">29₾/თვე</div>
         </div>
       </div>
       <div style="padding:14px 16px;border-radius:12px;border:2px solid rgba(168,85,247,.45);background:rgba(168,85,247,.07);cursor:pointer;transition:.2s" onclick="choosePlan('top')">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><div style="font-weight:800;font-size:15px">🔝 TOP</div><div style="font-size:12px;color:var(--t2);margin-top:3px">ყოვ. VIP+ · ულიმ. შეთ. · ავტო-განახლება</div></div>
+          <div><div style="font-weight:800;font-size:15px">🔝 TOP</div><div style="font-size:12px;color:var(--t2);margin-top:3px">ყოველდღე VIP+ · ულიმიტო შეთავაზებები · ავტო-განახლება</div></div>
           <div style="font-size:18px;font-weight:800;color:var(--vipp)" id="upgTopPrice">69₾/თვე</div>
         </div>
       </div>
@@ -1126,7 +1187,7 @@ const CATS_DATA = [
     'ელექტრო გაყვანილობის შეკეთება-დიაგნოსტიკა',
     'განათების სისტემის მონტაჟი-შეკეთება',
     'სოკეტი / ჩამრთველის მონტაჟი-შეკეთება',
-    'ელექტრო ფარის (სად. დაფის) მონტაჟი',
+    'ელექტრო ფარის (სადენების დაფის) მონტაჟი',
     'სარელეო დაცვა-ავტომატიკა',
     'ელექტრო თბილი იატაკის მონტაჟი',
     'ჭკვიანი სახლის (Smart Home) სისტემები',
@@ -1138,7 +1199,7 @@ const CATS_DATA = [
     'ავარიული სანტექნიკა',
     'ონკანის შეკეთება-მონტაჟი',
     'შხაპის / უნიტაზის მონტაჟი-შეკეთება',
-    'ბოილერის (წყ. გამაც.) მონტაჟი-შეკეთება',
+    'ბოილერის (წყლის გამათბობელი) მონტაჟი-შეკეთება',
     'წყლის ჟონვის დიაგნოსტიკა',
     'საკანალიზაციო სისტემის მონტაჟი-წმენდა',
     'სანიტარული კვანძის კაფელი-ლოჟი',
@@ -1161,7 +1222,7 @@ const CATS_DATA = [
     'დეკორატიული ბათქაში (ვენეციური, ესპანკა)',
     'კაფელ-მეტლახის დაგება',
     'ფასადის მოხატვა',
-    'ბუხრის / ფონტანის / ხელ. ქვის მოპირ.',
+    'ბუხრის / ფონტანის / ხელოვნური ქვის მოპირკეთება',
     'ლესვა (ბათქაში) — შიდა / გარე',
     'სტიაშკა — იატაკის გასწორება',
   ]},
@@ -1170,18 +1231,18 @@ const CATS_DATA = [
     'კოსმეტიკური რემონტი',
     'კედლების აგება / დემონტაჟი',
     'იატაკის მოწყობა (სტიაშკა, იზოლაცია)',
-    'პარკეტი / ლამინატი / ინჟ. დაფა',
+    'პარკეტი / ლამინატი / ინჟინერიული დაფა',
     'სახურავის მოწყობა-შეკეთება',
-    'გიფსოკარტონის (ყალბი ჭერი, კუპე) მონტ.',
+    'გიფსოკარტონის (ცრუ ჭერი, კუპე) მონტაჟი',
     'სამშენებლო ნარჩენების გატანა',
-    'ახალი ფანჯრები (მეტ-პლ. / ალუმინი)',
+    'ახალი ფანჯრები (მეტალოპლასტმასი / ალუმინი)',
   ]},
   { id:'hvac', icon:'❄️', name:'კონდიციონერის ტექნიკოსი', subs:[
     'კონდიციონერის მონტაჟი',
     'კონდიციონერის შეკეთება-სერვისი',
     'კონდიციონერის წმენდა',
-    'ცენტრ. / ინდ. გათბობის სისტემის მონტ.',
-    'გათბობის ქვაბის მონტაჟი-შეკეთება',
+    'ცენტრალური / ინდივიდუალური გათბობის სისტემის მონტაჟი',
+    'გათბობის ქვაბის მონტაჟი-შეკეთებაეთება',
     'რადიატორების მონტაჟი-შეკეთება',
     'წყლის თბილი იატაკის მონტაჟი',
     'ვენტილაციის სისტემის მონტაჟი-წმენდა',
@@ -1192,44 +1253,44 @@ const CATS_DATA = [
     'ნივთების დაკიდება (TV, სარკე, კარადა)',
     'კარის საკეტის მონტაჟი-შეცვლა',
     'შედუღება (ლითონის კონსტრ.)',
-    'კარჩერის (მაღ.-წნ. სარეცხი) მომსახ.',
-    'სახლის კომპლ. მართვა (ჰენდიმენი)',
-    'მეტ-პლ. კარ-ფანჯ. / აივნის მონტ.',
-    'ავარიული გამოძახება (ნებ. სამ.)',
+    'კარჩერის (მაღალი წნევის სარეცხი) მომსახურება',
+    'სახლის კომპლექსური მართვა (ჰენდიმენი)',
+    'მეტალოპლასტმასის კარი-ფანჯარის / აივნის მონტაჟი',
+    'ავარიული გამოძახება (ნებისმიერი სამუშაო)',
   ]},
   { id:'gardener', icon:'🏡', name:'მებაღე', subs:[
     'ლანდშაფტური დიზაინი',
     'ბაღის / ეზოს მოვლა',
     'ხეების გასხვლა',
-    'მორწყვის სისტემის მონტ.-შეკ.',
+    'მორწყვის სისტემის მონტაჟი-შეკეთება',
     'ღობე / ტერასა / აივანი',
-    'აუზის მშ. / შეკ. / წმენდა',
+    'აუზის მშენებლობა / შეკეთება / წმენდა',
   ]},
   { id:'technician', icon:'📱', name:'ტექნიკოსი', subs:[
     'კომპიუტერის / ნოუთბუქის შეკეთება',
-    'სმარტფონის შეკეთება (ეკრანი, ბატ.)',
+    'სმარტფონის შეკეთება (ეკრანი, ბატარეა)',
     'CCTV კამერების მონტაჟი',
     'საყოფ. ტექნიკის შეკეთება (მაცივ., ს.მ.)',
-    'ინტ. / ანტენა / სატ. სისტემის მონტ.',
+    'ინტერნეტის / ანტენის / სატელიტური სისტემის მონტაჟი',
     'PS / Xbox-ის გასუფთავება',
-    'პროგ. უზრ. ინსტ. / Windows',
+    'პროგრამული უზრუნველყოფის ინსტალაცია / Windows',
   ]},
   { id:'specialist', icon:'✨', name:'სპეციალიზებული ხელოსანი', subs:[
-    'ლითონის კარ / კიბე / მოაჯირის დამზ.',
-    'ფრანგ. გასაჭ. ჭერი (ბაუფი, ბარისოლი)',
-    'მზის პანელი / მზ. წყ. გამაც. მონტ.',
-    'ალუმინის კომპოზ. (ალუკაბონდი) პანელი',
-    'შუშის კონსტ. (საშხ. მინა, ვიტრაჟი)',
+    'ლითონის კარის / კიბის / მოაჯირის დამზადება',
+    'ფრანგული გასაჭიმი ჭერი (ბაუფი, ბარისოლი)',
+    'მზის პანელი / მზის წყლის გამათბობლის მონტაჟი',
+    'ალუმინის კომპოზიტი (ალუკაბონდი) პანელი',
+    'შუშის კონსტრუქციები (საშხაპის მინა, ვიტრაჟი)',
     'მლესავი — შიდა / გარე ლესვა',
-    'მქსოვი — კედ. / ჭ. / ფასადი',
-    'მხატვარ-სახელ. (ოჩოპინტრე)',
+    'მქსოვი — კედელი / ჭერი / ფასადი',
+    'მხატვარ-სახელოსნო (ოჩოპინტრე)',
   ]},
   { id:'household', icon:'🏠', name:'სახლის მომსახურება', subs:[
     'დამლაგებელი — სახლის დალაგება',
-    'დამლაგებელი — გენ. დალაგება',
+    'დამლაგებელი — გენერალური დალაგება',
     'ძიძა / ბავშვის მომვლელი',
     'ძველი ნივთების გატანა',
-    'მძღოლი — პირ. / მიწოდება',
+    'მძღოლი — პირადი / მიწოდება',
     'ცხოველის მოვლა (სეირნობა, გრუმინგი)',
   ]},
 ];
@@ -1343,7 +1404,7 @@ let currentVipType = 'vip';
 let currentVipDays = 1;
 let currentProfileId = null;
 let regType = 'user';
-let pendingRegEmail = null;
+let pendingRegელ-ფოსტა = null;
 let reqMediaFiles = [];
 let portFiles = [];
 let mediaRecorder = null;
@@ -1408,12 +1469,22 @@ function connectSocket() {
   });
   socket.on('supportAlert', ({ supportId, preview }) => {
     if (currentUser?.type === 'admin' || currentUser?.type === 'staff') {
-      toast('🎧 სუპ. შეტყობინება', preview, 'ok');
+      toast('🎧 სუპორტის შეტყობინება', preview, 'ok');
     }
   });
   socket.on('newSupportRequest', () => {
     if (currentUser?.type === 'admin' || currentUser?.type === 'staff') {
-      toast('🎧 ახალი სუპ. მოთხოვნა', 'მომხმარებელს სჭირდება დახმარება', 'ok');
+      toast('🎧 ახალი სუპორტის მოთხოვნა', 'მომხმარებელს სჭირდება დახმარება', 'ok');
+    }
+  });
+
+  // Live update: handyman edited their offer → refresh the detail modal if open
+  socket.on('offerUpdated', (offer) => {
+    toast('✏️ შეთავაზება განახლდა', 'ხელოსანმა შეცვალა დეტალები', 'ok');
+    // If the request detail modal is open AND shows this offer's request, reload it
+    const moReqDetail = document.getElementById('moReqDetail');
+    if (moReqDetail && moReqDetail.classList.contains('open') && offer.requestId) {
+      openRequestDetail(offer.requestId);
     }
   });
 }
@@ -1434,7 +1505,43 @@ function nav(page) {
   else if (page === 'my-card') renderCardPage();
 }
 
+
+// ========================================================
+// RENDER HERO CTA — changes based on login state
+// ========================================================
+function renderHeroCTA() {
+  const el = document.getElementById('heroHandymanCTA');
+  if (!el) return;
+  const cu = currentUser;
+
+  if (!cu) {
+    el.innerHTML = `
+      <h2 style="font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:10px">ხელოსანი ხარ?</h2>
+      <p style="color:var(--t2);font-size:15px;margin-bottom:24px">დარეგისტრირდი უფასოდ — პირველი 3 თვე სრულიად უფასო!</p>
+      <button class="btn bp" style="font-size:15px;padding:13px 28px" onclick="openMo('moRegister');setRegType('handyman')">რეგისტრაცია</button>
+    `;
+    return;
+  }
+
+  if (cu.type === 'handyman' || cu.type === 'company') {
+    el.innerHTML = `
+      <h2 style="font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:10px">გამარჯობა, ${sanitize(cu.name)}!</h2>
+      <p style="color:var(--t2);font-size:15px;margin-bottom:24px">გადაამოწმე შენი პროფილი და განაახლე ინფორმაცია</p>
+      <button class="btn bp" style="font-size:15px;padding:13px 28px" onclick="showProfile('${sanitize(cu.id)}')">👤 ჩემი პროფილი</button>
+    `;
+    return;
+  }
+
+  // Regular user
+  el.innerHTML = `
+    <h2 style="font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:10px">გამარჯობა, ${sanitize(cu.name)}!</h2>
+    <p style="color:var(--t2);font-size:15px;margin-bottom:24px">დაათვალიერე შენი მოთხოვნები და ჩათები</p>
+    <button class="btn bp" style="font-size:15px;padding:13px 28px" onclick="nav('dashboard')">📊 ჩემი გვერდი</button>
+  `;
+}
+
 function renderNav() {
+  renderHeroCTA();
   const cu = currentUser;
   const links = document.getElementById('navLinks');
   if (!links) return;
@@ -1531,7 +1638,7 @@ function previewAvatar(input) {
 // AUTH — LOGIN
 // ========================================================
 async function doLogin() {
-  const email = document.getElementById('liEmail').value.trim();
+  const email = document.getElementById('liელ-ფოსტა').value.trim();
   const password = document.getElementById('liPass').value;
   if (!email || !password) { toast('⚠️ შეავსე ყველა ველი', '', 'err'); return; }
   try {
@@ -1548,9 +1655,9 @@ async function doLogin() {
   } catch (e) {
     // Unverified email: backend re-sent a code, open verify modal
     if (e.emailNotVerified) {
-      pendingRegEmail = e.email || email;
+      pendingRegელ-ფოსტა = e.email || email;
       closeMo('moLogin');
-      document.getElementById('verifySubText').textContent = `კოდი გამოგზავნილია ${pendingRegEmail}-ზე. შეიყვანე:`;
+      document.getElementById('verifySubText').textContent = `კოდი გამოგზავნილია ${pendingRegელ-ფოსტა}-ზე. შეიყვანე:`;
       ['vc1','vc2','vc3','vc4','vc5','vc6'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
       openMo('moVerify');
       setTimeout(() => document.getElementById('vc1')?.focus(), 300);
@@ -1567,7 +1674,7 @@ async function doLogin() {
 async function doRegister() {
   const name = document.getElementById('rName').value.trim();
   const surname = document.getElementById('rSurname').value.trim();
-  const email = document.getElementById('rEmail').value.trim();
+  const email = document.getElementById('rელ-ფოსტა').value.trim();
   const phone = document.getElementById('rPhone').value.trim();
   const password = document.getElementById('rPass').value;
   const pass2 = document.getElementById('rPass2').value;
@@ -1586,7 +1693,7 @@ async function doRegister() {
       method: 'POST',
       body: { name, surname, email, phone: phone || undefined, password, type: regType, specialty, desc: desc || undefined }
     });
-    pendingRegEmail = email;
+    pendingRegელ-ფოსტა = email;
     closeMo('moRegister');
     document.getElementById('verifySubText').textContent = `კოდი გამოგზავნილია ${email}-ზე`;
     ['vc1','vc2','vc3','vc4','vc5','vc6'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
@@ -1602,9 +1709,9 @@ async function doRegister() {
 async function confirmVerify() {
   const code = ['vc1','vc2','vc3','vc4','vc5','vc6'].map(id => document.getElementById(id)?.value || '').join('');
   if (code.length < 6) { toast('⚠️ 6-ნიშნა კოდი შეიყვანე', '', 'err'); return; }
-  if (!pendingRegEmail) { toast('⚠️ შეცდომა — ხელახლა სცადე', '', 'err'); return; }
+  if (!pendingRegელ-ფოსტა) { toast('⚠️ შეცდომა — ცადე ხელახლა', '', 'err'); return; }
   try {
-    const data = await api('/auth/verify', { method: 'POST', body: { email: pendingRegEmail, code } });
+    const data = await api('/auth/verify', { method: 'POST', body: { email: pendingRegელ-ფოსტა, code } });
     setToken(data.token);
     currentUser = data.user;
     // After register, update specialties array in backend
@@ -1614,7 +1721,7 @@ async function confirmVerify() {
     closeMo('moVerify');
     renderNav();
     toast('🎉 რეგისტრაცია დასრულდა!', 'ელ-ფოსტა დადასტურებულია ✓', 'ok');
-    pendingRegEmail = null;
+    pendingRegელ-ფოსტა = null;
     selectedRegSpecialties = [];
     initSocket();
     maybeShowAppBanner();
@@ -1634,9 +1741,9 @@ async function confirmVerify() {
 }
 
 async function resendCode() {
-  if (!pendingRegEmail) return;
+  if (!pendingRegელ-ფოსტა) return;
   try {
-    await api('/auth/resend', { method: 'POST', body: { email: pendingRegEmail } });
+    await api('/auth/resend', { method: 'POST', body: { email: pendingRegელ-ფოსტა } });
     toast('📧 კოდი ხელახლა გაიგზავნა', '', 'ok');
   } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
 }
@@ -1666,11 +1773,11 @@ function doLogout() {
 // AUTH — FORGOT / RESET
 // ========================================================
 async function sendForgotCode() {
-  const email = document.getElementById('forgotEmail').value.trim();
+  const email = document.getElementById('forgotელ-ფოსტა').value.trim();
   if (!email) { toast('⚠️ ელ-ფოსტა შეიყვანე', '', 'err'); return; }
   try {
     await api('/auth/forgot', { method: 'POST', body: { email } });
-    pendingRegEmail = email;
+    pendingRegელ-ფოსტა = email;
     document.getElementById('forgotStep2text').textContent = `კოდი გამოგზავნილია ${email}-ზე`;
     ['fc1','fc2','fc3','fc4','fc5','fc6'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     document.getElementById('forgotPart1').style.display = 'none';
@@ -1685,17 +1792,17 @@ async function confirmForgot() {
   if (code.length < 6) { toast('⚠️ 6-ნიშნა კოდი შეიყვანე', '', 'err'); return; }
   const newPassword = document.getElementById('forgotNewPass').value;
   const newPassword2 = document.getElementById('forgotNewPass2').value;
-  if (!newPassword || newPassword.length < 8) { toast('⚠️ პაროლი მინ. 8 სიმბ.', '', 'err'); return; }
+  if (!newPassword || newPassword.length < 8) { toast('⚠️ პაროლი მინიმუმ 8 სიმბოლო', '', 'err'); return; }
   if (newPassword !== newPassword2) { toast('⚠️ პაროლები არ ემთხვევა', '', 'err'); return; }
-  const email = pendingRegEmail || document.getElementById('forgotEmail').value.trim();
+  const email = pendingRegელ-ფოსტა || document.getElementById('forgotელ-ფოსტა').value.trim();
   try {
     await api('/auth/reset', { method: 'POST', body: { email, code, newPassword } });
     closeMo('moForgot');
     toast('✅ პაროლი შეიცვალა!', 'ახლა შეგიძლია შეხვიდე', 'ok');
     document.getElementById('forgotPart1').style.display = 'block';
     document.getElementById('forgotPart2').style.display = 'none';
-    document.getElementById('forgotEmail').value = '';
-    pendingRegEmail = null;
+    document.getElementById('forgotელ-ფოსტა').value = '';
+    pendingRegელ-ფოსტა = null;
     openMo('moLogin');
   } catch (e) { toast('⚠️ ' + (e.error || 'კოდი არასწორია'), '', 'err'); }
 }
@@ -1728,7 +1835,7 @@ function setRegType(type) {
     const colorBg = type === 'company' ? 'rgba(52,152,219,.07)' : 'rgba(46,204,113,.08)';
     const colorBorder = type === 'company' ? 'rgba(52,152,219,.3)' : 'rgba(46,204,113,.3)';
     pi.innerHTML = `<div style="padding:10px 14px;background:${colorBg};border:1px solid ${colorBorder};border-radius:10px;font-size:13px;color:${color};display:flex;align-items:center;gap:8px">
-      <span style="font-size:18px">🎉</span><span><strong>პირველი 3 თვე სრულიად უფასო!</strong> — Start ტარიფი · 5 შეთ./თვე. ტარიფის შეცვლა შეგიძლია ანგარიშზე შესვლის შემდეგ.</span>
+      <span style="font-size:18px">🎉</span><span><strong>პირველი 3 თვე სრულიად უფასო!</strong> — Start ტარიფი · 5 შეთავაზება თვეში. ტარიფის შეცვლა შეგიძლია ანგარიშზე შესვლის შემდეგ.</span>
     </div>`;
   }
 }
@@ -1809,7 +1916,7 @@ function buildProfPanels(profChipsId, subCatsId, selectedProfs, selectedSubs, pr
   // Build sub-category panel (right panel)
   const activeCats = CATS_DATA.filter(c => selectedProfs.includes(c.name));
   if (!activeCats.length) {
-    subEl.innerHTML = '<div style="color:var(--t2);font-size:11px;padding:8px;text-align:center">← პროფ. აირჩიე</div>';
+    subEl.innerHTML = '<div style="color:var(--t2);font-size:11px;padding:8px;text-align:center">← პროფესია აირჩიე</div>';
     return;
   }
   subEl.innerHTML = activeCats.map(cat => `
@@ -1976,15 +2083,15 @@ function handymanCard(h, isCompanyCard = false) {
       </div>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-      ${h.verified ? '<span class="badge bv">✓ ვერ.</span>' : ''}
+      ${h.verified ? '<span class="badge bv">✓ ვერიფიცირებული</span>' : ''}
       ${isCompany && !isCompanyCard && vip ? `<span class="badge" style="background:rgba(52,152,219,.12);color:#3498db">🏢</span>` : ''}
       ${!isCompany && vip && h.vipType === 'vipp' ? '<span class="badge" style="background:rgba(168,85,247,.12);color:var(--vipp)">💜 VIP+</span>' :
         !isCompany && vip ? '<span class="badge" style="background:rgba(241,196,15,.12);color:var(--vip)">⭐ VIP</span>' : ''}
     </div>
     <div class="cs">
-      <div class="cst"><strong>${rating > 0 ? rating.toFixed(1) + ' ' + stars : '—'}</strong>რეიტ.</div>
-      <div class="cst"><strong>${(h.reviewsReceived || []).length}</strong>შეფ.</div>
-      <div class="cst"><strong>${h.jobs || 0}</strong>სამ.</div>
+      <div class="cst"><strong>${rating > 0 ? rating.toFixed(1) + ' ' + stars : '—'}</strong> რეიტინგი</div>
+      <div class="cst"><strong>${(h.reviewsReceived || []).length}</strong> შეფასება</div>
+      <div class="cst"><strong>${h.jobs || 0}</strong> სამუშაო</div>
     </div>
     ${h.services && h.services.length ? `<div style="margin-top:10px;display:flex;gap:4px;flex-wrap:wrap">${h.services.slice(0, 3).map(s => `<span class="tag">${sanitize(s)}</span>`).join('')}</div>` : ''}
   </div>`;
@@ -2047,7 +2154,7 @@ async function showProfile(hid) {
     document.getElementById('pReviews').innerHTML = reviews.length
       ? reviews.map(r => `<div style="padding:12px 0;border-bottom:1px solid var(--border)">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            <div style="font-weight:600;font-size:13px">${sanitize(r.reviewer?.name || 'მომხ.')} ${sanitize(r.reviewer?.surname || '')}</div>
+            <div style="font-weight:600;font-size:13px">${sanitize(r.reviewer?.name || 'მომხმარებელი')} ${sanitize(r.reviewer?.surname || '')}</div>
             <div class="stars">${'★'.repeat(r.stars)}</div>
           </div>
           ${r.comment ? `<div style="color:var(--t2);font-size:13px">${sanitize(r.comment)}</div>` : ''}
@@ -2056,13 +2163,13 @@ async function showProfile(hid) {
 
     const canReview = cu && cu.type === 'user' && cu.id !== hid;
     document.getElementById('pActions').innerHTML = `
-      ${isOwner ? `<button class="btn bg bs" onclick="openEditDesc()">✏️ რედ.</button>
-        <button class="btn bg bs" onclick="loadPortfolio();openMo('moPortfolio')">🖼️ პორტ.</button>
+      ${isOwner ? `<button class="btn bg bs" onclick="openEditDesc()">✏️ რედაქტირება</button>
+        <button class="btn bg bs" onclick="loadPortfolio();openMo('moPortfolio')">🖼️ პორტფოლიო</button>
         ${(h.type === 'handyman' || h.type === 'company') ? `<button class="btn bg bs" onclick="openChangePlanModal()">📦 ტარიფი</button>` : ''}
         <button class="btn bg bs" onclick="nav('my-card')">💳 ბარათი</button>` : ''}
       ${!isOwner && (h.type === 'handyman' || h.type === 'company') && cu
-        ? `<button class="btn bp" onclick="openSendOffer('${h.id}')">💬 შეთ.</button>` : ''}
-      ${canReview ? `<button class="btn bo bs" onclick="openReviewModal('${hid}')">⭐ შეფ.</button>` : ''}
+        ? `<button class="btn bp" onclick="openSendOffer('${h.id}')">💬 შეთავაზება</button>` : ''}
+      ${canReview ? `<button class="btn bo bs" onclick="openReviewModal('${hid}')">⭐ შეფასება</button>` : ''}
       ${h.phone && cu ? `<button class="btn bo bs" onclick="toast('📞 ${sanitize(h.name)}','${sanitize(h.phone || '')}','ok')">📞</button>` : ''}
     `;
   } catch (e) {
@@ -2118,28 +2225,75 @@ async function renderRequests() {
   }
 }
 
+
+// ========================================================
+// REQUEST STATUS HELPERS
+// ========================================================
+function requestStatusLabel(status) {
+  switch (status) {
+    case 'open':        return 'ღია';
+    case 'pending':     return 'შეთავაზებების მოლოდინში';
+    case 'in_progress': return 'მიმდინარე';
+    case 'completed':   return 'დასრულებული';
+    case 'closed':      return 'დახურული';
+    case 'archived':    return 'არქივში';
+    default:            return status || '';
+  }
+}
+
+function requestStatusClass(status) {
+  switch (status) {
+    case 'open':        return 'sn';   // green — new/open
+    case 'pending':     return 'sn';   // also green-ish — still receiving
+    case 'in_progress': return 'sa';   // active/in-progress
+    case 'completed':   return 'sd';   // done
+    case 'closed':      return 'sd';   // done
+    case 'archived':    return 'sd';
+    default:            return 'sd';
+  }
+}
+
 function requestCard(r, showActions = true) {
   const cu = currentUser;
   const isOwner = cu && cu.id === r.userId;
   const offerCount = r._count?.offers || (r.offers?.length || 0);
-  return `<div class="rcard">
+  const media = Array.isArray(r.media) ? r.media : [];
+  const preview = media.slice(0, 2);  // max 2 items on the card
+  const extraCount = Math.max(0, media.length - 2);
+
+  // Build media preview thumbnails (shown inside card, but clickable opens full modal)
+  const mediaHtml = preview.length ? `
+    <div class="rcard-media">
+      ${preview.map((m, i) => {
+        const url = sanitize(m.url || '');
+        if (m.type === 'video') {
+          return `<div class="rcard-media-item">
+            <video src="${url}" muted playsinline preload="metadata"></video>
+            <div class="rcard-media-icon">▶</div>
+            ${i === 1 && extraCount > 0 ? `<div class="rcard-media-more">+${extraCount}</div>` : ''}
+          </div>`;
+        }
+        return `<div class="rcard-media-item">
+          <img src="${url}" alt="" loading="lazy">
+          ${i === 1 && extraCount > 0 ? `<div class="rcard-media-more">+${extraCount}</div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>` : '';
+
+  return `<div class="rcard rcard-clickable" onclick="openRequestDetail('${sanitize(r.id)}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openRequestDetail('${sanitize(r.id)}')">
     <div class="rh">
       <div class="rt">${sanitize(r.title)}</div>
-      <span class="status ${r.status === 'open' ? 'sn' : r.status === 'in_progress' ? 'sa' : 'sd'}">${r.status === 'open' ? 'ღია' : r.status === 'in_progress' ? 'მიმდ.' : 'დასრ.'}</span>
+      <span class="status ${requestStatusClass(r.status)}">${requestStatusLabel(r.status)}</span>
     </div>
-    <div style="color:var(--t2);font-size:13px;margin-top:4px">${sanitize(r.desc || '')}</div>
+    ${r.desc ? `<div style="color:var(--t2);font-size:13px;margin-top:4px">${sanitize(r.desc)}</div>` : ''}
     <div class="rmeta">
       <span class="tag">${sanitize(r.category || '')}</span>
       <span class="tag">📍 ${sanitize(r.city || '')}</span>
       ${r.budget ? `<span class="tag">💰 ${r.budget}₾</span>` : ''}
       ${r.urgency === 'urgent' ? '<span class="tag urg">⚡ გადაუდებელი</span>' : ''}
-      <span class="tag">💬 ${offerCount} შეთ.</span>
+      <span class="tag">💬 ${offerCount} შეთავაზება</span>
     </div>
-    ${showActions && cu ? `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-      ${isOwner ? `<button class="btn bg bs" onclick="viewOffers('${r.id}')">💬 შეთავ. (${offerCount})</button>` : ''}
-      ${!isOwner && (cu.type === 'handyman' || cu.type === 'company')
-        ? `<button class="btn bp bs" onclick="openSendOffer('${r.id}','${sanitize(r.title)}')">+ შეთ.</button>` : ''}
-    </div>` : ''}
+    ${mediaHtml}
   </div>`;
 }
 
@@ -2149,17 +2303,70 @@ function requestCard(r, showActions = true) {
 function toggleOtherCat() { /* replaced by grid-based category selection */ }
 
 let reqMediaInputFiles = [];
-function addReqMedia(input) {
-  reqMediaInputFiles = [...reqMediaInputFiles, ...Array.from(input.files)];
-  input.value = ''; renderReqMediaGrid();
+
+/**
+ * Validate added files — size and video duration limits.
+ * Max 5 files total, max 20 MB per file, max 30 seconds per video.
+ */
+async function addReqMedia(input) {
+  const newFiles = Array.from(input.files);
+  input.value = '';
+
+  const MAX_FILES       = 5;
+  const MAX_SIZE_BYTES  = 20 * 1024 * 1024;  // 20 MB
+  const MAX_VIDEO_SECS  = 30;
+
+  for (const f of newFiles) {
+    if (reqMediaInputFiles.length >= MAX_FILES) {
+      toast('⚠️ მაქსიმუმ ' + MAX_FILES + ' ფაილი', '', 'err');
+      break;
+    }
+    if (f.size > MAX_SIZE_BYTES) {
+      toast('⚠️ ფაილი ძალიან დიდია', f.name + ' — მაქსიმუმ 20MB', 'err');
+      continue;
+    }
+    // Video duration check
+    if (f.type.startsWith('video/')) {
+      try {
+        const duration = await getVideoDuration(f);
+        if (duration > MAX_VIDEO_SECS) {
+          toast('⚠️ ვიდეო ძალიან გრძელია', f.name + ' — მაქსიმუმ ' + MAX_VIDEO_SECS + ' წამი', 'err');
+          continue;
+        }
+      } catch (_) { /* can't read duration — allow */ }
+    }
+    reqMediaInputFiles.push(f);
+  }
+  renderReqMediaGrid();
+}
+
+function getVideoDuration(file) {
+  return new Promise((resolve, reject) => {
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    v.onloadedmetadata = () => { URL.revokeObjectURL(v.src); resolve(v.duration); };
+    v.onerror = () => { URL.revokeObjectURL(v.src); reject(new Error('Video load failed')); };
+    v.src = URL.createObjectURL(file);
+  });
 }
 function renderReqMediaGrid() {
   const el = document.getElementById('reqMediaGrid'); if (!el) return;
-  el.innerHTML = reqMediaInputFiles.map((f, i) => `
-    <div class="req-media-item">
-      <div style="font-size:10px;color:var(--t2);padding:4px">${sanitize(f.name)}</div>
-      <button class="req-media-del" onclick="reqMediaInputFiles.splice(${i},1);renderReqMediaGrid()">✕</button>
-    </div>`).join('');
+  // Revoke any previous object URLs to avoid memory leaks
+  if (window._reqMediaUrls) window._reqMediaUrls.forEach(u => URL.revokeObjectURL(u));
+  window._reqMediaUrls = [];
+
+  el.innerHTML = reqMediaInputFiles.map((f, i) => {
+    const url = URL.createObjectURL(f);
+    window._reqMediaUrls.push(url);
+    const isVideo = f.type.startsWith('video/');
+    const media = isVideo
+      ? `<video src="${url}" muted playsinline></video>`
+      : `<img src="${url}" alt="">`;
+    return `<div class="req-media-item">
+      ${media}
+      <button class="req-media-del" onclick="reqMediaInputFiles.splice(${i},1);renderReqMediaGrid()" title="წაშლა">✕</button>
+    </div>`;
+  }).join('');
 }
 
 async function submitRequest() {
@@ -2261,17 +2468,245 @@ async function viewOffers(reqId) {
           </div>
           <div style="text-align:right;flex-shrink:0">
             <div class="oprice">₾${o.price}</div>
-            <span class="status ${o.status === 'pending' ? 'sn' : 'sa'}">${o.status === 'pending' ? 'მოლ.' : 'მიღ.'}</span>
+            <span class="status ${o.status === 'pending' ? 'sn' : 'sa'}">${o.status === 'pending' ? 'მოლოდინში' : 'მიღებული'}</span>
           </div>
         </div>
         ${req.status === 'open' && o.status === 'pending' ? `<div style="margin-top:10px;display:flex;gap:8px">
           <button class="btn bp bs" onclick="acceptOffer('${o.id}')">✓ მიღება</button>
-          <button class="btn bg bs" onclick="showProfile('${h?.id}')">პროფ.</button>
+          <button class="btn bg bs" onclick="showProfile('${h?.id}')">პროფილი</button>
         </div>` : ''}
         ${o.status === 'accepted' ? `<button class="btn bg bs" style="margin-top:8px" onclick="openChatForOffer('${o.id}')">💬 ჩათი</button>` : ''}
       </div>`;
     }).join('');
   } catch (e) { if (el) el.innerHTML = '<div style="color:var(--err);text-align:center;padding:20px">' + (e.error || '') + '</div>'; }
+}
+
+
+// ════════════════════════════════════════════════════════════
+// REQUEST DETAIL MODAL — full view of a single request
+// ════════════════════════════════════════════════════════════
+async function openRequestDetail(reqId) {
+  const body = document.getElementById('moReqDetailBody');
+  if (!body) return;
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳ იტვირთება...</div>';
+  openMo('moReqDetail');
+
+  try {
+    const r = await api('/requests/' + reqId);
+    renderRequestDetail(r);
+  } catch (e) {
+    body.innerHTML = `<div style="text-align:center;padding:40px">
+      <div style="font-size:48px;margin-bottom:12px">⚠️</div>
+      <h3 style="color:var(--err);margin-bottom:8px">ვერ ჩაიტვირთა</h3>
+      <p style="color:var(--t2)">${sanitize(e.error || 'შეცდომა')}</p>
+    </div>`;
+  }
+}
+
+function renderRequestDetail(r) {
+  const body = document.getElementById('moReqDetailBody');
+  if (!body) return;
+  const cu = currentUser;
+  const isOwner = cu && cu.id === r.userId;
+  const isWorker = cu && (cu.type === 'handyman' || cu.type === 'company');
+  const offers = r.offers || [];
+  const offerCount = offers.length;
+  const media = Array.isArray(r.media) ? r.media : [];
+  const hasOffered = cu && offers.some(o => o.handymanId === cu.id);
+
+  // Status label + color (full support for all 5 statuses)
+  const statusLabel = requestStatusLabel(r.status);
+  const statusCls   = requestStatusClass(r.status);
+
+  // Build media gallery
+  const galleryHtml = media.length ? `
+    <div class="rd-section">
+      <h3 style="font-size:15px;margin-bottom:4px">📷 ფოტო და ვიდეო (${media.length})</h3>
+      <div class="rd-gallery">
+        ${media.map(m => {
+          const url = sanitize(m.url || '');
+          if (m.type === 'video') {
+            return `<div class="rd-gallery-item" onclick="openLightbox('video','${url}')">
+              <video src="${url}" muted playsinline preload="metadata"></video>
+              <div class="vid-ind">▶</div>
+            </div>`;
+          }
+          return `<div class="rd-gallery-item" onclick="openLightbox('image','${url}')">
+            <img src="${url}" alt="" loading="lazy">
+          </div>`;
+        }).join('')}
+      </div>
+    </div>` : '';
+
+  // Offers list (only visible to owner)
+  const offersHtml = isOwner && offerCount ? `
+    <div class="rd-section">
+      <h3 style="font-size:15px;margin-bottom:10px">💬 შეთავაზებები (${offerCount})</h3>
+      ${offers.map(o => {
+        const h = o.handyman;
+        const rating = avgRating(h?.reviewsReceived || []);
+        const avatarHtml = h?.avatar
+          ? `<img src="${sanitize(h.avatar)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+          : `<div class="av" style="width:40px;height:40px;font-size:16px;background:${sanitize(h?.color || '#22222f')};color:var(--accent)">${sanitize(h?.emoji || '🔧')}</div>`;
+        return `<div class="oi" style="margin-bottom:10px">
+          <div style="display:flex;gap:10px;align-items:flex-start">
+            ${avatarHtml}
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:700">${sanitize(h?.name || '')} ${sanitize(h?.surname || '')}</div>
+              <div style="color:var(--accent);font-size:12px">${sanitize(h?.specialty || '')}</div>
+              <div style="font-size:11px;color:var(--t2)">${rating > 0 ? rating.toFixed(1) + ' ★' : ''} ${o.duration ? '· ' + sanitize(o.duration) : ''}</div>
+              ${o.comment ? `<div style="margin-top:6px;font-size:13px;color:var(--t2)">${sanitize(o.comment)}</div>` : ''}
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div class="oprice">₾${o.price}</div>
+              <span class="status ${o.status === 'pending' ? 'sn' : 'sa'}">${o.status === 'pending' ? 'მოლოდინში' : 'მიღებული'}</span>
+            </div>
+          </div>
+          ${['open','pending'].includes(r.status) && o.status === 'pending' ? `<div style="margin-top:10px;display:flex;gap:8px">
+            <button class="btn bp bs" onclick="acceptOfferFromDetail('${sanitize(o.id)}', '${sanitize(r.id)}')">✓ მიღება</button>
+            <button class="btn bg bs" onclick="showProfile('${sanitize(h?.id)}')">პროფილი</button>
+          </div>` : ''}
+          ${o.status === 'accepted' ? `<button class="btn bg bs" style="margin-top:8px" onclick="closeMo('moReqDetail');openChatForOffer('${sanitize(o.id)}')">💬 ჩათი</button>` : ''}
+        </div>`;
+      }).join('')}
+    </div>` : '';
+
+  // Actions footer
+  const actionsHtml = `
+    <div class="rd-section" style="display:flex;gap:8px;flex-wrap:wrap">
+      ${isWorker && !isOwner && ['open','pending'].includes(r.status) && !hasOffered ? `
+        <button class="btn bp" onclick="closeMo('moReqDetail');openSendOffer('${sanitize(r.id)}','${sanitize(r.title)}')">
+          + შეთავაზების გაგზავნა
+        </button>` : ''}
+      ${isWorker && hasOffered ? `
+        <div style="padding:10px 14px;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.3);border-radius:10px;color:var(--ok);font-size:13px">
+          ✅ შენი შეთავაზება უკვე გაგზავნილია
+        </div>` : ''}
+      <button class="btn bg bs" onclick="shareRequest('${sanitize(r.id)}','${sanitize(r.title)}')">
+        📤 გაზიარება
+      </button>
+      ${isOwner ? `
+        <button class="btn berr bs" onclick="deleteRequest('${sanitize(r.id)}')" style="margin-left:auto">
+          🗑️ წაშლა
+        </button>` : ''}
+    </div>`;
+
+  // Owner info
+  const ownerName = sanitize((r.user?.name || '') + ' ' + (r.user?.surname || '')).trim() || 'მომხმარებელი';
+
+  body.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px">
+      <h2 style="font-size:22px;flex:1">${sanitize(r.title)}</h2>
+      <span class="status ${statusCls}" style="flex-shrink:0">${statusLabel}</span>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+      <span class="tag">${sanitize(r.category || '')}</span>
+      <span class="tag">📍 ${sanitize(r.city || '')}</span>
+      ${r.budget ? `<span class="tag">💰 ${r.budget}₾</span>` : ''}
+      ${r.urgency === 'urgent' ? '<span class="tag urg">⚡ გადაუდებელი</span>' : ''}
+    </div>
+
+    ${r.desc ? `<div style="color:var(--text);font-size:14px;line-height:1.6;white-space:pre-wrap">${sanitize(r.desc)}</div>` : ''}
+
+    ${galleryHtml}
+
+    <div class="rd-section">
+      <div class="rd-info-row"><span>👤 მომხმარებელი</span><span>${ownerName}</span></div>
+      <div class="rd-info-row"><span>📅 გამოქვეყნდა</span><span>${new Date(r.createdAt).toLocaleDateString('ka-GE', {day:'numeric',month:'long',year:'numeric'})}</span></div>
+      <div class="rd-info-row"><span>💬 შეთავაზებები</span><span>${offerCount}</span></div>
+    </div>
+
+    ${offersHtml}
+
+    ${actionsHtml}
+  `;
+}
+
+async function deleteRequest(reqId) {
+  if (!confirm('ნამდვილად გინდა მოთხოვნის წაშლა? ეს მოქმედება შეუქცევადია.')) return;
+  try {
+    await api('/requests/' + reqId, { method: 'DELETE' });
+    closeMo('moReqDetail');
+    toast('🗑️ მოთხოვნა წაიშალა', '', 'ok');
+    renderRequests();
+    // Also refresh dashboard if user is on it
+    if (typeof renderDashboard === 'function') renderDashboard();
+  } catch (e) {
+    toast('⚠️ ' + (e.error || 'წაშლა ვერ მოხერხდა'), '', 'err');
+  }
+}
+
+async function acceptOfferFromDetail(offerId, reqId) {
+  try {
+    const data = await api('/offers/' + offerId + '/accept', { method: 'POST' });
+    toast('✅ შეთავაზება მიღებულია!', 'ჩათი გაიხსნა', 'ok');
+    closeMo('moReqDetail');
+    openChat(data.chatId);
+  } catch (e) {
+    toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err');
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// OFFER EDIT — handyman edits own pending offer
+// ════════════════════════════════════════════════════════════
+function openEditOffer(offer) {
+  // Accept either an object or a JSON string (used from inline onclick)
+  if (typeof offer === 'string') {
+    try { offer = JSON.parse(offer.replace(/&apos;/g, "'")); }
+    catch (_) { return; }
+  }
+  document.getElementById('editOfferId').value          = offer.id || '';
+  document.getElementById('editOfferPrice').value       = offer.price || '';
+  document.getElementById('editOfferDuration').value    = offer.duration || '';
+  document.getElementById('editOfferComment').value     = offer.comment || '';
+  openMo('moEditOffer');
+}
+
+async function saveEditOffer() {
+  const id       = document.getElementById('editOfferId').value;
+  const price    = parseInt(document.getElementById('editOfferPrice').value);
+  const duration = document.getElementById('editOfferDuration').value.trim();
+  const comment  = document.getElementById('editOfferComment').value.trim();
+
+  if (!id)                       { toast('⚠️ შეცდომა', 'ID ვერ მოიძებნა', 'err'); return; }
+  if (isNaN(price) || price <= 0) { toast('⚠️ ფასი არასწორია', '', 'err'); return; }
+
+  try {
+    await api('/offers/' + id, {
+      method: 'PATCH',
+      body:   { price, duration, comment },
+    });
+    closeMo('moEditOffer');
+    toast('✅ შეთავაზება განახლდა', '', 'ok');
+    if (typeof renderDashboard === 'function') renderDashboard();
+  } catch (e) {
+    toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err');
+  }
+}
+
+async function shareRequest(reqId, title) {
+  const url = `${location.origin}/?req=${encodeURIComponent(reqId)}`;
+  const shareData = {
+    title: title + ' — ხელოსანი.ge',
+    text: 'ნახე ეს მოთხოვნა ხელოსანი.ge-ზე: ' + title,
+    url,
+  };
+  // Native share API (mobile)
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+      return;
+    } catch (_) { /* user cancelled or not supported */ }
+  }
+  // Fallback: copy to clipboard
+  try {
+    await navigator.clipboard.writeText(url);
+    toast('🔗 ბმული დაკოპირდა!', '', 'ok');
+  } catch (_) {
+    toast('📋 ბმული: ' + url, '', 'ok');
+  }
 }
 
 async function acceptOffer(offerId) {
@@ -2331,7 +2766,7 @@ async function renderDashboard() {
         <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
           <button class="btn bp" onclick="openMo('moRequest')">+ მოთხოვნა</button>
           <button class="btn bo" onclick="nav('handymen')">🔧 ხელოსნები</button>
-          <button class="btn bg" onclick="openUserSupport()">🎧 სუპ.</button>
+          <button class="btn bg" onclick="openUserSupport()">🎧 სუპორტი</button>
         </div>
         <h3 style="margin:22px 0 12px;font-size:15px">📋 ჩემი მოთხოვნები</h3>
         ${myReqs.length ? myReqs.map(r => requestCard(r)).join('') : '<div class="empty"><div class="ei">📋</div><h3>მოთხოვნა არ გაქვს</h3></div>'}
@@ -2369,8 +2804,8 @@ async function renderDashboard() {
 
       body.innerHTML = `
         <div class="dg">
-          <div class="dc"><div class="dn">${cu2.jobs || 0}</div><div class="dl">სამ.</div></div>
-          <div class="dc"><div class="dn">${myOffers.length}</div><div class="dl">შეთ.</div></div>
+          <div class="dc"><div class="dn">${cu2.jobs || 0}</div><div class="dl">სამუშაო</div></div>
+          <div class="dc"><div class="dn">${myOffers.length}</div><div class="dl">შეთავაზებები</div></div>
           <div class="dc"><div class="dn">${myChats.length}</div><div class="dl">ჩათი</div></div>
           <div class="dc"><div class="dn" style="color:${vip ? (cu2.vipType === 'vipp' ? 'var(--vipp)' : 'var(--vip)') : 'var(--t2)'};font-size:${vip ? '14px' : '28px'}">${vip ? (cu2.vipType === 'vipp' ? '💜 VIP+' : '⭐ VIP') : '—'}</div><div class="dl">VIP</div></div>
         </div>
@@ -2380,7 +2815,7 @@ async function renderDashboard() {
           <div>
             <span style="font-size:12px;color:var(--t2)">მიმდინარე ტარიფი: </span>
             ${planBadge}
-            ${cu2.plan === 'start' ? `<span style="font-size:11px;color:var(--t2);margin-left:8px">(${5 - monthlyOffers} შეთ. დარჩა ამ თვეში)</span>` : ''}
+            ${cu2.plan === 'start' ? `<span style="font-size:11px;color:var(--t2);margin-left:8px">(${5 - monthlyOffers} შეთავაზება დარჩა ამ თვეში)</span>` : ''}
           </div>
           <button class="btn bg bs" onclick="openChangePlanModal()" style="font-size:12px">🔄 ტარიფის შეცვლა</button>
         </div>
@@ -2392,8 +2827,8 @@ async function renderDashboard() {
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
           <button class="btn bvip bs" onclick="openVipModal('vip')">⭐ VIP ${vip1Price}₾</button>
           <button class="btn bvipp bs" onclick="openVipModal('vipp')">💜 VIP+ ${vipp1Price}₾</button>
-          <button class="btn bo bs" onclick="showProfile('${cu2.id}')">👤 პროფ.</button>
-          <button class="btn bg bs" onclick="openEditDesc()">✏️ რედ.</button>
+          <button class="btn bo bs" onclick="showProfile('${cu2.id}')">👤 პროფილი</button>
+          <button class="btn bg bs" onclick="openEditDesc()">✏️ რედაქტირება</button>
           <button class="btn bg bs" onclick="nav('my-card')">💳 ბარათი</button>
         </div>
 
@@ -2426,17 +2861,23 @@ function renderDashTabContent(myOffers, myChats, cu2) {
   if (!el) return;
   if (currentDashTab === 'offers') {
     el.innerHTML = myOffers.length ? myOffers.map(o => `<div class="oi">
-      <div>
-        <div style="font-weight:600">${sanitize(o.request?.title || 'მოთხ.')}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600">${sanitize(o.request?.title || 'მოთხოვნა')}</div>
         <div style="font-size:12px;color:var(--t2)">${sanitize(o.request?.category || '')} · ${sanitize(o.request?.city || '')}</div>
-        ${o.comment ? `<div style="font-size:12px;color:var(--t2)">${sanitize(o.comment)}</div>` : ''}
-        ${o.chat ? `<button class="btn bg bs" style="margin-top:8px" onclick="openChat('${o.chat.id}')">💬 ჩათი</button>` : ''}
+        ${o.duration ? `<div style="font-size:12px;color:var(--t2)">⏱ ${sanitize(o.duration)}</div>` : ''}
+        ${o.comment ? `<div style="font-size:12px;color:var(--t2);margin-top:4px">${sanitize(o.comment)}</div>` : ''}
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+          ${o.chat ? `<button class="btn bg bs" onclick="openChat('${sanitize(o.chat.id)}')">💬 ჩათი</button>` : ''}
+          ${o.status === 'pending' && ['open','pending'].includes(o.request?.status) ? `
+            <button class="btn bg bs" onclick='openEditOffer(${JSON.stringify({id:o.id,price:o.price,duration:o.duration||"",comment:o.comment||""}).replace(/'/g,"&apos;")})'>✏️ რედაქტირება</button>
+          ` : ''}
+        </div>
       </div>
-      <div style="text-align:right">
+      <div style="text-align:right;flex-shrink:0">
         <div class="oprice">₾${o.price}</div>
-        <span class="status ${o.status === 'pending' ? 'sn' : 'sa'}">${o.status === 'pending' ? 'მოლ.' : 'მიღ.'}</span>
+        <span class="status ${o.status === 'pending' ? 'sn' : 'sa'}">${o.status === 'pending' ? 'მოლოდინში' : 'მიღებული'}</span>
       </div>
-    </div>`).join('') : '<div class="empty"><div class="ei">💬</div><h3>შეთ. ჯერ არ გაქვს</h3></div>';
+    </div>`).join('') : '<div class="empty"><div class="ei">💬</div><h3>შეთავაზება ჯერ არ გაქვს</h3></div>';
   } else {
     el.innerHTML = myChats.length ? myChats.map(c => chatItem(c)).join('') : '<div class="empty"><div class="ei">💬</div><h3>ჩათი ჯერ არ გაქვს</h3></div>';
   }
@@ -2676,7 +3117,7 @@ async function sendUserSupportMsg() {
     } catch (e) {
       if (e.status === 409) {
         // Extract supportId - create a dummy message via socket
-        toast('⚠️ სუპ. მოთხოვნა უკვე ღიაა', '', 'ok');
+        toast('⚠️ სუპორტის მოთხოვნა უკვე ღიაა', '', 'ok');
       } else {
         toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err');
       }
@@ -2700,7 +3141,7 @@ function appendUserSupportMsg(msg) {
   const placeholder = body.querySelector('div[style*="text-align:center"]');
   if (placeholder) placeholder.remove();
   body.appendChild(div); body.scrollTop = body.scrollHeight;
-  if (!isMe) document.getElementById('userSupportStatus').textContent = '🔴 ოპ. პასუხობს';
+  if (!isMe) document.getElementById('userSupportStatus').textContent = '🔴 ოპერატორი პასუხობს';
 }
 
 // ========================================================
@@ -2719,7 +3160,7 @@ function openVipModal(type) {
   const color = isPlus ? 'var(--vipp)' : 'var(--vip)';
   document.getElementById('vipModalTitle').textContent = isPlus ? '💜 VIP+ გაახლება' : '⭐ VIP გაახლება';
   document.getElementById('vipModalSub').textContent = isCompany
-    ? (isPlus ? 'კომპ.: ყოველთვის VIP-ზე მაღლა' : 'კომპ.: სიის სათავეში')
+    ? (isPlus ? 'კომპანიის პრიორიტეტი: ყოველთვის VIP-ზე მაღლა' : 'კომპანიის პრიორიტეტი: სიის სათავეში')
     : (isPlus ? 'ყოველთვის VIP-ზე მაღლა' : 'სიის სათავეში ჩვენება');
   document.getElementById('vipDayOptions').innerHTML = `
     <div onclick="selectVipDay(1)" class="vopt" style="flex:1;background:var(--s2);border:2px solid var(--accent);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:.2s;transform:scale(1.03)">
@@ -2877,7 +3318,7 @@ function renderAdmin() {
   const isAdmin = cu.type === 'admin';
   document.getElementById('adminWelcome').textContent = cu.type === 'admin' ? `🛡️ ადმინ — ${cu.name}` : `👤 სტაფ — ${cu.name}`;
   const allTabs = isAdmin ? ['accounts','requests','support','analytics','staff'] : ['support','accounts','requests'];
-  const labels = {accounts:'👥 ანგარ.',requests:'📋 მოთხ.',support:'🎧 სუპ.',analytics:'📊 ანალ.',staff:'👨‍💼 სტაფი'};
+  const labels = {accounts:'👥 ანგარიშები',requests:'📋 მოთხოვნები',support:'🎧 სუპორტი',analytics:'📊 ანალიტიკალ.',staff:'👨‍💼 სტაფი'};
   document.getElementById('adminTabs').innerHTML = allTabs.map(t =>
     `<div class="tab ${adminTab === t ? 'active' : ''}" onclick="adminTab='${t}';renderAdmin()">${labels[t]}</div>`
   ).join('');
@@ -2896,18 +3337,18 @@ async function renderAdminAnalytics(body) {
     body.innerHTML = `
       <h3 style="margin-bottom:16px">📊 ანალიტიკა</h3>
       <div class="dg" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr));margin-bottom:16px">
-        <div class="dc"><div class="dn">${a.users}</div><div class="dl">მომხ.</div></div>
-        <div class="dc"><div class="dn">${a.handymen}</div><div class="dl">ხელოს.</div></div>
-        <div class="dc"><div class="dn">${a.companies}</div><div class="dl">კომფ.</div></div>
+        <div class="dc"><div class="dn">${a.users}</div><div class="dl">მომხმარებლები</div></div>
+        <div class="dc"><div class="dn">${a.handymen}</div><div class="dl">ხელოსნები</div></div>
+        <div class="dc"><div class="dn">${a.companies}</div><div class="dl">კომპანიები</div></div>
         <div class="dc"><div class="dn">${a.staff}</div><div class="dl">სტაფი</div></div>
-        <div class="dc"><div class="dn" style="color:var(--err)">${a.blockedUsers}</div><div class="dl">დაბლ.</div></div>
-        <div class="dc"><div class="dn">${a.openReqs}</div><div class="dl">ღია მოთხ.</div></div>
-        <div class="dc"><div class="dn">${a.acceptedOffers}</div><div class="dl">მიღ. შეთ.</div></div>
-        <div class="dc"><div class="dn">${a.totalReviews}</div><div class="dl">შეფ.</div></div>
-        <div class="dc"><div class="dn">${a.avgRating}★</div><div class="dl">საშ. რეიტ.</div></div>
-        <div class="dc"><div class="dn">${a.supportPending}</div><div class="dl">სუპ. მოლ.</div></div>
-        <div class="dc" style="border-color:rgba(255,107,43,.4)"><div class="dn" style="color:var(--ok)">₾${(a.vipRevenueTetri/100).toFixed(2)}</div><div class="dl">VIP შემ.</div></div>
-        <div class="dc"><div class="dn">${a.vipActive}</div><div class="dl">VIP აქტ.</div></div>
+        <div class="dc"><div class="dn" style="color:var(--err)">${a.blockedUsers}</div><div class="dl">დაბლოკილი</div></div>
+        <div class="dc"><div class="dn">${a.openReqs}</div><div class="dl">ღია მოთხოვნები</div></div>
+        <div class="dc"><div class="dn">${a.acceptedOffers}</div><div class="dl">მიღებული შეთავაზებები</div></div>
+        <div class="dc"><div class="dn">${a.totalReviews}</div><div class="dl">შეფასებები</div></div>
+        <div class="dc"><div class="dn">${a.avgRating}★</div><div class="dl">საშუალო რეიტინგი</div></div>
+        <div class="dc"><div class="dn">${a.supportPending}</div><div class="dl">სუპორტი მოლოდინში</div></div>
+        <div class="dc" style="border-color:rgba(255,107,43,.4)"><div class="dn" style="color:var(--ok)">₾${(a.vipRevenueTetri/100).toFixed(2)}</div><div class="dl">VIP შემოსავალი</div></div>
+        <div class="dc"><div class="dn">${a.vipActive}</div><div class="dl">VIP აქტიური</div></div>
       </div>`;
   } catch (e) { body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>'; }
 }
@@ -2972,7 +3413,7 @@ function _adminApplyFilters() {
 
 function _renderAccountsTable(body) {
   const filtered = _adminApplyFilters();
-  const typeLabels = { all:'ყველა', user:'👤 მომხ.', handyman:'🔧 ხელოს.', company:'🏢 კომ.' };
+  const typeLabels = { all:'ყველა', user:'👤 მომხმარებელი', handyman:'🔧 ხელოსანი', company:'🏢 კომპანია' };
   const planLabels = { all:'ყველა ტარიფი', pro:'⚡ Pro', top:'🔝 TOP', vip:'⭐ VIP', vipp:'💜 VIP+', paid:'💳 გადახდილი' };
 
   body.innerHTML = `
@@ -3006,8 +3447,8 @@ function _renderAccountsTable(body) {
         <th style="text-align:left;padding:10px 8px;color:var(--t2)">ტიპი</th>
         <th style="text-align:left;padding:10px 8px;color:var(--t2)">ელ-ფოსტა</th>
         <th style="text-align:left;padding:10px 8px;color:var(--t2)">ტარიფი</th>
-        <th style="text-align:left;padding:10px 8px;color:var(--t2)">სტ.</th>
-        <th style="text-align:left;padding:10px 8px;color:var(--t2)">მოქ.</th>
+        <th style="text-align:left;padding:10px 8px;color:var(--t2)">სტატუსი</th>
+        <th style="text-align:left;padding:10px 8px;color:var(--t2)">მოქმედება</th>
       </tr></thead>
       <tbody>${filtered.length ? filtered.map(u => `<tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="openAdminUserDetail('${u.id}')">
         <td style="padding:10px 8px">
@@ -3024,8 +3465,8 @@ function _renderAccountsTable(body) {
         <td style="padding:10px 8px">${_planBadge(u)}</td>
         <td style="padding:10px 8px">${u.blocked ? '🚫' : '<span style="color:var(--ok)">✓</span>'}</td>
         <td style="padding:10px 8px" onclick="event.stopPropagation()">
-          <button class="btn bs ${u.blocked ? 'bok' : 'berr'}" onclick="toggleBlock('${u.id}')">${u.blocked ? 'განბ.' : 'დაბ.'}</button>
-          <button class="btn bs berr" style="margin-left:4px" onclick="deleteUser('${u.id}')">წაშ.</button>
+          <button class="btn bs ${u.blocked ? 'bok' : 'berr'}" onclick="toggleBlock('${u.id}')">${u.blocked ? 'განბლოკვა' : 'დაბლოკვა'}</button>
+          <button class="btn bs berr" style="margin-left:4px" onclick="deleteUser('${u.id}')">წაშლა</button>
         </td>
       </tr>`).join('') : `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--t2)">ანგარიში ვერ მოიძებნა</td></tr>`}
       </tbody>
@@ -3046,10 +3487,10 @@ async function renderAdminRequests(body) {
     const requests = await api('/admin/requests');
     body.innerHTML = `<h3 style="margin-bottom:14px">📋 ყველა მოთხოვნა (${requests.length})</h3>` +
       (requests.length ? requests.map(r => `<div class="rcard">
-        <div class="rh"><div class="rt">${sanitize(r.title)}</div><span class="status ${r.status === 'open' ? 'sn' : 'sa'}">${r.status === 'open' ? 'ღია' : 'მიმდ.'}</span></div>
+        <div class="rh"><div class="rt">${sanitize(r.title)}</div><span class="status ${requestStatusClass(r.status)}">${requestStatusLabel(r.status)}</span></div>
         <div class="rmeta"><span class="tag">${sanitize(r.category || '')}</span><span class="tag">📍 ${sanitize(r.city || '')}</span><span class="tag">💬 ${r._count?.offers || 0}</span></div>
         <div style="margin-top:8px"><button class="btn bs berr" onclick="adminDeleteRequest('${r.id}')">🗑️ წაშლა</button></div>
-      </div>`).join('') : '<div class="empty"><div class="ei">📋</div><h3>მოთხ. არ არის</h3></div>');
+      </div>`).join('') : '<div class="empty"><div class="ei">📋</div><h3>მოთხოვნა არ არის</h3></div>');
   } catch (e) { body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>'; }
 }
 
@@ -3057,20 +3498,20 @@ async function renderAdminSupport(body) {
   body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳...</div>';
   try {
     const reqs = await api('/admin/support');
-    body.innerHTML = `<h3 style="margin-bottom:14px">🎧 სუპ. მოთხოვნები (${reqs.length})</h3>` +
+    body.innerHTML = `<h3 style="margin-bottom:14px">🎧 სუპორტის მოთხოვნები (${reqs.length})</h3>` +
       (reqs.length ? reqs.map(sr => `<div class="rcard" style="cursor:pointer" onclick="openSupportChat('${sr.id}')">
         <div class="rh">
           <div>
-            <div class="rt">👤 ${sanitize(sr.user?.name || 'მომხ.')} ${sanitize(sr.user?.surname || '')} — ${sr.user?.type || ''}</div>
+            <div class="rt">👤 ${sanitize(sr.user?.name || 'მომხმარებელი')} ${sanitize(sr.user?.surname || '')} — ${sr.user?.type || ''}</div>
             <div style="color:var(--t2);font-size:12px;margin-top:4px">${sanitize(sr.lastMsg || '')}</div>
           </div>
-          <span class="status ${sr.status === 'pending' ? 'sn' : sr.status === 'active' ? 'sa' : 'sd'}">${sr.status === 'pending' ? '⏳ მოლ.' : sr.status === 'active' ? '🔴 ცოც.' : '✓ დახ.'}</span>
+          <span class="status ${sr.status === 'pending' ? 'sn' : sr.status === 'active' ? 'sa' : 'sd'}">${sr.status === 'pending' ? '⏳ მოლოდინში' : sr.status === 'active' ? '🔴 ცოცხალი' : '✓ დახურული'}</span>
         </div>
         <div style="margin-top:8px;display:flex;gap:8px" onclick="event.stopPropagation()">
           <button class="btn bp bs" onclick="openSupportChat('${sr.id}')">💬 ჩატი</button>
-          <button class="btn bs berr" onclick="closeSupportRequest('${sr.id}')">✓ დახ.</button>
+          <button class="btn bs berr" onclick="closeSupportRequest('${sr.id}')">✓ დახურვა</button>
         </div>
-      </div>`).join('') : '<div class="empty"><div class="ei">🎧</div><h3>სუპ. მოთხ. არ არის</h3></div>');
+      </div>`).join('') : '<div class="empty"><div class="ei">🎧</div><h3>სუპორტის მოთხოვნა არ არის</h3></div>');
   } catch (e) { body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>'; }
 }
 
@@ -3087,16 +3528,16 @@ async function renderAdminStaff(body, isAdmin) {
         <thead><tr style="border-bottom:2px solid var(--border)">
           <th style="text-align:left;padding:10px 8px;color:var(--t2)">სახელი</th>
           <th style="text-align:left;padding:10px 8px;color:var(--t2)">ელ-ფოსტა</th>
-          <th style="text-align:left;padding:10px 8px;color:var(--t2)">სტ.</th>
-          ${isAdmin ? '<th style="text-align:left;padding:10px 8px;color:var(--t2)">მოქ.</th>' : ''}
+          <th style="text-align:left;padding:10px 8px;color:var(--t2)">სტატუსი</th>
+          ${isAdmin ? '<th style="text-align:left;padding:10px 8px;color:var(--t2)">მოქმედება</th>' : ''}
         </tr></thead><tbody>
         ${users.map(s => `<tr style="border-bottom:1px solid var(--border)">
           <td style="padding:10px 8px"><div style="font-weight:600">${sanitize(s.name)} ${sanitize(s.surname || '')}</div></td>
           <td style="padding:10px 8px;color:var(--t2);font-size:12px">${sanitize(s.email)}</td>
           <td style="padding:10px 8px">${s.blocked ? '🚫' : '<span style="color:var(--ok)">✓</span>'}</td>
           ${isAdmin ? `<td style="padding:10px 8px">
-            <button class="btn bs ${s.blocked ? 'bok' : 'berr'}" onclick="toggleBlock('${s.id}');renderAdmin()">${s.blocked ? 'განბ.' : 'დაბ.'}</button>
-            <button class="btn bs berr" onclick="deleteUser('${s.id}')">წაშ.</button>
+            <button class="btn bs ${s.blocked ? 'bok' : 'berr'}" onclick="toggleBlock('${s.id}');renderAdmin()">${s.blocked ? 'განბლოკვა' : 'დაბლოკვა'}</button>
+            <button class="btn bs berr" onclick="deleteUser('${s.id}')">წაშლა</button>
           </td>` : ''}
         </tr>`).join('')}
         </tbody></table></div>`
@@ -3148,7 +3589,7 @@ async function openAdminUserDetail(uid) {
             </div>
             ${u.planExpiresAt ? `<div><span style="color:var(--t2)">ვადა:</span> <strong style="margin-left:6px">${fdate(u.planExpiresAt)}</strong></div>` : ''}
             ${u.trialExpiresAt ? `<div><span style="color:var(--t2)">Trial ვადა:</span> <strong style="margin-left:6px">${fdate(u.trialExpiresAt)}</strong></div>` : ''}
-            <div><span style="color:var(--t2)">ავტო-განახ.:</span>
+            <div><span style="color:var(--t2)">ავტო-განახლება:</span>
               <strong style="margin-left:6px">${u.autoRenew ? '✅ ჩართული' : '—'}</strong>
             </div>
           </div>
@@ -3182,7 +3623,7 @@ async function openAdminUserDetail(uid) {
                 : p.type === 'vipp' ? '💜 VIP+'
                 : p.type || '—';
               const stColor = p.status === 'paid' ? 'var(--ok)' : p.status === 'pending' ? '#f39c12' : '#e74c3c';
-              const stLabel = p.status === 'paid' ? '✅ გადახდ.' : p.status === 'pending' ? '⏳ მოლ.' : '❌ გაუქ.';
+              const stLabel = p.status === 'paid' ? '✅ გადახდ.' : p.status === 'pending' ? '⏳ მოლოდინში' : '❌ გაუქმებული';
               return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--surface);border-radius:8px;font-size:12px">
                 <div>
                   <div style="font-weight:600">${typeLabel}</div>
@@ -3207,16 +3648,16 @@ async function openAdminUserDetail(uid) {
           <div style="font-size:20px;font-weight:800">${sanitize(u.name)} ${sanitize(u.surname || '')}</div>
           <div style="color:var(--accent);font-size:13px">${u.type}${u.specialty ? ' · ' + sanitize(u.specialty) : ''}</div>
           <div style="color:var(--t2);font-size:12px;margin-top:4px">📧 ${sanitize(u.email)}${u.phone ? ' · 📞 ' + sanitize(u.phone) : ''}${u.city ? ' · 📍 ' + sanitize(u.city) : ''}</div>
-          <div style="color:var(--t2);font-size:11px;margin-top:2px">🗓️ გაწევრ.: ${fdate(u.createdAt)} · ${u.emailVerified ? '✅ ვერ.' : '⚠️ დაუდ.'}</div>
+          <div style="color:var(--t2);font-size:11px;margin-top:2px">🗓️ გაწევრ.: ${fdate(u.createdAt)} · ${u.emailVerified ? '✅ ვერიფიცირებული' : '⚠️ დაუდასტურებელი'}</div>
           ${u.blocked ? '<div style="color:#e74c3c;font-size:12px;margin-top:4px">🚫 ანგარიში დაბლოკილია</div>' : ''}
         </div>
       </div>
       <!-- Stats -->
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:14px">
-        <div class="dc"><div class="dn">${u._count?.requests || 0}</div><div class="dl">მოთხ.</div></div>
-        <div class="dc"><div class="dn">${u._count?.offers || 0}</div><div class="dl">შეთ.</div></div>
-        <div class="dc"><div class="dn">${u.jobs || 0}</div><div class="dl">სამ.</div></div>
-        ${u.reviewsReceived?.length ? `<div class="dc"><div class="dn">${u.reviewsReceived.length}</div><div class="dl">შეფ.</div></div>` : ''}
+        <div class="dc"><div class="dn">${u._count?.requests || 0}</div><div class="dl">მოთხოვნები</div></div>
+        <div class="dc"><div class="dn">${u._count?.offers || 0}</div><div class="dl">შეთავაზებები</div></div>
+        <div class="dc"><div class="dn">${u.jobs || 0}</div><div class="dl">სამუშაო</div></div>
+        ${u.reviewsReceived?.length ? `<div class="dc"><div class="dn">${u.reviewsReceived.length}</div><div class="dl">შეფასებები</div></div>` : ''}
       </div>
       <!-- Plan + VIP -->
       ${planHtml}
@@ -3243,12 +3684,12 @@ async function deleteUser(uid) {
 }
 async function adminDeleteRequest(rid) {
   if (!confirm('ნამდვილად გინდა წაშალო?')) return;
-  try { await api('/admin/requests/' + rid, { method: 'DELETE' }); toast('🗑️ მოთხ. წაიშალა', '', 'ok'); renderAdmin(); }
+  try { await api('/admin/requests/' + rid, { method: 'DELETE' }); toast('🗑️ მოთხოვნა წაიშალა', '', 'ok'); renderAdmin(); }
   catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
 }
 async function createStaff() {
   const name = document.getElementById('newStaffName').value.trim();
-  const email = document.getElementById('newStaffEmail').value.trim();
+  const email = document.getElementById('newStaffელ-ფოსტა').value.trim();
   const password = document.getElementById('newStaffPass').value;
   const phone = document.getElementById('newStaffPhone').value.trim();
   if (!name || !email || !password) { toast('⚠️ შეავსე ყველა ველი', '', 'err'); return; }
@@ -3265,7 +3706,7 @@ async function createStaff() {
 async function openSupportChat(sid) {
   currentSupportId = sid;
   try { await api('/admin/support/' + sid + '/status', { method: 'PATCH', body: { status: 'active' } }); } catch (_) {}
-  document.getElementById('supportChatTitle').textContent = 'სუპ. #' + sid.slice(-6);
+  document.getElementById('supportChatTitle').textContent = 'სუპორტი #' + sid.slice(-6);
   document.getElementById('supportChatBody').innerHTML = '<div style="text-align:center;padding:20px;color:var(--t2)">⏳...</div>';
   openMo('moSupportChat');
   if (socket) socket.emit('joinSupport', sid);
@@ -3311,7 +3752,7 @@ function sendSupportMsg() {
 async function closeSupportRequest(sid) {
   try {
     await api('/admin/support/' + sid + '/status', { method: 'PATCH', body: { status: 'closed' } });
-    toast('✓ სუპ. დახურულია', '', 'ok'); renderAdmin();
+    toast('✓ სუპორტი დახურულია', '', 'ok'); renderAdmin();
   } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
 }
 
@@ -3349,7 +3790,7 @@ async function sendAriaMsg(text) {
   ariaAddMsg('user', text);
   if (text.toLowerCase().includes('ოპერატ') || text.toLowerCase().includes('operator') || text === '🎧 ოპერატორთან დაკავშირება') {
     await new Promise(r => setTimeout(r, 400));
-    ariaAddMsg('assistant', 'ვაკავშირებ ოპერატორთან! ⏳\n\nთქვენი მოთხოვნა გადაეგზავნა სუპ. გუნდს!');
+    ariaAddMsg('assistant', 'ვაკავშირებ ოპერატორთან! ⏳\n\nთქვენი მოთხოვნა გადაეგზავნა სუპორტის გუნდს!');
     triggerSupportRequest(text); return;
   }
   ariaLoading = true; ariaAddMsg('assistant', '...');
@@ -3375,13 +3816,13 @@ async function sendAriaMsg(text) {
 }
 async function triggerSupportRequest(userMsg) {
   const cu = currentUser;
-  if (!cu) { setTimeout(() => ariaAddMsg('assistant', '💡 შეხვიდე ანგარიშზე ოპ.-სთან ლაივ კომ.-სთვის!'), 300); return; }
+  if (!cu) { setTimeout(() => ariaAddMsg('assistant', '💡 შეხვიდე ანგარიშზე ოპერატორთან კომუნიკაციისთვის!'), 300); return; }
   try {
     const sr = await api('/admin/support', { method: 'POST', body: { message: userMsg } });
     currentUserSupportId = sr.id;
     if (socket) socket.emit('joinSupport', sr.id);
   } catch (e) {
-    if (e.status === 409) ariaAddMsg('assistant', 'ოპ. უკვე ამოხ.! 🎧 გთხ. დაიცადო.');
+    if (e.status === 409) ariaAddMsg('assistant', 'ოპერატორი უკვე ამოგეხმაურა! 🎧 გთხოვთ დაიცადოთ.');
   }
 }
 function ariaKeydown(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAriaMsg(); } }
@@ -3572,7 +4013,7 @@ async function choosePlan(plan) {
   if (!cu) return;
   closeMo('moUpgrade');
   if (plan === 'start') {
-    toast('ℹ️ Start ტარიფი', '3 თვე უფასო · 5 შეთ./თვე. შეძენა არ სჭირდება!', 'ok');
+    toast('ℹ️ Start ტარიფი', '3 თვე უფასო · 5 შეთავაზება თვეში. შეძენა არ სჭირდება!', 'ok');
     return;
   }
   // Redirect to TBC Pay for payment
@@ -3597,17 +4038,17 @@ function showPricingFor(type) {
     <div class="pc">
       <div class="pn">Start</div><div class="pp">0₾ <span>/3 თვე</span></div>
       <p style="color:var(--t2);font-size:12px;margin-top:4px">ერთჯერადი სასაჩუქრე პერიოდი</p>
-      <ul class="pf"><li>პროფილი</li><li>მოთხ. ნახვა</li><li>5 შეთ./თვე</li><li>ბაზ. სტატ.</li></ul>
+      <ul class="pf"><li>პროფილი</li><li>მოთხოვნების ნახვა</li><li>5 შეთავაზება თვეში</li><li>ბაზისური სტატისტიკა</li></ul>
       <button class="btn bo" style="width:100%;justify-content:center" onclick="openMo('moRegister')">დაწყება</button>
     </div>
     <div class="pc feat">
       <div class="pn">Pro</div><div class="pp">${p.pro}₾ <span>/თვე</span></div>
-      <ul class="pf"><li>შეუზღ. შეთ.</li><li>გამ. პოზ.</li><li>ვიდ. პორტ.</li><li>სრ. სტატ.</li><li>ავტო-განახ.</li></ul>
+      <ul class="pf"><li>შეუზღუდავი შეთავაზებები</li><li>გაუმჯობესებული პოზიცია</li><li>ვიდეო პორტფოლიო</li><li>სრული სტატისტიკა</li><li>ავტო-განახლება</li></ul>
       <button class="btn bp" style="width:100%;justify-content:center" onclick="openMo('moRegister')">Pro ${p.pro}₾</button>
     </div>
     <div class="pc">
       <div class="pn">TOP</div><div class="pp">${p.top}₾ <span>/თვე</span></div>
-      <ul class="pf"><li>Pro ყველ.</li><li>TOP ბეჯი</li><li>ყოვ. VIP+</li><li>სიაში 1-ლი</li><li>ავტო-განახ.</li></ul>
+      <ul class="pf"><li>Pro-ს ყველა ფუნქცია</li><li>TOP ბეჯი</li><li>ყოველდღე VIP+</li><li>სიაში 1-ლი</li><li>ავტო-განახლება</li></ul>
       <button class="btn bvipp" style="width:100%;justify-content:center" onclick="openMo('moRegister')">TOP ${p.top}₾</button>
     </div>
   </div>`;
@@ -3790,7 +4231,7 @@ function initCats() {
   // Build request cat pills
   const rcp = document.getElementById('reqCatPills');
   if (rcp) {
-    rcp.innerHTML = '<span style="font-size:12px;color:var(--t2);font-weight:600">პროფ.:</span>' +
+    rcp.innerHTML = '<span style="font-size:12px;color:var(--t2);font-weight:600">პროფესია:</span>' +
       CATS_DATA.map(g => `<span class="cat-pill" onclick="selectReqCatPill(this,'${g.name}')">${g.icon} ${g.name}</span>`).join('');
   }
   // Hero pills
@@ -3815,7 +4256,7 @@ function checkPassStrength(val) {
   if (!bar) return; if (!val) { bar.className = 'ps-bar'; lbl.textContent = ''; return; }
   let s = 0; if (val.length >= 8) s++; if (val.length >= 12) s++; if (/[A-Z]/.test(val)) s++; if (/[0-9]/.test(val)) s++; if (/[^A-Za-z0-9]/.test(val)) s++;
   if (s <= 2) { bar.className = 'ps-bar weak'; lbl.textContent = 'სუსტი'; }
-  else if (s <= 3) { bar.className = 'ps-bar mid'; lbl.textContent = 'საშ.'; }
+  else if (s <= 3) { bar.className = 'ps-bar mid'; lbl.textContent = 'საშუალო'; }
   else { bar.className = 'ps-bar strong'; lbl.textContent = 'ძლიერი ✓'; }
 }
 function checkPassStrength2(val) {
@@ -3857,6 +4298,22 @@ function now() { const d = new Date(); return d.getHours() + ':' + (d.getMinutes
   renderNav();
   renderHomeGrid();
   setRegType('user');
+
+  // ── Deep link: open shared request URL (?req=abc) ─────
+  try {
+    const params = new URLSearchParams(location.search);
+    const reqId = params.get('req');
+    const chatId = params.get('chat');
+    if (reqId) {
+      // Wait a tick for UI to render, then open
+      setTimeout(() => openRequestDetail(reqId), 400);
+      // Clean URL so refresh doesn't re-open
+      history.replaceState(null, '', location.pathname);
+    } else if (chatId && currentUser) {
+      setTimeout(() => openChat(chatId), 400);
+      history.replaceState(null, '', location.pathname);
+    }
+  } catch (_) {}
 })();
 
 </script>

@@ -67,13 +67,22 @@ router.post('/', requireAuth, async (req, res) => {
     // ── Find request ──────────────────────────────────────────
     const request = await prisma.request.findUnique({ where: { id: requestId } });
     if (!request) return res.status(404).json({ error: 'მოთხოვნა ვერ მოიძებნა' });
-    if (request.status !== 'open') return res.status(400).json({ error: 'მოთხოვნა დახურულია' });
+    if (!['open', 'pending'].includes(request.status)) return res.status(400).json({ error: 'მოთხოვნა აღარ იღებს შეთავაზებებს' });
 
     // ── Check duplicate ───────────────────────────────────────
     const existing = await prisma.offer.findUnique({
       where: { requestId_handymanId: { requestId, handymanId: req.user.id } },
     });
     if (existing) return res.status(409).json({ error: 'შეთავაზება უკვე გაგზავნილია' });
+
+    // ── Bump request status: open → pending (first offer) ─────
+    // Stays 'pending' until owner accepts one
+    if (request.status === 'open') {
+      await prisma.request.update({
+        where: { id: requestId },
+        data:  { status: 'pending' },
+      }).catch(() => {});
+    }
 
     const offer = await prisma.offer.create({
       data: {
@@ -131,6 +140,69 @@ router.get('/mine', requireAuth, async (req, res) => {
   }
 });
 
+// ── PATCH /api/offers/:id ─────────────────────────────────────
+// Handyman edits their own offer while it's still pending.
+// Allowed fields: price, duration, comment.
+router.patch('/:id', requireAuth, async (req, res) => {
+  try {
+    const { price, duration, comment } = req.body;
+
+    const offer = await prisma.offer.findUnique({
+      where: { id: req.params.id },
+      include: { request: true },
+    });
+    if (!offer) return res.status(404).json({ error: 'შეთავაზება ვერ მოიძებნა' });
+
+    // Only the offer's author can edit it
+    if (offer.handymanId !== req.user.id) {
+      return res.status(403).json({ error: 'მხოლოდ შეთავაზების ავტორს შეუძლია რედაქტირება' });
+    }
+
+    // Only pending offers can be edited (once accepted, it's locked)
+    if (offer.status !== 'pending') {
+      return res.status(400).json({ error: 'მხოლოდ მოლოდინში მყოფი შეთავაზების რედაქტირება შეიძლება' });
+    }
+
+    // Request must still be open/pending (not in_progress/completed/closed)
+    if (!['open', 'pending'].includes(offer.request.status)) {
+      return res.status(400).json({ error: 'მოთხოვნა აღარ იღებს ცვლილებებს' });
+    }
+
+    // Build the update data — only apply fields that were actually sent
+    const data = {};
+    if (price !== undefined) {
+      const parsed = parseInt(price);
+      if (isNaN(parsed) || parsed <= 0) {
+        return res.status(400).json({ error: 'ფასი არასწორია' });
+      }
+      data.price = parsed;
+    }
+    if (duration !== undefined) data.duration = duration || null;
+    if (comment  !== undefined) data.comment  = comment  || null;
+
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({ error: 'არცერთი ველი არ შეცვლილა' });
+    }
+
+    const updated = await prisma.offer.update({
+      where: { id: req.params.id },
+      data,
+      include: { handyman: { select: { id: true, name: true, surname: true, avatar: true, emoji: true, color: true, specialty: true } } },
+    });
+
+    // Notify the request owner via socket if available
+    try {
+      const io = req.app.get('io');
+      if (io) io.to(`user:${offer.request.userId}`).emit('offerUpdated', updated);
+    } catch (_) {}
+
+    res.json(updated);
+  } catch (err) {
+    console.error('[OFFERS] edit error:', err.message);
+    res.status(500).json({ error: 'სერვერის შეცდომა' });
+  }
+});
+
 // ── POST /api/offers/:id/accept ───────────────────────────────
 router.post('/:id/accept', requireAuth, async (req, res) => {
   try {
@@ -146,11 +218,20 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
     if (offer.request.userId !== req.user.id) return res.status(403).json({ error: 'წვდომა აკრძალულია' });
     if (offer.status !== 'pending') return res.status(400).json({ error: 'შეთავაზება უკვე დამუშავებულია' });
 
-    // Accept offer, update request, create chat
+    // Accept offer, update request, reject other pending offers, create chat
     // FIX: system message now uses fromId: null (not 'system' string)
-    const [updatedOffer, , chat] = await prisma.$transaction([
+    const [updatedOffer, , , chat] = await prisma.$transaction([
       prisma.offer.update({ where: { id: offer.id }, data: { status: 'accepted' } }),
       prisma.request.update({ where: { id: offer.requestId }, data: { status: 'in_progress' } }),
+      // Auto-reject any other pending offers on the same request
+      prisma.offer.updateMany({
+        where: {
+          requestId: offer.requestId,
+          id:        { not: offer.id },
+          status:    'pending',
+        },
+        data: { status: 'rejected' },
+      }),
       prisma.chat.create({
         data: {
           offerId:   offer.id,

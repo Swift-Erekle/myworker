@@ -251,10 +251,55 @@ app.use((err, req, res, next) => {
     } catch (_) {}
   });
 
+  // ── 5. Request lifecycle — daily at 03:00 ───────────────────
+  // Auto-close stale requests that nobody acted on
+  cron.schedule('0 3 * * *', async () => {
+    console.log('[CRON] Running request lifecycle cleanup...');
+    const now = new Date();
+    const fourteenDaysAgo = new Date(now.getTime() - 14 * 86400000);
+    const thirtyDaysAgo   = new Date(now.getTime() - 30 * 86400000);
+
+    try {
+      // 5a. Close 'open' requests with zero offers older than 14 days
+      const staleOpen = await prisma.request.updateMany({
+        where: {
+          status: 'open',
+          createdAt: { lt: fourteenDaysAgo },
+        },
+        data: { status: 'closed' },
+      });
+      if (staleOpen.count > 0) console.log(`[CRON] ${staleOpen.count} open request(s) auto-closed (no offers, 14+ days)`);
+
+      // 5b. Close 'pending' requests older than 14 days (owner didn't accept anyone)
+      const stalePending = await prisma.request.updateMany({
+        where: {
+          status: 'pending',
+          createdAt: { lt: fourteenDaysAgo },
+        },
+        data: { status: 'closed' },
+      });
+      if (stalePending.count > 0) console.log(`[CRON] ${stalePending.count} pending request(s) auto-closed (14+ days)`);
+
+      // 5c. Archive 'completed' requests older than 30 days
+      // We use a separate 'archived' flag-like status; keeps history intact.
+      const archivedCount = await prisma.request.updateMany({
+        where: {
+          status: 'completed',
+          updatedAt: { lt: thirtyDaysAgo },
+        },
+        data: { status: 'archived' },
+      });
+      if (archivedCount.count > 0) console.log(`[CRON] ${archivedCount.count} completed request(s) archived (30+ days)`);
+    } catch (err) {
+      console.error('[CRON] Request lifecycle error:', err.message);
+    }
+  });
+
   console.log('[CRON] All schedulers started:');
   console.log('  06:00 daily — plan expiry checks');
   console.log('  08:00 daily — subscription auto-renewal');
   console.log('  00:05 daily — TOP plan VIP+ refresh');
+  console.log('  03:00 daily — request lifecycle cleanup');
   console.log('  07:00 Sunday — weekly stats');
 })();
 

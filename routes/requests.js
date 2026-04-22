@@ -14,7 +14,13 @@ router.get('/', optionalAuth, async (req, res) => {
     if (category) where.category = category;
     if (city) where.city = { contains: city, mode: 'insensitive' };
     if (urgency) where.urgency = urgency;
-    where.status = status || 'open';
+    // Allow filtering by specific status or show all "active" (open + pending)
+    if (status) {
+      where.status = status;
+    } else {
+      // Default: show requests that still accept offers
+      where.status = { in: ['open', 'pending'] };
+    }
 
     const requests = await prisma.request.findMany({
       where,
@@ -128,7 +134,7 @@ router.patch('/:id/status', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'წვდომა აკრძალულია' });
     }
     const { status } = req.body;
-    if (!['open', 'in_progress', 'completed'].includes(status)) {
+    if (!['open', 'pending', 'in_progress', 'completed', 'closed'].includes(status)) {
       return res.status(400).json({ error: 'სტატუსი არასწორია' });
     }
     const updated = await prisma.request.update({ where: { id: req.params.id }, data: { status } });
