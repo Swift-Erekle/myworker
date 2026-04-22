@@ -1300,17 +1300,15 @@ function openIosInstallModal() {
 }
 
 function dismissAppBanner() {
+  // მხოლოდ ამ სესიაში ხურავს — შემდეგ შესვლაზე კვლავ ჩნდება
   const b = document.getElementById('appBanner');
   if (b) b.style.display = 'none';
-  localStorage.setItem('xg_app_banner_dismissed', '1');
 }
 
 function maybeShowAppBanner() {
-  if (!currentUser) return;           // must be logged in
-  if (!isMobile()) return;            // desktop → skip
-  if (isInPwa()) return;              // already using PWA → skip
-  if (localStorage.getItem('xg_app_banner_dismissed')) return;
-  if (localStorage.getItem('xg_app_downloaded')) return;  // already downloaded APK
+  if (!currentUser) return;   // შესვლა სავალდებულოა
+  if (!isMobile()) return;    // მხოლოდ ტელეფონზე
+  if (isInPwa()) return;      // PWA-ში უკვე არის → არ აჩვენო
 
   const banner  = document.getElementById('appBanner');
   const android = document.getElementById('appBannerAndroid');
@@ -1322,15 +1320,14 @@ function maybeShowAppBanner() {
     if (apkLink) apkLink.href = APK_URL;
     if (android) android.style.display = 'flex';
   } else if (isIos()) {
-    // iOS: only show if NOT already installed as PWA
     if (window.navigator.standalone) return;
     if (ios) ios.style.display = 'flex';
   } else {
-    return; // other mobile → skip
+    return;
   }
 
-  // Show banner after 3 seconds
-  setTimeout(() => { banner.style.display = 'block'; }, 3000);
+  // დაუყოვნებლივ აჩვენე
+  banner.style.display = 'block';
 }
 
 // ========================================================
@@ -1547,7 +1544,7 @@ async function doLogin() {
     if (currentUser.type === 'admin' || currentUser.type === 'staff') nav('admin');
     else nav('dashboard');
     initSocket();
-    setTimeout(maybeShowAppBanner, 3000);
+    maybeShowAppBanner();
   } catch (e) {
     // Unverified email: backend re-sent a code, open verify modal
     if (e.emailNotVerified) {
@@ -1620,7 +1617,7 @@ async function confirmVerify() {
     pendingRegEmail = null;
     selectedRegSpecialties = [];
     initSocket();
-    setTimeout(maybeShowAppBanner, 3000);
+    maybeShowAppBanner();
     // Show plan selection for handymen/companies
     const isWorker = data.user.type === 'handyman' || data.user.type === 'company';
     if (isWorker) {
@@ -3845,7 +3842,7 @@ function now() { const d = new Date(); return d.getHours() + ':' + (d.getMinutes
     try {
       currentUser = await api('/auth/me');
       initSocket();
-      setTimeout(maybeShowAppBanner, 3000);
+      maybeShowAppBanner();
       if (currentUser.type === 'admin' || currentUser.type === 'staff') nav('admin');
       else {
         // Check if trial expired for handyman/company
