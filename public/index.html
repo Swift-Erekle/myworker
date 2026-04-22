@@ -1478,7 +1478,7 @@ async function doLogin() {
     initSocket();
   } catch (e) {
     // Unverified email: backend re-sent a code, open verify modal
-    if (e.needsVerification) {
+    if (e.emailNotVerified) {
       pendingRegEmail = e.email || email;
       closeMo('moLogin');
       document.getElementById('verifySubText').textContent = `კოდი გამოგზავნილია ${pendingRegEmail}-ზე. შეიყვანე:`;
