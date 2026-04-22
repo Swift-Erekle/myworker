@@ -509,10 +509,9 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
   </div>
   <div id="reqContent" style="display:none">
     <div class="ph"><div class="phi"><div><h1>მოთხოვნების დაფა</h1><p>ადამიანებს სჭირდებათ ხელოსანი — გეწერე!</p></div><div id="addReqBtn"></div></div></div>
-    <div class="sec" style="padding-top:20px">
-      <!-- Category pills like handymen page -->
-      <div id="reqCatPills" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;align-items:center"></div>
-      <div class="fb" style="margin-bottom:14px">
+    <div class="sec" style="padding-top:28px">
+      <div id="reqCatPills" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;align-items:center"></div>
+      <div class="fb" style="margin-bottom:12px">
         <select id="rUrg" onchange="renderRequests()"><option value="">ყველა</option><option value="urgent">⚡ გადაუდებელი</option><option value="normal">ჩვეულებრივი</option></select>
       </div>
       <div id="requestsGrid"></div>
@@ -660,11 +659,8 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
       <div class="at" id="at-handyman" onclick="setRegType('handyman')"><div class="ate">🔧</div><div class="atn">ხელოსანი</div><div class="atd">ასრულებს სამუშაოს</div></div>
       <div class="at" id="at-company" onclick="setRegType('company')"><div class="ate">🏢</div><div class="atn">კომპანია</div><div class="atd">ჯგუფი/გუნდი</div></div>
     </div>
-    <!-- Simple free note — tariff chosen AFTER login -->
     <div id="regPricingInfo" style="margin-bottom:16px"></div>
-    <div id="regFreeNote" style="display:none;margin-bottom:14px;padding:10px 14px;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.3);border-radius:10px;font-size:13px;color:var(--ok)">
-      ✅ <strong>3 თვე სრულიად უფასო!</strong> — რეგისტრაციის შემდეგ ტარიფი შეგიძლია აირჩიო ნებისმიერ დროს.
-    </div>
+    <div id="regFreeNote" style="display:none;margin-bottom:14px;padding:10px 14px;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.3);border-radius:10px;font-size:13px;color:var(--ok)">✅ <strong>3 თვე სრულიად უფასო!</strong> — რეგისტრაციის შემდეგ ტარიფი შეგიძლია აირჩიო ნებისმიერ დროს.</div>
     <div class="fr">
       <div class="fg"><label>სახელი</label><input id="rName" placeholder="გიორგი"></div>
       <div class="fg"><label>გვარი / კომპანია</label><input id="rSurname" placeholder="ბერიძე"></div>
@@ -672,17 +668,13 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
     <div class="fg" id="rSpecGroup" style="display:none">
       <label>პროფესია(ები) <span style="color:var(--t2);font-weight:400">— აირჩიე ერთი ან მეტი</span></label>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <!-- Left: main categories -->
         <div>
           <div style="font-size:11px;color:var(--t2);margin-bottom:4px;font-weight:600">🔧 სფერო</div>
           <div id="rMainCatGrid" class="spec-grid" style="max-height:220px"></div>
         </div>
-        <!-- Right: sub-categories of selected mains -->
-        <div id="rSubCatPanel">
+        <div>
           <div style="font-size:11px;color:var(--t2);margin-bottom:4px;font-weight:600">📋 ქვე-სპეც.</div>
-          <div id="rSubCatGrid" class="spec-grid" style="max-height:220px">
-            <div style="padding:10px;font-size:11px;color:var(--t2);text-align:center">← სფერო აირჩიე</div>
-          </div>
+          <div id="rSubCatGrid" class="spec-grid" style="max-height:220px"><div style="padding:10px;font-size:11px;color:var(--t2);text-align:center">← სფერო აირჩიე</div></div>
         </div>
       </div>
       <div style="font-size:11px;color:var(--t2);margin-top:4px">პირველი მონიშნული = მთავარი სპეციალობა</div>
@@ -877,9 +869,7 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
         </div>
         <div>
           <div style="font-size:11px;color:var(--t2);margin-bottom:4px;font-weight:600">📋 ქვე-სპეც.</div>
-          <div id="editSubCatGrid" class="spec-grid" style="max-height:220px">
-            <div style="padding:10px;font-size:11px;color:var(--t2);text-align:center">← სფერო აირჩიე</div>
-          </div>
+          <div id="editSubCatGrid" class="spec-grid" style="max-height:220px"><div style="padding:10px;font-size:11px;color:var(--t2);text-align:center">← სფერო აირჩიე</div></div>
         </div>
       </div>
     </div>
@@ -1348,160 +1338,85 @@ function avatarNavHtml(cu) {
 // ========================================================
 // TWO-PANEL SPECIALTY SELECTOR
 // ========================================================
-// selectedRegSpecialties  = array of chosen values (main cat names OR sub-cat names)
-// selectedEditSpecialties = same for edit profile
-
-function buildTwoPanelSpec(mainGridId, subGridId, selectedArr, onMainToggle, onSubToggle) {
-  const mainEl = document.getElementById(mainGridId);
-  const subEl  = document.getElementById(subGridId);
+function buildTwoPanelSpec(mainId, subId, selArr, onMain, onSub) {
+  const mainEl = document.getElementById(mainId);
   if (!mainEl) return;
-
-  // Determine which main cats are selected (from selectedArr)
-  const selectedMains = CATS_DATA.filter(g => selectedArr.includes(g.name)).map(g => g.name);
-
-  // Left panel: main categories
   mainEl.innerHTML = CATS_DATA.map(g => {
-    const sel = selectedArr.includes(g.name);
-    return `<div class="spec-item">
-      <label style="background:${sel?'rgba(255,107,43,.12)':'var(--s2)'};border-color:${sel?'var(--accent)':'var(--border)'}">
-        <input type="checkbox" value="${g.name}" ${sel?'checked':''} onchange="${onMainToggle}(this)" style="accent-color:var(--accent);flex-shrink:0">
-        <span>${g.icon} ${g.name}</span>
-      </label></div>`;
+    const sel = selArr.includes(g.name);
+    return `<div class="spec-item"><label style="background:${sel?'rgba(255,107,43,.12)':'var(--s2)'};border-color:${sel?'var(--accent)':'var(--border)'}"><input type="checkbox" value="${g.name}" ${sel?'checked':''} onchange="${onMain}(this)" style="accent-color:var(--accent);flex-shrink:0"><span>${g.icon} ${g.name}</span></label></div>`;
   }).join('');
-
-  // Right panel: sub-categories of all selected mains
-  refreshSubPanel(mainGridId, subGridId, selectedArr, onSubToggle);
+  refreshSubPanel(mainId, subId, selArr, onSub);
 }
 
-function refreshSubPanel(mainGridId, subGridId, selectedArr, onSubToggle) {
-  const subEl = document.getElementById(subGridId);
+function refreshSubPanel(mainId, subId, selArr, onSub) {
+  const subEl = document.getElementById(subId);
   if (!subEl) return;
-
-  // Collect subs from all selected main cats
-  const selectedMains = CATS_DATA.filter(g => selectedArr.includes(g.name));
-  if (selectedMains.length === 0) {
+  const selMains = CATS_DATA.filter(g => selArr.includes(g.name));
+  if (!selMains.length) {
     subEl.innerHTML = '<div style="padding:10px;font-size:11px;color:var(--t2);text-align:center">← სფერო აირჩიე</div>';
     return;
   }
-
-  let html = '';
-  selectedMains.forEach(g => {
-    html += `<div style="font-size:10px;font-weight:700;color:var(--accent);padding:4px 8px 2px">${g.icon} ${g.name}</div>`;
-    html += g.subs.map(s => {
-      const sel = selectedArr.includes(s);
-      return `<div class="spec-item">
-        <label style="font-size:11px;background:${sel?'rgba(255,107,43,.12)':'var(--s2)'};border-color:${sel?'var(--accent)':'var(--border)'}">
-          <input type="checkbox" value="${s}" ${sel?'checked':''} onchange="${onSubToggle}(this)" style="accent-color:var(--accent);flex-shrink:0">
-          <span>${s}</span>
-        </label></div>`;
-    }).join('');
-  });
-  subEl.innerHTML = html;
+  subEl.innerHTML = selMains.map(g =>
+    `<div style="font-size:10px;font-weight:700;color:var(--accent);padding:4px 8px 2px">${g.icon} ${g.name}</div>` +
+    g.subs.map(s => {
+      const sel = selArr.includes(s);
+      return `<div class="spec-item"><label style="font-size:11px;background:${sel?'rgba(255,107,43,.12)':'var(--s2)'};border-color:${sel?'var(--accent)':'var(--border)'}"><input type="checkbox" value="${s}" ${sel?'checked':''} onchange="${onSub}(this)" style="accent-color:var(--accent);flex-shrink:0"><span>${s}</span></label></div>`;
+    }).join('')
+  ).join('');
 }
 
-// ── Registration ─────────────────────────────────────────────
-function onRegMainToggle(cb) {
+function _specToggle(cb, arr, liftMain) {
   const val = cb.value;
-  if (cb.checked) {
-    if (!selectedRegSpecialties.includes(val)) selectedRegSpecialties.push(val);
-  } else {
-    selectedRegSpecialties = selectedRegSpecialties.filter(s => s !== val);
-    // Also remove any sub-cats belonging to this main cat
-    const group = CATS_DATA.find(g => g.name === val);
-    if (group) selectedRegSpecialties = selectedRegSpecialties.filter(s => !group.subs.includes(s));
+  if (cb.checked) { if (!arr.includes(val)) arr.push(val); }
+  else {
+    const idx = arr.indexOf(val); if (idx > -1) arr.splice(idx,1);
+    if (liftMain) { const g = CATS_DATA.find(x => x.name===val); if(g) g.subs.forEach(s=>{const i=arr.indexOf(s);if(i>-1)arr.splice(i,1);}); }
   }
-  cb.closest('label').style.background = cb.checked ? 'rgba(255,107,43,.12)' : 'var(--s2)';
-  cb.closest('label').style.borderColor = cb.checked ? 'var(--accent)' : 'var(--border)';
-  refreshSubPanel('rMainCatGrid', 'rSubCatGrid', selectedRegSpecialties, 'onRegSubToggle');
+  const lbl = cb.closest('label');
+  if (lbl) { lbl.style.background = cb.checked?'rgba(255,107,43,.12)':'var(--s2)'; lbl.style.borderColor = cb.checked?'var(--accent)':'var(--border)'; }
 }
 
-function onRegSubToggle(cb) {
-  const val = cb.value;
-  if (cb.checked) {
-    if (!selectedRegSpecialties.includes(val)) selectedRegSpecialties.push(val);
-  } else {
-    selectedRegSpecialties = selectedRegSpecialties.filter(s => s !== val);
-  }
-  cb.closest('label').style.background = cb.checked ? 'rgba(255,107,43,.12)' : 'var(--s2)';
-  cb.closest('label').style.borderColor = cb.checked ? 'var(--accent)' : 'var(--border)';
-}
+function onRegMainToggle(cb) { _specToggle(cb, selectedRegSpecialties, true); refreshSubPanel('rMainCatGrid','rSubCatGrid',selectedRegSpecialties,'onRegSubToggle'); }
+function onRegSubToggle(cb)  { _specToggle(cb, selectedRegSpecialties, false); }
+function onEditMainToggle(cb){ _specToggle(cb, selectedEditSpecialties, true); refreshSubPanel('editMainCatGrid','editSubCatGrid',selectedEditSpecialties,'onEditSubToggle'); }
+function onEditSubToggle(cb) { _specToggle(cb, selectedEditSpecialties, false); }
 
-// ── Edit Profile ──────────────────────────────────────────────
-function onEditMainToggle(cb) {
-  const val = cb.value;
-  if (cb.checked) {
-    if (!selectedEditSpecialties.includes(val)) selectedEditSpecialties.push(val);
-  } else {
-    selectedEditSpecialties = selectedEditSpecialties.filter(s => s !== val);
-    const group = CATS_DATA.find(g => g.name === val);
-    if (group) selectedEditSpecialties = selectedEditSpecialties.filter(s => !group.subs.includes(s));
-  }
-  cb.closest('label').style.background = cb.checked ? 'rgba(255,107,43,.12)' : 'var(--s2)';
-  cb.closest('label').style.borderColor = cb.checked ? 'var(--accent)' : 'var(--border)';
-  refreshSubPanel('editMainCatGrid', 'editSubCatGrid', selectedEditSpecialties, 'onEditSubToggle');
-}
-
-function onEditSubToggle(cb) {
-  const val = cb.value;
-  if (cb.checked) {
-    if (!selectedEditSpecialties.includes(val)) selectedEditSpecialties.push(val);
-  } else {
-    selectedEditSpecialties = selectedEditSpecialties.filter(s => s !== val);
-  }
-  cb.closest('label').style.background = cb.checked ? 'rgba(255,107,43,.12)' : 'var(--s2)';
-  cb.closest('label').style.borderColor = cb.checked ? 'var(--accent)' : 'var(--border)';
-}
-
-// Legacy stubs (kept so old references don't break)
+// Legacy stubs
 function buildSpecCheckboxes(cid, arr, fn) {
-  if (cid === 'rSpecCheckboxes' || cid === 'rMainCatGrid') buildTwoPanelSpec('rMainCatGrid','rSubCatGrid',arr,'onRegMainToggle','onRegSubToggle');
-  else if (cid === 'editSpecCheckboxes' || cid === 'editMainCatGrid') buildTwoPanelSpec('editMainCatGrid','editSubCatGrid',arr,'onEditMainToggle','onEditSubToggle');
+  if (cid.includes('edit')) buildTwoPanelSpec('editMainCatGrid','editSubCatGrid',arr,'onEditMainToggle','onEditSubToggle');
+  else buildTwoPanelSpec('rMainCatGrid','rSubCatGrid',arr,'onRegMainToggle','onRegSubToggle');
 }
-function onRegSpecChange(cb) { onRegMainToggle(cb); }
+function onRegSpecChange(cb)  { onRegMainToggle(cb); }
 function onEditSpecChange(cb) { onEditMainToggle(cb); }
-// ========================================================
-// REGISTER TYPE — updated to use two-panel specialty
-// ========================================================
+
+// ── setRegType: two-panel + no tariff ────────────────────────
 function setRegType(type) {
   regType = type;
-  ['user','handyman','company'].forEach(t => {
-    document.getElementById('at-' + t)?.classList.toggle('sel', t === type);
-  });
+  ['user','handyman','company'].forEach(t => { document.getElementById('at-'+t)?.classList.toggle('sel', t===type); });
   const isWorker = type !== 'user';
-  document.getElementById('rSpecGroup').style.display = isWorker ? 'block' : 'none';
-  document.getElementById('rDescGroup').style.display = isWorker ? 'block' : 'none';
-
-  // Show/hide free note for handyman/company
-  const freeNote = document.getElementById('regFreeNote');
-  if (freeNote) freeNote.style.display = isWorker ? 'block' : 'none';
-
-  if (isWorker) {
-    selectedRegSpecialties = [];
-    buildTwoPanelSpec('rMainCatGrid','rSubCatGrid', selectedRegSpecialties,'onRegMainToggle','onRegSubToggle');
-  }
+  document.getElementById('rSpecGroup').style.display  = isWorker ? 'block' : 'none';
+  document.getElementById('rDescGroup').style.display  = isWorker ? 'block' : 'none';
+  const fn = document.getElementById('regFreeNote');
+  if (fn) fn.style.display = isWorker ? 'block' : 'none';
+  if (isWorker) { selectedRegSpecialties = []; buildTwoPanelSpec('rMainCatGrid','rSubCatGrid',selectedRegSpecialties,'onRegMainToggle','onRegSubToggle'); }
 }
 
-// ========================================================
-// REQUESTS CATEGORY PILLS — like handymen page
-// ========================================================
-let activeReqCat = '';  // '' = all
-
+// ── Request category pills ────────────────────────────────────
+let activeReqCat = '';
 function renderReqCatPills() {
-  const el = document.getElementById('reqCatPills');
-  if (!el) return;
-  el.innerHTML =
-    `<span class="pill${activeReqCat===''?' active':''}" onclick="filterReqCat('')" style="font-size:11px">🔍 ყველა</span>` +
-    CATS_DATA.map(g =>
-      `<span class="pill${activeReqCat===g.name?' active':''}" onclick="filterReqCat('${g.name}')" style="font-size:11px">${g.icon} ${g.name}</span>`
-    ).join('');
+  const el = document.getElementById('reqCatPills'); if (!el) return;
+  el.innerHTML = `<span class="pill${activeReqCat===''?' active':''}" onclick="filterReqCat('')" style="font-size:11px">🔍 ყველა</span>` +
+    CATS_DATA.map(g => `<span class="pill${activeReqCat===g.name?' active':''}" onclick="filterReqCat('${g.name}')" style="font-size:11px">${g.icon} ${g.name}</span>`).join('');
 }
+function filterReqCat(cat) { activeReqCat = cat; renderReqCatPills(); renderRequests(); }
 
-function filterReqCat(cat) {
-  activeReqCat = cat;
-  renderReqCatPills();
-  renderRequests();
+// choosePlan — called from upgrade modal; paid plans go to card page
+async function choosePlan(plan) {
+  closeMo('moUpgrade');
+  if (plan === 'start') { toast('ℹ️ Start','3 თვე უფასო · 5 შეთ./თვე. გადახდა საჭირო არ არის!','ok'); return; }
+  nav('my-card');
 }
-
+function selectRegTariff(t) {}
 // ========================================================
 // HANDYMEN — LIST WITH COMPANY SECTION
 // ========================================================
@@ -2117,23 +2032,6 @@ function openChangePlanModal() {
   openMo('moUpgrade');
 }
 
-// choosePlan — called from upgrade modal buttons
-async function choosePlan(plan) {
-  const cu = currentUser;
-  if (!cu) return;
-  closeMo('moUpgrade');
-  if (plan === 'start') {
-    toast('ℹ️ Start ტარიფი', '3 თვე უფასო · 5 შეთ./თვე. გადახდა საჭირო არ არის!', 'ok');
-    return;
-  }
-  // Go to card/payment page for paid plans
-  nav('my-card');
-}
-
-// selectRegTariff — stub (tariff no longer chosen during registration)
-function selectRegTariff(t) {}
-let selectedRegTariff = 'start';
-
 function chatItem(c) {
   const cu = currentUser;
   const other = cu.type === 'user' ? c.handyman : c.user;
@@ -2437,7 +2335,7 @@ function openEditDesc() {
   // Multi-specialty checkboxes
   if (cu.type !== 'user') {
     selectedEditSpecialties = cu.specialties?.length ? [...cu.specialties] : (cu.specialty ? [cu.specialty] : []);
-    buildTwoPanelSpec('editMainCatGrid','editSubCatGrid', selectedEditSpecialties,'onEditMainToggle','onEditSubToggle');
+    buildTwoPanelSpec('editMainCatGrid','editSubCatGrid',selectedEditSpecialties,'onEditMainToggle','onEditSubToggle');
     document.getElementById('editSpecGroup').style.display = 'block';
   } else {
     document.getElementById('editSpecGroup').style.display = 'none';
@@ -2847,15 +2745,9 @@ async function triggerSupportRequest(userMsg) {
 function ariaKeydown(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAriaMsg(); } }
 
 // ========================================================
-// CARD PAGE — beautiful card form + saved card management
+// CARD PAGE — TBC Pay redirect (no card form on our side)
 // ========================================================
-let savedCard = null; // simulated saved card in localStorage
-
-function loadSavedCard() {
-  try { return JSON.parse(localStorage.getItem('xg_card') || 'null'); } catch { return null; }
-}
-function saveSavedCard(card) { localStorage.setItem('xg_card', JSON.stringify(card)); }
-function deleteSavedCard() { localStorage.removeItem('xg_card'); }
+let savedCards = [];
 
 async function renderCardPage() {
   const cu = currentUser;
@@ -2863,151 +2755,306 @@ async function renderCardPage() {
   if (cu.type === 'user') { nav('dashboard'); return; }
   const body = document.getElementById('cardPageBody');
   if (!body) return;
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳ იტვირთება...</div>';
 
-  Promise.all([
+  const [cu2, hist] = await Promise.all([
     api('/auth/me').catch(() => cu),
-    api('/payment/history').catch(() => ({ savedCards: [], subPayments: [] })),
-  ]).then(([cu2, hist]) => {
-    currentUser = cu2;
-    savedCards = hist.savedCards || [];
+    api('/payment/history').catch(() => ({ savedCards:[], subPayments:[] })),
+  ]);
+  currentUser = cu2;
+  savedCards = hist.savedCards || [];
 
-    const prices = PLAN_PRICES[cu2.type] || PLAN_PRICES.handyman;
-    const plan = cu2.plan || 'start';
-    const planExpired = cu2.planExpiresAt && new Date(cu2.planExpiresAt) < new Date();
-    const hasActivePlan = plan !== 'start' && !planExpired;
-    const expDate = cu2.planExpiresAt ? new Date(cu2.planExpiresAt).toLocaleDateString('ka-GE') : '';
-    const autoRenew = cu2.autoRenew !== false;
+  const prices = PLAN_PRICES[cu2.type] || PLAN_PRICES.handyman;
+  const plan = cu2.plan || 'start';
+  const planExpired = cu2.planExpiresAt && new Date(cu2.planExpiresAt) < new Date();
+  const hasActivePlan = plan !== 'start' && !planExpired;
+  const expDate = cu2.planExpiresAt ? new Date(cu2.planExpiresAt).toLocaleDateString('ka-GE') : '';
+  const autoRenew = cu2.autoRenew !== false;
 
-    // ── Saved cards list ──────────────────────────────────
-    const cardsHTML = savedCards.length
-      ? savedCards.map(c => `
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 15px;background:${c.isDefault?'rgba(255,107,43,.08)':'var(--bg)'};border:1px solid ${c.isDefault?'rgba(255,107,43,.4)':'var(--border)'};border-radius:11px;gap:10px;margin-bottom:8px">
-            <div style="display:flex;align-items:center;gap:11px;flex:1;min-width:0">
-              <span style="font-size:22px">${c.brand==='Visa'?'💳':c.brand==='Mastercard'?'🔴':'💳'}</span>
-              <div>
-                <div style="font-weight:700;font-size:14px">${sanitize(c.brand)} •••• ${sanitize(c.last4)}</div>
-                <div style="font-size:11px;color:var(--t2)">${c.expiry?'ვადა: '+sanitize(c.expiry):''} ${c.isDefault?'<span style="color:var(--accent);font-weight:600">✓ ძირ.</span>':''}</div>
-              </div>
-            </div>
-            <div style="display:flex;gap:6px;flex-shrink:0">
-              ${!c.isDefault?`<button class="btn bg bs" onclick="setDefaultCard('${c.id}')">ძირ.</button>`:''}
-              <button class="btn berr bs" onclick="deleteCard('${c.id}')">🗑</button>
-            </div>
-          </div>`).join('')
-      : '<div style="padding:14px;text-align:center;color:var(--t2);font-size:13px;background:var(--bg);border-radius:10px;margin-bottom:10px">💳 მიბმული ბარათი არ გაქვს</div>';
-
-    body.innerHTML = `
-      <!-- Current plan status -->
-      <div style="padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:20px">
-        <div style="font-size:12px;color:var(--t2);margin-bottom:5px">მიმდინარე ტარიფი</div>
-        <div style="font-size:22px;font-weight:800;margin-bottom:5px">${getPlanBadge(cu2)}</div>
-        ${hasActivePlan?`<div style="font-size:12px;color:var(--t2)">ვადა: <strong style="color:var(--text)">${expDate}-მდე</strong></div>`:''}
-        ${plan==='start'&&cu2.trialExpiresAt?`<div style="font-size:12px;color:var(--ok)">✅ ტრიალი: <strong>${new Date(cu2.trialExpiresAt).toLocaleDateString('ka-GE')}-მდე</strong></div>`:''}
-        ${hasActivePlan?`<div style="margin-top:10px;display:flex;align-items:center;gap:10px">
-          <span style="font-size:12px;color:var(--t2)">ავტო-განახლება:</span>
-          <button class="btn bs ${autoRenew?'bok':'bg'}" onclick="toggleAutoRenew(${!autoRenew})">${autoRenew?'✅ ჩართ.':'❌ გამ.'}</button>
-        </div>`:''}
-      </div>
-
-      <!-- Saved cards -->
-      <div style="font-size:14px;font-weight:700;margin-bottom:10px">💳 მიბმული ბარათები</div>
-      ${cardsHTML}
-
-      <!-- Bind card button (just redirects to TBC Pay) -->
-      <button class="btn bo" style="width:100%;justify-content:center;margin-bottom:22px" onclick="bindCardViaTBC(event)">
-        ➕ ახალი ბარათის მიბმა (TBC Pay)
-      </button>
-
-      <!-- Plan purchase buttons -->
-      <div style="font-size:14px;font-weight:700;color:var(--t2);margin-bottom:10px">ტარიფის შეძენა</div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-
-        <div style="padding:16px;border-radius:13px;border:2px solid rgba(255,107,43,.4);background:rgba(255,107,43,.06)">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+  const cardsHTML = savedCards.length
+    ? savedCards.map(c => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 15px;background:${c.isDefault?'rgba(255,107,43,.08)':'var(--bg)'};border:1px solid ${c.isDefault?'rgba(255,107,43,.4)':'var(--border)'};border-radius:11px;gap:10px;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:11px;flex:1;min-width:0">
+            <span style="font-size:22px">💳</span>
             <div>
-              <div style="font-weight:800;font-size:16px">⚡ Pro</div>
-              <div style="font-size:12px;color:var(--t2);margin-top:3px">ულიმ. შეთ. · გამ. პოზ. · ავტო-განახ.</div>
+              <div style="font-weight:700;font-size:14px">${sanitize(c.brand)} •••• ${sanitize(c.last4)}</div>
+              <div style="font-size:11px;color:var(--t2)">${c.expiry?'ვადა: '+sanitize(c.expiry):''} ${c.isDefault?'<span style="color:var(--accent);font-weight:600">✓ ძირ.</span>':''}</div>
             </div>
-            <div style="font-size:22px;font-weight:800;color:var(--accent)">${prices.pro}₾<span style="font-size:12px;font-weight:400;color:var(--t2)">/თვე</span></div>
           </div>
-          <button class="btn bp" style="width:100%;justify-content:center;padding:12px" onclick="doSubscribe('pro',event)">
-            💳 Pro — ${prices.pro}₾/თვე
-          </button>
-        </div>
-
-        <div style="padding:16px;border-radius:13px;border:2px solid rgba(168,85,247,.4);background:rgba(168,85,247,.06)">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-            <div>
-              <div style="font-weight:800;font-size:16px">🔝 TOP</div>
-              <div style="font-size:12px;color:var(--t2);margin-top:3px">TOP ბეჯი · ავტო VIP+ · ულიმ. შეთ.</div>
-            </div>
-            <div style="font-size:22px;font-weight:800;color:var(--vipp)">${prices.top}₾<span style="font-size:12px;font-weight:400;color:var(--t2)">/თვე</span></div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            ${!c.isDefault?`<button class="btn bg bs" onclick="setDefaultCard('${c.id}')">ძირ.</button>`:''}
+            <button class="btn berr bs" onclick="deleteCard('${c.id}')">🗑</button>
           </div>
-          <button class="btn" style="width:100%;justify-content:center;padding:12px;background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(99,102,241,.2));border:1px solid rgba(168,85,247,.5);color:var(--vipp)" onclick="doSubscribe('top',event)">
-            💳 TOP — ${prices.top}₾/თვე
-          </button>
-        </div>
+        </div>`).join('')
+    : '<div style="padding:14px;text-align:center;color:var(--t2);font-size:13px;background:var(--bg);border-radius:10px;margin-bottom:10px">💳 მიბმული ბარათი არ გაქვს</div>';
 
+  body.innerHTML = `
+    <div style="padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:20px">
+      <div style="font-size:12px;color:var(--t2);margin-bottom:5px">მიმდინარე ტარიფი</div>
+      <div style="font-size:22px;font-weight:800;margin-bottom:5px">${getPlanBadge(cu2)}</div>
+      ${hasActivePlan?`<div style="font-size:12px;color:var(--t2)">ვადა: <strong style="color:var(--text)">${expDate}-მდე</strong></div>`:''}
+      ${plan==='start'&&cu2.trialExpiresAt?`<div style="font-size:12px;color:var(--ok)">✅ ტრიალი: <strong>${new Date(cu2.trialExpiresAt).toLocaleDateString('ka-GE')}-მდე</strong></div>`:''}
+      ${hasActivePlan?`<div style="margin-top:10px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;color:var(--t2)">ავტო-განახლება:</span>
+        <button class="btn bs ${autoRenew?'bok':'bg'}" onclick="toggleAutoRenew(${!autoRenew})">${autoRenew?'✅ ჩართ.':'❌ გამ.'}</button>
+      </div>`:''}
+    </div>
+
+    <div style="font-size:14px;font-weight:700;margin-bottom:10px">💳 მიბმული ბარათები</div>
+    ${cardsHTML}
+
+    <button class="btn bo" style="width:100%;justify-content:center;margin-bottom:22px" onclick="bindCardViaTBC(event)">
+      ➕ ახალი ბარათის მიბმა (TBC Pay)
+    </button>
+
+    <div style="font-size:14px;font-weight:700;color:var(--t2);margin-bottom:10px">ტარიფის შეძენა</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="padding:16px;border-radius:13px;border:2px solid rgba(255,107,43,.4);background:rgba(255,107,43,.06)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <div><div style="font-weight:800;font-size:16px">⚡ Pro</div><div style="font-size:12px;color:var(--t2);margin-top:3px">ულიმ. შეთ. · გამ. პოზ. · ავტო-განახ.</div></div>
+          <div style="font-size:22px;font-weight:800;color:var(--accent)">${prices.pro}₾<span style="font-size:12px;font-weight:400;color:var(--t2)">/თვე</span></div>
+        </div>
+        <button class="btn bp" style="width:100%;justify-content:center;padding:12px" onclick="doSubscribe('pro',event)">💳 Pro — ${prices.pro}₾/თვე</button>
       </div>
-      <p style="font-size:11px;color:var(--t2);text-align:center;margin-top:14px">🔐 გადამისამართება TBC Pay-ზე · SSL 256-bit</p>
-      <button class="btn bg" style="width:100%;justify-content:center;margin-top:12px" onclick="nav('dashboard')">← დაფაზე</button>
-    `;
-  });
+      <div style="padding:16px;border-radius:13px;border:2px solid rgba(168,85,247,.4);background:rgba(168,85,247,.06)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <div><div style="font-weight:800;font-size:16px">🔝 TOP</div><div style="font-size:12px;color:var(--t2);margin-top:3px">TOP ბეჯი · ავტო VIP+ · ულიმ. შეთ.</div></div>
+          <div style="font-size:22px;font-weight:800;color:var(--vipp)">${prices.top}₾<span style="font-size:12px;font-weight:400;color:var(--t2)">/თვე</span></div>
+        </div>
+        <button class="btn" style="width:100%;justify-content:center;padding:12px;background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(99,102,241,.2));border:1px solid rgba(168,85,247,.5);color:var(--vipp)" onclick="doSubscribe('top',event)">💳 TOP — ${prices.top}₾/თვე</button>
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--t2);text-align:center;margin-top:14px">🔐 TBC Pay · SSL 256-bit · ავტო-განახლება 30 დღეში</p>
+    <button class="btn bg" style="width:100%;justify-content:center;margin-top:12px" onclick="nav('dashboard')">← დაფაზე</button>
+  `;
 }
 
-// Bind card — just redirect to TBC Pay (no card form on our side)
 async function bindCardViaTBC(e) {
-  const btn = e.currentTarget;
-  btn.disabled = true; btn.innerHTML = '⏳ TBC Pay-ზე გადამისამართება...';
+  const btn = e.currentTarget; btn.disabled=true; btn.innerHTML='⏳ TBC Pay-ზე...';
   try {
-    const data = await api('/payment/cards/bind', { method: 'POST' });
-    if (data.redirectUrl) {
-      window.location.href = data.redirectUrl;
-    } else throw new Error('no url');
-  } catch (err) {
-    btn.disabled = false; btn.innerHTML = '➕ ახალი ბარათის მიბმა (TBC Pay)';
-    toast('⚠️ ' + (err.error || 'შეცდომა'), '', 'err');
-  }
+    const data = await api('/payment/cards/bind', {method:'POST'});
+    if (data.redirectUrl) window.location.href = data.redirectUrl;
+    else throw new Error('no url');
+  } catch(err) { btn.disabled=false; btn.innerHTML='➕ ახალი ბარათის მიბმა (TBC Pay)'; toast('⚠️ '+(err.error||'შეცდომა'),'','err'); }
 }
 
 async function doSubscribe(plan, e) {
-  const btn = e.currentTarget; const orig = btn.innerHTML;
-  btn.disabled = true; btn.innerHTML = '⏳ ...';
+  const btn = e.currentTarget; const orig = btn.innerHTML; btn.disabled=true; btn.innerHTML='⏳...';
   try {
-    const def = (savedCards || []).find(c => c.isDefault) || (savedCards || [])[0];
-    const data = await api('/payment/subscribe', { method: 'POST', body: { plan, cardId: def?.id || null } });
-    if (data.charged) {
-      toast('🎉 ' + (plan === 'top' ? 'TOP' : 'Pro') + ' ჩართულია!', '', 'ok');
-      renderCardPage();
-    } else if (data.redirectUrl) {
-      window.location.href = data.redirectUrl;
-    } else throw new Error('no url');
-  } catch (err) {
-    btn.disabled = false; btn.innerHTML = orig;
-    toast('⚠️ ' + (err.error || 'გადახდის შეცდომა'), '', 'err');
-  }
+    const def = savedCards.find(c=>c.isDefault)||savedCards[0];
+    const data = await api('/payment/subscribe',{method:'POST',body:{plan,cardId:def?.id||null}});
+    if (data.charged) { toast('🎉 '+(plan==='top'?'TOP':'Pro')+' ჩართულია!','','ok'); renderCardPage(); }
+    else if (data.redirectUrl) window.location.href = data.redirectUrl;
+    else throw new Error('no url');
+  } catch(err) { btn.disabled=false; btn.innerHTML=orig; toast('⚠️ '+(err.error||'გადახდის შეცდომა'),'','err'); }
 }
 
 async function setDefaultCard(id) {
-  try { await api('/payment/cards/'+id+'/default', { method:'PATCH' }); toast('✅ ძირ. ბარათი დაყენდა','','ok'); renderCardPage(); }
+  try { await api('/payment/cards/'+id+'/default',{method:'PATCH'}); toast('✅ ძირ. ბარათი','','ok'); renderCardPage(); }
   catch(e) { toast('⚠️ '+(e.error||'შეცდომა'),'','err'); }
 }
 async function deleteCard(id) {
   if (!confirm('ნამდვილად გსურს ბარათის წაშლა?')) return;
-  try { await api('/payment/cards/'+id, { method:'DELETE' }); toast('🗑 ბარათი წაიშალა','','ok'); renderCardPage(); }
+  try { await api('/payment/cards/'+id,{method:'DELETE'}); toast('🗑 ბარათი წაიშალა','','ok'); renderCardPage(); }
   catch(e) { toast('⚠️ '+(e.error||'შეცდომა'),'','err'); }
 }
 async function toggleAutoRenew(val) {
-  try { await api('/payment/auto-renew', { method:'PATCH', body:{ autoRenew:val } }); toast(val?'✅ ავტო-განახ. ჩართ.':'❌ ავტო-განახ. გამ.','','ok'); renderCardPage(); }
+  try { await api('/payment/auto-renew',{method:'PATCH',body:{autoRenew:val}}); toast(val?'✅ ავტო-განახ. ჩართ.':'❌ ავტო-განახ. გამ.','','ok'); renderCardPage(); }
   catch(e) { toast('⚠️ '+(e.error||'შეცდომა'),'','err'); }
 }
-// Legacy compat stubs
-let savedCards = [];
-function loadSavedCard() { return null; }
-function saveSavedCard() {}
-function deleteSavedCard() {}
-async function bindCardAndSubscribe(plan) { await doSubscribe(plan, event); }
-function saveCard() {}
-function confirmDeleteCard() { if (savedCards[0]) deleteCard(savedCards[0].id); }
-function formatCardInput(inp) {}
-function formatExpiry(inp) {}
+// compat stubs
+function loadSavedCard(){return null;} function saveSavedCard(){} function deleteSavedCard(){}
+async function bindCardAndSubscribe(plan){await doSubscribe(plan,event);}
+function saveCard(){} function confirmDeleteCard(){if(savedCards[0])deleteCard(savedCards[0].id);}
+function formatCardInput(inp){} function formatExpiry(inp){} function formatCardDisplay(n){return n;}
+function toggleBindForm(){} async function proceedBindCard(){}
+// ── Plan selection (from upgrade modal) ────────────────
+async function choosePlan(plan) {
+  const cu = currentUser;
+  if (!cu) return;
+  closeMo('moUpgrade');
+  if (plan === 'start') {
+    toast('ℹ️ Start ტარიფი', '3 თვე უფასო · 5 შეთ./თვე. შეძენა არ სჭირდება!', 'ok');
+    return;
+  }
+  // Redirect to TBC Pay for payment
+  nav('my-card');
+}
+
+// ========================================================
+// PRICING PAGE
+// ========================================================
+function showPricingFor(type) {
+  document.getElementById('ptab-handyman')?.classList.toggle('btn bp bs'.split(' ')[1], type === 'handyman');
+  ['ptab-handyman','ptab-company'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const isActive = (id === 'ptab-handyman' && type === 'handyman') || (id === 'ptab-company' && type === 'company');
+    el.className = isActive ? 'btn bp bs' : 'btn bg bs';
+  });
+  const p = PLAN_PRICES[type] || PLAN_PRICES.handyman;
+  const el = document.getElementById('pricingGrid');
+  if (!el) return;
+  el.innerHTML = `<div class="pg">
+    <div class="pc">
+      <div class="pn">Start</div><div class="pp">0₾ <span>/3 თვე</span></div>
+      <p style="color:var(--t2);font-size:12px;margin-top:4px">ერთჯერადი სასაჩუქრე პერიოდი</p>
+      <ul class="pf"><li>პროფილი</li><li>მოთხ. ნახვა</li><li>5 შეთ./თვე</li><li>ბაზ. სტატ.</li></ul>
+      <button class="btn bo" style="width:100%;justify-content:center" onclick="openMo('moRegister')">დაწყება</button>
+    </div>
+    <div class="pc feat">
+      <div class="pn">Pro</div><div class="pp">${p.pro}₾ <span>/თვე</span></div>
+      <ul class="pf"><li>შეუზღ. შეთ.</li><li>გამ. პოზ.</li><li>ვიდ. პორტ.</li><li>სრ. სტატ.</li><li>ავტო-განახ.</li></ul>
+      <button class="btn bp" style="width:100%;justify-content:center" onclick="openMo('moRegister')">Pro ${p.pro}₾</button>
+    </div>
+    <div class="pc">
+      <div class="pn">TOP</div><div class="pp">${p.top}₾ <span>/თვე</span></div>
+      <ul class="pf"><li>Pro ყველ.</li><li>TOP ბეჯი</li><li>ყოვ. VIP+</li><li>სიაში 1-ლი</li><li>ავტო-განახ.</li></ul>
+      <button class="btn bvipp" style="width:100%;justify-content:center" onclick="openMo('moRegister')">TOP ${p.top}₾</button>
+    </div>
+  </div>`;
+}
+
+// ========================================================
+// MISC UI
+// ========================================================
+function openMo(id) { document.getElementById(id)?.classList.add('open'); }
+function closeMo(id) { document.getElementById(id)?.classList.remove('open'); }
+document.querySelectorAll('.mo').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeLightbox(); document.querySelectorAll('.mo.open').forEach(m => m.classList.remove('open')); } });
+
+function toast(title, msg, type = 'ok') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<div class="tt">${title}</div>${msg ? `<div class="tm">${msg}</div>` : ''}`;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(20px)'; t.style.transition = '.3s'; setTimeout(() => t.remove(), 300); }, 3500);
+}
+function openLightbox(type, url) {
+  document.getElementById('lbContent').innerHTML = type === 'video'
+    ? `<video src="${url}" controls autoplay style="max-width:90vw;max-height:88vh;border-radius:12px"></video>`
+    : `<img src="${url}" style="max-width:90vw;max-height:88vh;border-radius:12px;object-fit:contain">`;
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lbContent').innerHTML = '';
+  document.body.style.overflow = '';
+}
+function doSearch() {
+  const q = document.getElementById('heroSearch').value.toLowerCase().trim();
+  nav('handymen');
+  if (q) setTimeout(() => {
+    const match = CATS_DATA.find(g => g.name.toLowerCase().includes(q) || g.subs.some(s => s.toLowerCase().includes(q)));
+    if (match) {
+      const m = document.getElementById('fCatMain'); if (m) { m.value = match.name; updateFSubCatOpts(); }
+      // Also check if specific sub matches
+      const sub = match.subs.find(s => s.toLowerCase().includes(q));
+      if (sub) { const s = document.getElementById('fCatSub'); if (s) s.value = sub; }
+    }
+    renderHandymen();
+  }, 100);
+}
+function filterCat(cat) { nav('handymen'); setTimeout(() => { const el = document.getElementById('fCatMain'); if (el) { el.value = cat; delete el.dataset.mainCatId; renderHandymen(); } }, 100); }
+function filterMainCat(catId) { nav('handymen'); setTimeout(() => { const el = document.getElementById('fCatMain'); if (el) { el.value = ''; el.dataset.mainCatId = catId; renderHandymen(); } }, 100); }
+function filterMainCatBtn(catId, btnEl) { const el = document.getElementById('fCatMain'); if (el) { el.value = ''; el.dataset.mainCatId = catId; } clearActivePill(); if (btnEl) btnEl.classList.add('active'); renderHandymen(); }
+function clearCatFilter(btnEl) { const el = document.getElementById('fCatMain'); if (el) { el.value = ''; delete el.dataset.mainCatId; } clearActivePill(); if (btnEl) btnEl.classList.add('active'); renderHandymen(); }
+function clearActivePill() { document.querySelectorAll('#mainCatPills .pill').forEach(p => p.classList.remove('active')); }
+function renderMainCatPills() {
+  const el = document.getElementById('mainCatPills'); if (!el) return;
+  el.innerHTML = '<span class="pill active" onclick="clearCatFilter(this)" style="font-size:11px">🔍 ყველა</span>' +
+    CATS_DATA.map(g => `<span class="pill" onclick="filterMainCatBtn('${g.id}',this)" style="font-size:11px">${g.icon} ${g.name}</span>`).join('');
+}
+function buildCatOptgroups(firstOptionHTML) {
+  return firstOptionHTML + CATS_DATA.map(g =>
+    `<optgroup label="${g.icon} ${g.name}">${g.subs.map(s => `<option value="${s}">${s}</option>`).join('')}</optgroup>`
+  ).join('') + '<option value="სხვა">🔩 სხვა</option>';
+}
+function updateQSubCatOpts() {
+  const main = document.getElementById('qCatMain')?.value;
+  const sub = document.getElementById('qCatSub');
+  const grp = document.getElementById('qCatSubGroup');
+  if (!sub || !grp) return;
+  sub.innerHTML = '<option value="">— ქვე-კ. —</option>';
+  if (!main) { grp.style.display = 'none'; return; }
+  const group = CATS_DATA.find(g => g.name === main);
+  if (group) {
+    group.subs.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sub.appendChild(o); });
+    grp.style.display = 'block';
+  } else { grp.style.display = 'none'; }
+}
+
+function updateFSubCatOpts() {
+  const main = document.getElementById('fCatMain')?.value;
+  const sub = document.getElementById('fCatSub');
+  if (!sub) return;
+  sub.innerHTML = '<option value="">— ყველა ქვე-კ. —</option>';
+  if (!main) return;
+  const group = CATS_DATA.find(g => g.name === main);
+  if (group) group.subs.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sub.appendChild(o); });
+}
+
+function initCats() {
+  // fCatMain and qCatMain — main category dropdowns
+  ['fCatMain', 'qCatMain'].forEach(id => {
+    const el = document.getElementById(id); if (!el) return;
+    el.innerHTML = '<option value="">— პროფ. —</option>' +
+      CATS_DATA.map(g => `<option value="${g.name}">${g.icon} ${g.name}</option>`).join('');
+  });
+  // reqCatPills inited by renderRequestsPage()
+  const hp = document.getElementById('heroPills');
+  if (hp) hp.innerHTML = CATS_DATA.map(g => `<div class="pill" onclick="filterMainCat('${g.id}')">${g.icon} ${g.name}</div>`).join('');
+  renderMainCatPills();
+}
+function checkPassStrength(val) {
+  const bar = document.getElementById('psBar'), lbl = document.getElementById('psLabel');
+  if (!bar) return; if (!val) { bar.className = 'ps-bar'; lbl.textContent = ''; return; }
+  let s = 0; if (val.length >= 8) s++; if (val.length >= 12) s++; if (/[A-Z]/.test(val)) s++; if (/[0-9]/.test(val)) s++; if (/[^A-Za-z0-9]/.test(val)) s++;
+  if (s <= 2) { bar.className = 'ps-bar weak'; lbl.textContent = 'სუსტი'; }
+  else if (s <= 3) { bar.className = 'ps-bar mid'; lbl.textContent = 'საშ.'; }
+  else { bar.className = 'ps-bar strong'; lbl.textContent = 'ძლიერი ✓'; }
+}
+function checkPassStrength2(val) {
+  const bar = document.getElementById('psBar2'), lbl = document.getElementById('psLabel2');
+  if (!bar) return; checkPassStrength.call({bar, lbl}, val);
+}
+function now() { const d = new Date(); return d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes(); }
+
+// ========================================================
+// INIT
+// ========================================================
+(async function init() {
+  initCats();
+  showPricingFor('handyman');
+  // ARIA quick buttons
+  const ariaEl = document.getElementById('ariaQuickBtns');
+  if (ariaEl) ariaEl.innerHTML = ARIA_QUICK.map(q =>
+    `<button onclick="sendAriaMsg('${q.replace(/'/g, "\\'")}')" style="padding:5px 10px;background:var(--surface);border:1px solid var(--border);border-radius:50px;font-size:11px;color:var(--t2);cursor:pointer;white-space:nowrap;transition:.2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--t2)'">${q}</button>`
+  ).join('');
+
+  // Load current user from token
+  const token = getToken();
+  if (token) {
+    try {
+      currentUser = await api('/auth/me');
+      initSocket();
+      if (currentUser.type === 'admin' || currentUser.type === 'staff') nav('admin');
+      else {
+        // Check if trial expired for handyman/company
+        if ((currentUser.type === 'handyman' || currentUser.type === 'company') &&
+            currentUser.trialExpiresAt && new Date(currentUser.trialExpiresAt) < new Date() &&
+            (!currentUser.plan || currentUser.plan === 'start')) {
+          setTimeout(() => showUpgradeModal('trial_expired', currentUser), 1200);
+        }
+      }
+    } catch (e) { clearToken(); currentUser = null; }
+  }
+  renderNav();
+  renderHomeGrid();
+  setRegType('user');
+})();
+
+</script>
+</body>
+</html>
