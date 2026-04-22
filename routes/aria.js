@@ -37,12 +37,44 @@ VIP სისტემა:
 პასუხობ ყოველთვის ქართულად, მეგობრულად და ლაკონურად.
 თუ ოპერატორი სჭირდება, უთხარი "ვაკავშირებ ოპერატორთან!" და დაამატე [OPERATOR_REQUEST] ბოლოში.`;
 
+// ── Static greeting patterns (no API call needed) ─────────────
+const GREETINGS = [
+  /^გამარჯობა[!?.]*$/i,
+  /^გამარჯობა\s*არია[!?.]*$/i,
+  /^სალამი?[!?.]*$/i,
+  /^hi+[!?.]*$/i,
+  /^hello[!?.]*$/i,
+  /^hey[!?.]*$/i,
+  /^მოგესალმები[!?.]*$/i,
+  /^ჰეი[!?.]*$/i,
+];
+
+const GREETING_REPLIES = [
+  'გამარჯობა! 👋 მე ვარ ARIA — ხელოსანი.ge-ის ასისტენტი. როგორ დაგეხმარო?',
+  'გამარჯობა! 😊 ARIA ვარ. შეგიძლია მკითხო ნებისმიერი კითხვა პლატფორმის შესახებ!',
+  'სალამი! 👋 ARIA ვარ, მზად ვარ დაგეხმაროს. რა გაინტერესებს?',
+];
+
+function isGreeting(messages) {
+  if (!messages || messages.length !== 1) return false;
+  const last = messages[messages.length - 1];
+  if (last.role !== 'user') return false;
+  const text = (last.parts?.[0]?.text || last.text || '').trim();
+  return GREETINGS.some((pattern) => pattern.test(text));
+}
+
 // POST /api/aria/chat
 router.post('/chat', ariaLimiter, async (req, res) => {
   try {
     const { messages } = req.body;
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'messages სავალდებულოა' });
+    }
+
+    // ✅ FIX 1: Return hardcoded reply for simple greetings — saves API tokens
+    if (isGreeting(messages)) {
+      const reply = GREETING_REPLIES[Math.floor(Math.random() * GREETING_REPLIES.length)];
+      return res.json({ reply });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;

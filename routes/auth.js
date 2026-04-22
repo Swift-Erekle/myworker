@@ -133,6 +133,20 @@ router.post('/register', authLimiter, async (req, res) => {
     const exists = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
     if (exists) return res.status(409).json({ error: 'ეს ელ-ფოსტა უკვე გამოყენებულია' });
 
+    // ✅ FIX 3: Phone uniqueness per account type
+    // Same phone allowed across different types (e.g. user + handyman), but NOT within same type
+    const phoneTrimmed = (req.body.phone || '').trim();
+    if (phoneTrimmed) {
+      const phoneExists = await prisma.user.findFirst({
+        where: { phone: phoneTrimmed, type: userType },
+      });
+      if (phoneExists) {
+        return res.status(409).json({
+          error: 'ეს ტელეფონის ნომერი უკვე გამოყენებულია ამ ტიპის ანგარიშისთვის',
+        });
+      }
+    }
+
     const hashed = await bcrypt.hash(password, 12);
     const { data } = buildUserData(req.body, hashed);
 
@@ -208,6 +222,25 @@ router.post('/login', authLimiter, async (req, res) => {
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ error: 'ელ-ფოსტა ან პაროლი არასწორია' });
+
+    // ✅ FIX 2: Require email verification before allowing login
+    if (!user.emailVerified) {
+      // Re-send a fresh verification code automatically
+      const code = generateCode();
+      await saveCode(user.email, code, 'verify');
+      const sent = await sendEmail(
+        user.email,
+        'ხელოსანი.ge — ვერიფიკაციის კოდი',
+        emailVerifyTemplate(user.name, code)
+      );
+      const devCode = (!sent && process.env.NODE_ENV !== 'production') ? code : undefined;
+      return res.status(403).json({
+        error: 'ელ-ფოსტა დაუდასტურებელია. შეამოწმე შენი inbox — ახალი კოდი გაიგზავნა.',
+        emailNotVerified: true,
+        email: user.email,
+        devCode,
+      });
+    }
 
     const token = signToken(user.id);
     res.json({ token, user: safeUser(user) });
