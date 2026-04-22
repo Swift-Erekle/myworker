@@ -1,9 +1,8 @@
 // socket/index.js
-// BUG FIX (DeepSeek): messages stored as JSON blob in Chat model.
-// Now uses separate Message model for proper pagination & real-time.
-
 const jwt = require('jsonwebtoken');
 const prisma = require('../utils/prisma');
+const { sendPushToUser, sendPushToStaff } = require('../utils/webPush');
+const { sendExpoPushToUser, sendExpoPushToStaff } = require('../utils/expoPush');
 
 function setupSocket(io) {
   // Authenticate socket connection via JWT
@@ -72,6 +71,28 @@ function setupSocket(io) {
         // Broadcast to everyone in chat room (including sender)
         io.to(`chat:${chatId}`).emit('newMessage', msg);
 
+        // ── Push: notify the OTHER participant ────────────────
+        // Only if they are NOT currently viewing this chat
+        const recipientId = chat.userId === userId ? chat.handymanId : chat.userId;
+        const sender = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, emoji: true } });
+        const preview = type === 'image' ? '📷 ფოტო'
+                      : type === 'video' ? '🎥 ვიდეო'
+                      : type === 'voice' ? '🎤 ხმა'
+                      : String(content).substring(0, 80);
+        sendPushToUser(prisma, recipientId, {
+          title: `${sender?.emoji || '💬'} ${sender?.name || 'ვიღაც'} გიწერს`,
+          body:  preview,
+          tag:   'chat-' + chatId,
+          url:   `/?chat=${chatId}`,
+        }).catch(() => {});
+        // ── Expo push (mobile) ────────────────────────────────
+        sendExpoPushToUser(prisma, recipientId, {
+          title: `${sender?.emoji || '💬'} ${sender?.name || 'ვიღაც'}`,
+          body:  preview,
+          data:  { chatId, type: 'new_message' },
+          channelId: 'chat',
+        }).catch(() => {});
+
         // Update chat updatedAt
         await prisma.chat.update({
           where: { id: chatId },
@@ -117,6 +138,18 @@ function setupSocket(io) {
         // Notify all staff/admin
         if (fromRole === 'user') {
           io.emit('supportAlert', { supportId, preview: content.substring(0, 60) });
+          // ── Push: notify all staff/admin ───────────────────
+          sendPushToStaff(prisma, {
+            title: '🎧 სუპორტი — ახალი შეტყობინება',
+            body:  content.substring(0, 100),
+            tag:   'support-' + supportId,
+            url:   '/?admin=support',
+          }).catch(() => {});
+          sendExpoPushToStaff(prisma, {
+            title: '🎧 სუპ. ახალი შეტყობინება',
+            body:  content.substring(0, 100),
+            data:  { screen: 'Chats', type: 'support' },
+          }).catch(() => {});
         }
       } catch (err) {
         console.error('[SOCKET] sendSupportMsg error:', err.message);

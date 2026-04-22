@@ -1,0 +1,20 @@
+{
+  "name": "ხელოსანი.ge",
+  "short_name": "ხელოსანი",
+  "description": "საქართველოს #1 ხელოსნების პლატფორმა",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ff6b2b",
+  "theme_color": "#0f0f13",
+  "orientation": "portrait",
+  "lang": "ka",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/assets/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

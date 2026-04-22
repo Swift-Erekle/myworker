@@ -19,6 +19,7 @@ const chatRoutes    = require('./routes/chat');
 const adminRoutes   = require('./routes/admin');
 const paymentRoutes = require('./routes/payment');
 const ariaRoutes    = require('./routes/aria');
+const pushRoutes    = require('./routes/push');
 
 const app    = express();
 app.set('trust proxy', 1);
@@ -53,6 +54,7 @@ app.use('/api/chat',     chatRoutes);
 app.use('/api/admin',    adminRoutes);
 app.use('/api/payment',  paymentRoutes);
 app.use('/api/aria',     ariaRoutes);
+app.use('/api/push',     pushRoutes);
 
 // ── Health ─────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ ok: true, env: process.env.NODE_ENV }));

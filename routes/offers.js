@@ -3,10 +3,13 @@
 // FIXES vs previous version:
 // 1. Trial expiry check added (trialExpiresAt < now → block)
 // 2. upgradeRequired: true returned in all limit cases
+// 3. Web Push notifications on new offer + offer accepted
 // ════════════════════════════════════════════════════════════════
 const express = require('express');
 const prisma  = require('../utils/prisma');
 const { requireAuth } = require('../middleware/auth');
+const { sendPushToUser } = require('../utils/webPush');
+const { sendExpoPushToUser } = require('../utils/expoPush');
 
 const router = express.Router();
 
@@ -26,8 +29,8 @@ router.post('/', requireAuth, async (req, res) => {
     const plan = req.user.plan || 'start';
 
     if (plan === 'start') {
-      // FIX 1: Check if free trial has expired
-      if (req.user.trialExpiresAt && new Date(req.user.trialExpiresAt) < new Date()) {
+      // FIX 1: Check if free trial has expired (null = never set = expired)
+      if (!req.user.trialExpiresAt || new Date(req.user.trialExpiresAt) < new Date()) {
         return res.status(403).json({
           error: 'Start ტარიფის 3-თვიანი ვადა გასულია. Pro ან TOP-ზე გადასვლა საჭიროა.',
           upgradeRequired: true,
@@ -50,11 +53,11 @@ router.post('/', requireAuth, async (req, res) => {
       }
     }
 
-    // ── Check Pro plan expiry ─────────────────────────────────
-    if ((plan === 'pro' || plan === 'top') && req.user.planExpiresAt) {
-      if (new Date(req.user.planExpiresAt) < new Date()) {
+    // ── Check Pro/Top plan expiry ─────────────────────────────
+    if (plan === 'pro' || plan === 'top') {
+      if (!req.user.planExpiresAt || new Date(req.user.planExpiresAt) < new Date()) {
         return res.status(403).json({
-          error: `${plan === 'top' ? 'TOP' : 'Pro'} ტარიფის ვადა გასულია. განაახლე გამოწერა.`,
+          error: `${plan === 'top' ? 'TOP' : 'Pro'} ტარიფის ვადა გასულია ან არ არის გააქტიურებული.`,
           upgradeRequired: true,
           planExpired: true,
         });
@@ -90,6 +93,20 @@ router.post('/', requireAuth, async (req, res) => {
         },
       },
     });
+
+    // ── Push: notify request owner of new offer ───────────────
+    sendPushToUser(prisma, request.userId, {
+      title: `${req.user.emoji || '🔧'} ახალი შეთავაზება!`,
+      body:  `${req.user.name} — ₾${parseInt(price)}${comment ? ': ' + comment.substring(0, 60) : ''}`,
+      tag:   'new-offer-' + requestId,
+      url:   `/?req=${requestId}`,
+    }).catch(() => {});
+    sendExpoPushToUser(prisma, request.userId, {
+      title: `${req.user.emoji || '🔧'} ახალი შეთავაზება!`,
+      body:  `${req.user.name} — ₾${parseInt(price)}${comment ? ': ' + comment.substring(0, 60) : ''}`,
+      data:  { requestId, type: 'new_offer' },
+    }).catch(() => {});
+
     res.status(201).json(offer);
   } catch (err) {
     console.error('[OFFERS] create error:', err.message);
@@ -152,6 +169,20 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
       }),
     ]);
     res.json({ offer: updatedOffer, chatId: chat.id });
+
+    // ── Push: notify handyman their offer was accepted ────────
+    sendPushToUser(prisma, offer.handymanId, {
+      title: '🎉 შეთავაზება მიღებულია!',
+      body:  `"${offer.request.title}" — შეხვედი ჩათში`,
+      tag:   'offer-accepted-' + offer.id,
+      url:   `/?chat=${chat.id}`,
+    }).catch(() => {});
+    sendExpoPushToUser(prisma, offer.handymanId, {
+      title: '🎉 შეთავაზება მიღებულია!',
+      body:  `"${offer.request.title}"`,
+      data:  { chatId: chat.id, type: 'offer_accepted' },
+      channelId: 'default',
+    }).catch(() => {});
   } catch (err) {
     console.error('[OFFERS] accept error:', err.message);
     res.status(500).json({ error: 'სერვერის შეცდომა' });

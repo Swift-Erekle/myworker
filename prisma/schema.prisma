@@ -1,10 +1,7 @@
 // prisma/schema.prisma
 // ════════════════════════════════════════════════════════════════
-// CHANGES v3:
-// 1. Added SavedCard model — stores TBC Pay recurrent tokens
-// 2. Added autoRenew Boolean to User
-// 3. Added isAutoRenewal + cardId to SubscriptionPayment
-// 4. TOP plan daily refresh handled via cron (vipActivatedAt)
+// CHANGES v4:
+// 1. Added PushSubscription model for Web Push Notifications
 // ════════════════════════════════════════════════════════════════
 
 generator client {
@@ -48,11 +45,11 @@ model User {
 
   // ── Subscription plan ──────────────────────────────────────
   plan               String    @default("start")  // start, pro, top
-  planExpiresAt      DateTime?                     // null = no paid plan active
-  trialExpiresAt     DateTime?                     // null = trial not started
+  planExpiresAt      DateTime?
+  trialExpiresAt     DateTime?
   usedFreeTrial      Boolean   @default(false)
   subscriptionStatus String    @default("active")  // active, expired, cancelled
-  autoRenew          Boolean   @default(true)       // ✅ NEW: auto-renew subscription
+  autoRenew          Boolean   @default(true)
 
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
@@ -67,23 +64,54 @@ model User {
   supportRequests      SupportRequest[]
   vipPayments          VipPayment[]
   subscriptionPayments SubscriptionPayment[]
-  savedCards           SavedCard[]          // ✅ NEW
+  savedCards           SavedCard[]
+  pushSubscriptions    PushSubscription[]   // ✅ Web push
+  expoPushTokens       ExpoPushToken[]      // ✅ Mobile push
 
   @@index([type])
   @@index([email])
 }
 
 // ─────────────────────────────────────────────────────────────
-// ✅ NEW: მიბმული ბარათები (TBC Pay recurring tokens)
+// ✅ NEW: Web Push Subscriptions
+// ─────────────────────────────────────────────────────────────
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique          // browser push endpoint URL
+  p256dh    String                    // public key
+  auth      String                    // auth secret
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// ✅ Expo Push Tokens (Mobile App — iOS & Android)
+// ─────────────────────────────────────────────────────────────
+model ExpoPushToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique          // ExponentPushToken[xxxx]
+  platform  String?                   // ios, android
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+// ─────────────────────────────────────────────────────────────
+// მიბმული ბარათები (TBC Pay recurring tokens)
 // ─────────────────────────────────────────────────────────────
 model SavedCard {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  last4     String                      // last 4 digits
-  brand     String   @default("Card")  // Visa, Mastercard, etc.
-  expiry    String   @default("")      // "MM/YY"
-  token     String                      // TBC Pay recurrentPaymentId
+  last4     String
+  brand     String   @default("Card")
+  expiry    String   @default("")
+  token     String
   isDefault Boolean  @default(false)
   createdAt DateTime @default(now())
 
@@ -236,9 +264,9 @@ model VipPayment {
   id         String    @id @default(cuid())
   userId     String
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vipType    String    // vip, vipp
+  vipType    String    // vip, vipp, bind
   days       Int
-  amount     Int       // tetri (200 = 2₾)
+  amount     Int
   status     String    @default("pending")  // pending, paid, failed
   tbcOrderId String?   @unique
   tbcPayId   String?
@@ -257,15 +285,15 @@ model SubscriptionPayment {
   userId        String
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   plan          String    // pro, top
-  amount        Int       // tetri (2900 = 29₾)
+  amount        Int
   status        String    @default("pending")  // pending, paid, failed
   tbcOrderId    String?   @unique
   tbcPayId      String?
   periodStart   DateTime?
   periodEnd     DateTime?
   paidAt        DateTime?
-  isAutoRenewal Boolean   @default(false)  // ✅ NEW: was this auto-renewed?
-  cardId        String?                    // ✅ NEW: which card was used
+  isAutoRenewal Boolean   @default(false)
+  cardId        String?
   createdAt     DateTime  @default(now())
 
   @@index([userId])

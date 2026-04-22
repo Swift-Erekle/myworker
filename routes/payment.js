@@ -286,9 +286,9 @@ router.post('/subscribe', requireAuth, async (req, res) => {
 
 // POST /api/payment/internal/renew-subscriptions (for cron)
 router.post('/internal/renew-subscriptions', async (req, res) => {
-  // Only allow internal calls (from localhost or with secret)
+  // Only allow internal calls with the correct secret (all environments)
   const secret = req.headers['x-internal-secret'];
-  if (secret !== process.env.INTERNAL_SECRET && process.env.NODE_ENV === 'production') {
+  if (secret !== process.env.INTERNAL_SECRET) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   try {
