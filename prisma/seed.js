@@ -112,6 +112,31 @@ async function main() {
     },
   });
 
+  // ── Demo company — TOP plan active (appears in featured companies section) ──
+  await prisma.user.upsert({
+    where: { email: 'company@demo.ge' },
+    update: {},
+    create: {
+      name: 'BuildPro', surname: 'საქართველო',
+      email: 'company@demo.ge', password: demoPass,
+      type: 'company', verified: true, emailVerified: true,
+      phone: '+995 555 999 000',
+      specialty: 'კომპანია', city: 'თბილისი',
+      specialties: ['მშენებელი', 'ელექტრიკოსი', 'სანტექნიკი'],
+      desc: 'პროფესიონალური სამშენებლო კომპანია. სრული სარემონტო და სამშენებლო სამუშაოები 2010 წლიდან. 200+ დასრულებული პროექტი, 50+ სპეციალისტი.',
+      services: ['სრული რემონტი', 'ელექტრო სამუშაოები', 'სანტექნიკა', 'ფასადი', 'ინტერიერის დიზაინი'],
+      emoji: '🏢', color: '#2980b922', jobs: 214,
+      // TOP plan — auto-grants VIP+ status daily
+      plan: 'top',
+      planExpiresAt: new Date(Date.now() + 30 * 86400000),   // 30 days
+      autoRenew: false,
+      // VIP+ active (set by TOP plan cron, or manually here for demo)
+      vipType: 'vipp',
+      vipActivatedAt: new Date(),
+      vipExpiresAt: new Date(Date.now() + 30 * 86400000),    // 30 days
+    },
+  });
+
   // ── Demo requests ────────────────────────────────────────────
   const req1 = await prisma.request.upsert({
     where: { id: 'req-demo-1' },
@@ -162,8 +187,9 @@ async function main() {
   console.log('\n🎉 Seed complete!\n');
   console.log('Demo accounts (password: Demo1234!):');
   console.log('  👤 User:     nino@demo.ge');
-  console.log('  🔧 Handyman: giorgi@demo.ge');
-  console.log('  🔧 Handyman: levan@demo.ge');
+  console.log('  🔧 Handyman: giorgi@demo.ge   (VIP+ active)');
+  console.log('  🔧 Handyman: levan@demo.ge    (VIP active)');
+  console.log('  🏢 Company:  company@demo.ge  (TOP plan + VIP+ active)');
   console.log('  🛡️  Admin:   admin@xelosani.ge  (Admin123!)');
   console.log('  👤 Staff:   staff@xelosani.ge  (Staff123!)\n');
 }
