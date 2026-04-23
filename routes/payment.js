@@ -398,13 +398,39 @@ async function runAutoRenewals() {
 // ══════════════════════════════════════════════════════════════
 
 // POST /api/payment/callback
+// 🔐 SECURITY: We don't trust the `status` field in request body — anyone could
+// POST { payId, status: 'Succeeded' } and get free VIP. Instead, for every
+// callback we make a server-to-server call to TBC's getPaymentStatus endpoint
+// and use THAT as the source of truth.
 router.post('/callback', async (req, res) => {
   try {
-    const { payId, status, recurrentPaymentId, cardDetails } = req.body;
+    const { payId, recurrentPaymentId, cardDetails } = req.body;
     if (!payId) return res.status(400).send('Bad request');
 
-    const isOk = status === 'Succeeded' || status === 'SUCCESS';
-    const isFail = status === 'Failed' || status === 'FAIL' || status === 'Rejected';
+    // ── Verify status with TBC API (don't trust request body) ──
+    let verifiedStatus = null;
+    let verifiedDetails = null;
+    if (isTbcConfigured()) {
+      try {
+        const result = await getPaymentStatus(payId);
+        verifiedStatus = result?.status || null;
+        verifiedDetails = result;
+      } catch (err) {
+        console.error('[PAYMENT] callback verification failed:', err.message);
+        // Fail closed — reject callback if we can't verify
+        return res.status(400).send('Verification failed');
+      }
+    } else {
+      // DEMO mode — no TBC configured, fall back to body status
+      verifiedStatus = req.body.status;
+    }
+
+    const isOk = verifiedStatus === 'Succeeded' || verifiedStatus === 'SUCCESS';
+    const isFail = verifiedStatus === 'Failed' || verifiedStatus === 'FAIL' || verifiedStatus === 'Rejected';
+
+    // Trust recurrentPaymentId / cardDetails from TBC API response if present
+    const trustedRecurrentId = verifiedDetails?.recurringCard?.recId || recurrentPaymentId || null;
+    const trustedCardDetails = verifiedDetails?.cardDetails || cardDetails || null;
 
     // ── Card bind callback ───────────────────────────────────
     // The bind payment has vipType='bind' and amount=10 (0.10₾)
@@ -413,31 +439,21 @@ router.post('/callback', async (req, res) => {
     });
     if (bindPayment) {
       if (isOk) {
-        // Save the card token
-        if (recurrentPaymentId) {
-          const last4 = cardDetails?.cardNumber?.slice(-4) || '****';
-          const brand = detectBrand(cardDetails?.cardNumber || '');
-          const expiry = cardDetails?.expiryDate || '';
-
-          // Mark any existing cards as non-default
-          const existing = await prisma.savedCard.count({ where: { userId: bindPayment.userId } });
-
-          await prisma.savedCard.create({
-            data: {
-              userId: bindPayment.userId,
-              last4,
-              brand,
-              expiry,
-              token: recurrentPaymentId,
-              isDefault: existing === 0, // First card is default
-            },
-          });
+        // Save the card token (atomic upsert — prevents double-callback race)
+        if (trustedRecurrentId) {
+          await saveCardFromCallback(bindPayment.userId, trustedRecurrentId, trustedCardDetails);
         }
         // Refund the 0.10₾ verification charge
         await refundPayment(payId, 10).catch(() => {});
-        await prisma.vipPayment.update({ where: { id: bindPayment.id }, data: { status: 'paid' } });
+        await prisma.vipPayment.updateMany({
+          where: { id: bindPayment.id, status: 'pending' },
+          data:  { status: 'paid' },
+        });
       } else if (isFail) {
-        await prisma.vipPayment.update({ where: { id: bindPayment.id }, data: { status: 'failed' } });
+        await prisma.vipPayment.updateMany({
+          where: { id: bindPayment.id, status: 'pending' },
+          data:  { status: 'failed' },
+        });
       }
       return res.status(200).send('OK');
     }
@@ -447,10 +463,12 @@ router.post('/callback', async (req, res) => {
     if (vip) {
       if (isOk) {
         await activateVipByPaymentRecord(vip);
-        // Save card token if returned (for future auto-renewal)
-        if (recurrentPaymentId) await saveCardFromCallback(vip.userId, recurrentPaymentId, cardDetails);
+        if (trustedRecurrentId) await saveCardFromCallback(vip.userId, trustedRecurrentId, trustedCardDetails);
       } else if (isFail) {
-        await prisma.vipPayment.update({ where: { id: vip.id }, data: { status: 'failed' } });
+        await prisma.vipPayment.updateMany({
+          where: { id: vip.id, status: 'pending' },
+          data:  { status: 'failed' },
+        });
       }
       return res.status(200).send('OK');
     }
@@ -460,10 +478,12 @@ router.post('/callback', async (req, res) => {
     if (sub) {
       if (isOk) {
         await activateSubByPaymentRecord(sub, payId);
-        // Save card token if returned
-        if (recurrentPaymentId) await saveCardFromCallback(sub.userId, recurrentPaymentId, cardDetails);
+        if (trustedRecurrentId) await saveCardFromCallback(sub.userId, trustedRecurrentId, trustedCardDetails);
       } else if (isFail) {
-        await prisma.subscriptionPayment.update({ where: { id: sub.id }, data: { status: 'failed' } });
+        await prisma.subscriptionPayment.updateMany({
+          where: { id: sub.id, status: 'pending' },
+          data:  { status: 'failed' },
+        });
       }
       return res.status(200).send('OK');
     }
@@ -634,13 +654,22 @@ async function activateVipByPaymentRecord(p) {
   const now = new Date();
   const expiresAt = new Date(now.getTime() + p.days * 86400000);
 
-  await prisma.$transaction([
-    prisma.vipPayment.update({ where: { id: p.id }, data: { status: 'paid', paidAt: now } }),
-    prisma.user.update({
-      where: { id: p.userId },
-      data: { vipType: p.vipType, vipActivatedAt: now, vipExpiresAt: expiresAt },
-    }),
-  ]);
+  // ✅ RACE-SAFE: atomic "claim" via updateMany with status check.
+  // If two concurrent callbacks race, only ONE will update (count === 1).
+  const claimed = await prisma.vipPayment.updateMany({
+    where: { id: p.id, status: 'pending' },
+    data:  { status: 'paid', paidAt: now },
+  });
+  if (claimed.count === 0) {
+    // Already activated by another concurrent request
+    return;
+  }
+
+  // Only after successful claim do we activate the user's VIP
+  await prisma.user.update({
+    where: { id: p.userId },
+    data:  { vipType: p.vipType, vipActivatedAt: now, vipExpiresAt: expiresAt },
+  });
 
   const user = await prisma.user.findUnique({ where: { id: p.userId } });
   if (user?.email) {
@@ -663,11 +692,16 @@ async function activateSubByPaymentRecord(s, tbcPayId) {
   const now = new Date();
   const planExpiresAt = s.periodEnd || new Date(now.getTime() + 30 * 86400000);
 
+  // ✅ RACE-SAFE: atomic claim
+  const claimed = await prisma.subscriptionPayment.updateMany({
+    where: { id: s.id, status: 'pending' },
+    data:  { status: 'paid', paidAt: now, ...(tbcPayId ? { tbcPayId } : {}) },
+  });
+  if (claimed.count === 0) {
+    return;
+  }
+
   const updates = [
-    prisma.subscriptionPayment.update({
-      where: { id: s.id },
-      data: { status: 'paid', paidAt: now, ...(tbcPayId ? { tbcPayId } : {}) },
-    }),
     prisma.user.update({
       where: { id: s.userId },
       data: {

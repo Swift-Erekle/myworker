@@ -6,6 +6,7 @@ const http       = require('http');
 const cors       = require('cors');
 const helmet     = require('helmet');
 const path       = require('path');
+const rateLimit  = require('express-rate-limit');
 const { Server } = require('socket.io');
 
 const { setupSocket } = require('./socket');
@@ -51,11 +52,37 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// ── Rate limiting ──────────────────────────────────────────────
+// Global limiter — generous default for logged-in usage.
+// Individual routes can stack additional, stricter limits.
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,           // 1 minute
+  max:      120,                 // 120 requests / minute per IP
+  standardHeaders: true,
+  legacyHeaders:   false,
+  message: { error: 'ძალიან ბევრი მოთხოვნა — ცოტა ხანში სცადე ხელახლა' },
+  // Skip rate limits in development
+  skip: () => process.env.NODE_ENV !== 'production',
+});
+
+// Stricter limiter for write-heavy endpoints
+const writeHeavyLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max:      30,
+  standardHeaders: true,
+  legacyHeaders:   false,
+  message: { error: 'ძალიან ბევრი მოთხოვნა — ცოტა ხანში სცადე ხელახლა' },
+  skip: () => process.env.NODE_ENV !== 'production',
+});
+
+// Apply global limit to /api. Auth routes already have their own limiter inside.
+app.use('/api', apiLimiter);
+
 // ── API Routes ─────────────────────────────────────────────────
 app.use('/api/auth',     authRoutes);
 app.use('/api/users',    userRoutes);
-app.use('/api/requests', requestRoutes);
-app.use('/api/offers',   offerRoutes);
+app.use('/api/requests', writeHeavyLimiter, requestRoutes);
+app.use('/api/offers',   writeHeavyLimiter, offerRoutes);
 app.use('/api/chat',     chatRoutes);
 app.use('/api/admin',    adminRoutes);
 app.use('/api/payment',  paymentRoutes);
