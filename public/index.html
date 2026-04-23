@@ -386,6 +386,25 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
 .req-media-move-right{right:3px}
 .req-media-move:hover,.req-media-del:hover{background:rgba(0,0,0,.85)}
 .req-media-primary{position:absolute;bottom:3px;left:3px;background:var(--accent);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;z-index:2;letter-spacing:.3px}
+
+/* ── Notification bell ─────────────────────────────────── */
+.nav-bell{background:transparent;border:1px solid var(--border);color:var(--text);width:38px;height:38px;border-radius:10px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;position:relative;transition:.15s;flex-shrink:0}
+.nav-bell:hover{background:var(--surface);border-color:var(--accent)}
+.nav-bell-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;background:var(--accent);border-radius:50%;border:2px solid var(--bg)}
+#notifDropdown{display:none;position:fixed;top:60px;right:20px;width:340px;max-width:calc(100vw - 40px);max-height:70vh;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);z-index:2000;overflow:hidden;flex-direction:column}
+#notifDropdown.open{display:flex}
+.notif-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--bg)}
+.notif-list{overflow-y:auto;flex:1;max-height:50vh}
+.notif-item{padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:.1s;display:flex;gap:10px;align-items:flex-start}
+.notif-item:hover{background:var(--bg)}
+.notif-item.unread{background:rgba(255,107,43,.06)}
+.notif-item.unread:hover{background:rgba(255,107,43,.1)}
+.notif-ico{font-size:18px;flex-shrink:0;margin-top:1px}
+.notif-body{flex:1;min-width:0}
+.notif-title{font-weight:600;font-size:13px;color:var(--text);margin-bottom:2px}
+.notif-desc{font-size:12px;color:var(--t2);line-height:1.4;word-break:break-word}
+.notif-time{font-size:10px;color:var(--t3,#6b6b80);margin-top:3px}
+.notif-empty{padding:40px 16px;text-align:center;color:var(--t2);font-size:13px}
 /* VERIFY CODE INPUT */
 .code-inputs{display:flex;gap:8px;justify-content:center;margin:20px 0}
 .code-inputs input{width:44px;height:52px;text-align:center;font-size:22px;font-weight:800;background:var(--bg);border:2px solid var(--border);border-radius:10px;color:var(--text);outline:none;transition:.2s}
@@ -400,7 +419,7 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
 .btn-user-nav:hover{background:linear-gradient(135deg,rgba(180,220,60,.28),rgba(100,200,120,.25));border-color:rgba(160,210,80,.7);transform:translateY(-1px);box-shadow:0 4px 14px rgba(140,210,60,.25)}
 /* DASH TABS */
 .dash-tabs{display:flex;gap:0;margin-bottom:24px;border-radius:12px;overflow:hidden;border:1px solid var(--border)}
-.dash-tab{flex:1;padding:13px 10px;text-align:center;font-size:14px;font-weight:700;cursor:pointer;background:var(--surface);color:var(--t2);transition:all .2s;border:none}
+.dash-tab{flex:1;padding:13px 10px;text-align:center;font-size:14px;font-weight:700;cursor:pointer;background:var(--surface);color:var(--t2);transition:all .2s;border:none;display:flex;align-items:center;justify-content:center;line-height:1.2;min-height:44px}
 .dash-tab:first-child{border-right:1px solid var(--border)}
 .dash-tab.active{background:var(--accent);color:#fff}
 /* SPEC CHECKBOXES GRID */
@@ -546,7 +565,7 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
     </div>
   </div>
   <div id="reqContent" style="display:none">
-    <div class="ph"><div class="phi"><div><h1>მოთხოვნების დაფა</h1><p>ადამიანებს სჭირდებათ ხელოსანი — გეწერე!</p></div><div id="addReqBtn"></div></div></div>
+    <div class="ph"><div class="phi"><div><h1>მოთხოვნების დაფა</h1></div><div id="addReqBtn"></div></div></div>
     <div class="sec" style="padding-top:28px">
       <div class="fb" style="flex-direction:column;gap:10px">
         <div id="reqCatPills" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>
@@ -757,7 +776,14 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
     <div class="fg"><label>აღწერა</label><textarea id="qDesc" placeholder="დეტალები — რაც უფრო ვრცლად დაწერთ, მით უკეთ..."></textarea></div>
     <div class="fr">
       <div class="fg"><label>ქალაქი / უბანი</label><input id="qCity" placeholder="ვაკე, თბილისი"></div>
-      <div class="fg"><label>ბიუჯეტი (₾)</label><input id="qBudget" type="number" placeholder="200"></div>
+      <div class="fg">
+        <label>ბიუჯეტი (₾)</label>
+        <input id="qBudget" type="number" placeholder="200">
+        <label style="display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer;font-size:13px;color:var(--t2)">
+          <input type="checkbox" id="qBudgetNegotiable" onchange="toggleNegotiableBudget()" style="accent-color:var(--accent);cursor:pointer">
+          <span>ფასი შეთანხმებით</span>
+        </label>
+      </div>
     </div>
     <div class="fg"><label>გადაუდებელია?</label><select id="qUrg"><option value="normal">ჩვეულებრივი</option><option value="urgent">გადაუდებელი</option></select></div>
     <div class="fg">
@@ -1157,6 +1183,15 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
   </div>
 </div>
 
+<!-- NOTIFICATION DROPDOWN -->
+<div id="notifDropdown">
+  <div class="notif-head">
+    <div style="font-weight:700;font-size:14px">🔔 შეტყობინებები</div>
+    <button onclick="markAllNotifRead()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;font-weight:600" id="notifMarkAllBtn">წავიკითხე ყველა</button>
+  </div>
+  <div class="notif-list" id="notifList"></div>
+</div>
+
 <!-- ARIA CHAT WIDGET -->
 <div id="ariaToggle" style="position:fixed;bottom:24px;right:24px;z-index:300">
   <button id="ariaToggleBtn" onclick="toggleAria()" style="width:54px;height:54px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 8px 24px rgba(255,107,43,.45);transition:all .2s;display:flex;align-items:center;justify-content:center">💬</button>
@@ -1451,13 +1486,14 @@ let selectedRegSpecialties = [];   // for register multi-select
 let selectedEditSpecialties = [];  // for edit multi-select
 let avatarFile = null;             // pending avatar file
 let selectedRegTariff = 'start';   // selected tariff during registration
-let currentDashTab = 'offers';     // dashboard tab state
+let currentDashTab = 'offers';     // dashboard tab state (handyman/company)
+let currentUserDashTab = 'requests'; // dashboard tab state (user)
 let usedFreeTrial = false;         // has used free 3-month trial
 
 // Pricing constants
 const PLAN_PRICES = {
   handyman: { pro: 29, top: 69 },
-  company: { pro: 99, top: 59 },
+  company: { pro: 99, top: 159 },
 };
 
 // ========================================================
@@ -1517,6 +1553,15 @@ function connectSocket() {
     if (moReqDetail && moReqDetail.classList.contains('open') && offer.requestId) {
       openRequestDetail(offer.requestId);
     }
+  });
+
+  // Live in-app bell notification
+  socket.on('notification', (notif) => {
+    notifCache.unshift(notif);
+    if (notifCache.length > 30) notifCache.pop();
+    renderNotifBell(notifCache.filter(x => !x.read).length);
+    renderNotifDropdown();
+    toast(notif.title, notif.body || '', 'ok');
   });
 }
 
@@ -1585,6 +1630,9 @@ function renderNav() {
     ${cu ? `
       ${isHandyman ? `<span class="nav-a" onclick="nav('vip-info')">⭐ VIP</span>` : ''}
       ${isAdmin ? `<span class="nav-a" onclick="nav('admin')">🛡️ ადმინი</span>` : ''}
+      <button class="nav-bell" onclick="toggleNotifDropdown(event)" title="შეტყობინებები" id="navBellBtn">
+        🔔<span class="nav-bell-dot" id="navBellDot" style="display:none"></span>
+      </button>
       <button class="btn-user-nav" onclick="${isAdmin ? "nav('admin')" : "nav('dashboard')"}" title="ჩემი დაფა">${avatarNavHtml(cu)}</button>
       <button class="btn bo bs" onclick="doLogout()">გამოსვლა</button>
     ` : `
@@ -1592,11 +1640,133 @@ function renderNav() {
       <button class="btn bp bs" onclick="openMo('moRegister')">რეგისტრაცია</button>
     `}
   `;
+  if (cu) loadNotifications();
 }
 
 function avatarNavHtml(cu) {
   if (cu.avatar) return `<img src="${sanitize(cu.avatar)}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:4px">${sanitize(cu.name)}`;
   return `${cu.emoji || '👤'} ${sanitize(cu.name)}`;
+}
+
+// ========================================================
+// NOTIFICATION BELL (in-app notifications)
+// ========================================================
+let notifCache = [];
+
+async function loadNotifications() {
+  if (!currentUser) return;
+  try {
+    const data = await api('/notifications');
+    notifCache = data.notifications || [];
+    renderNotifBell(data.unreadCount || 0);
+    renderNotifDropdown();
+  } catch (_) { /* silent */ }
+}
+
+function renderNotifBell(unreadCount) {
+  const dot = document.getElementById('navBellDot');
+  if (!dot) return;
+  dot.style.display = unreadCount > 0 ? 'block' : 'none';
+}
+
+function renderNotifDropdown() {
+  const list = document.getElementById('notifList');
+  if (!list) return;
+  if (!notifCache.length) {
+    list.innerHTML = '<div class="notif-empty">შეტყობინება ჯერ არ არის</div>';
+    return;
+  }
+  list.innerHTML = notifCache.map(n => {
+    const ico = notifIcon(n.type);
+    const time = notifRelativeTime(n.createdAt);
+    return `<div class="notif-item ${n.read ? '' : 'unread'}" onclick="onNotifClick('${sanitize(n.id)}', ${n.link ? `'${sanitize(n.link)}'` : 'null'})">
+      <div class="notif-ico">${ico}</div>
+      <div class="notif-body">
+        <div class="notif-title">${sanitize(n.title)}</div>
+        ${n.body ? `<div class="notif-desc">${sanitize(n.body)}</div>` : ''}
+        <div class="notif-time">${time}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function notifIcon(type) {
+  switch (type) {
+    case 'new_offer':       return '💬';
+    case 'offer_accepted':  return '🎉';
+    case 'offer_rejected':  return '❌';
+    case 'new_message':     return '✉️';
+    case 'offer_updated':   return '✏️';
+    default:                return '🔔';
+  }
+}
+
+function notifRelativeTime(iso) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const sec = Math.floor(diff / 1000);
+  if (sec < 60)    return 'ახლახან';
+  const min = Math.floor(sec / 60);
+  if (min < 60)    return min + ' წუთის წინ';
+  const hrs = Math.floor(min / 60);
+  if (hrs < 24)    return hrs + ' სთ წინ';
+  const days = Math.floor(hrs / 24);
+  if (days < 7)    return days + ' დღის წინ';
+  return new Date(iso).toLocaleDateString('ka-GE', { day: 'numeric', month: 'short' });
+}
+
+function toggleNotifDropdown(event) {
+  if (event) event.stopPropagation();
+  const dd = document.getElementById('notifDropdown');
+  if (!dd) return;
+  const isOpen = dd.classList.toggle('open');
+  if (isOpen) {
+    loadNotifications();
+    // Dismiss on outside click
+    setTimeout(() => {
+      document.addEventListener('click', closeNotifOnOutside, { once: true });
+    }, 0);
+  }
+}
+
+function closeNotifOnOutside(e) {
+  const dd = document.getElementById('notifDropdown');
+  if (dd && !dd.contains(e.target) && !e.target.closest('.nav-bell')) {
+    dd.classList.remove('open');
+  } else if (dd) {
+    // Still open — re-attach listener
+    setTimeout(() => {
+      document.addEventListener('click', closeNotifOnOutside, { once: true });
+    }, 0);
+  }
+}
+
+async function onNotifClick(id, link) {
+  // Mark as read
+  api('/notifications/read', { method: 'POST', body: { id } }).catch(() => {});
+  const n = notifCache.find(x => x.id === id);
+  if (n) n.read = true;
+  renderNotifBell(notifCache.filter(x => !x.read).length);
+  renderNotifDropdown();
+
+  // Follow link if present
+  if (link) {
+    document.getElementById('notifDropdown')?.classList.remove('open');
+    // Parse link — support ?chat=xxx or ?req=yyy
+    const params = new URLSearchParams(link.startsWith('?') ? link.slice(1) : link);
+    const chatId = params.get('chat');
+    const reqId  = params.get('req');
+    if (chatId) { openChat(chatId); }
+    else if (reqId) { openRequestDetail(reqId); }
+  }
+}
+
+async function markAllNotifRead() {
+  try {
+    await api('/notifications/read', { method: 'POST', body: {} });
+    notifCache.forEach(n => n.read = true);
+    renderNotifBell(0);
+    renderNotifDropdown();
+  } catch (_) {}
 }
 
 // ========================================================
@@ -2020,7 +2190,13 @@ async function renderHandymen() {
   grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳ იტვირთება...</div>';
   if (companiesGrid) companiesGrid.innerHTML = '';
 
-  const mainCat = document.getElementById('fCatMain')?.value || '';
+  // ✅ FIX (Task 3): pills set dataset.mainCatId (e.g. 'plumber') — resolve to category NAME
+  const fCatMainEl = document.getElementById('fCatMain');
+  let mainCat = fCatMainEl?.value || '';
+  if (!mainCat && fCatMainEl?.dataset.mainCatId) {
+    const found = CATS_DATA.find(g => g.id === fCatMainEl.dataset.mainCatId);
+    if (found) mainCat = found.name;
+  }
   const subCat = document.getElementById('fCatSub')?.value || '';
   const minRating = document.getElementById('fRating')?.value || '';
 
@@ -2201,7 +2377,7 @@ async function showProfile(hid) {
       ${!isOwner && (h.type === 'handyman' || h.type === 'company') && cu
         ? `<button class="btn bp" onclick="openSendOffer('${h.id}')">💬 შეთავაზება</button>` : ''}
       ${canReview ? `<button class="btn bo bs" onclick="openReviewModal('${hid}')">⭐ შეფასება</button>` : ''}
-      ${h.phone && cu ? `<button class="btn bo bs" onclick="toast('📞 ${sanitize(h.name)}','${sanitize(h.phone || '')}','ok')">📞</button>` : ''}
+      ${h.phone && cu ? `<button class="btn bo bs" onclick="contactPhone('${sanitize(h.phone)}','${sanitize(h.name)}')">📞</button>` : ''}
     `;
   } catch (e) {
     toast('⚠️ პროფილი ვერ ჩაიტვირთა', '', 'err');
@@ -2234,7 +2410,8 @@ async function renderRequests() {
   const subCat = document.getElementById('rCatSub')?.value || '';
   const urg = document.getElementById('rUrg')?.value || '';
   try {
-    let url = '/requests?status=open&';
+    // Show both 'open' and 'pending' (requests that still accept offers)
+    let url = '/requests?';
     if (mainCat) url += `category=${encodeURIComponent(mainCat)}&`;
     if (urg) url += `urgency=${urg}&`;
     let requests = await api(url);
@@ -2320,7 +2497,7 @@ function requestCard(r, showActions = true) {
     <div class="rmeta">
       <span class="tag">${sanitize(r.category || '')}</span>
       <span class="tag">📍 ${sanitize(r.city || '')}</span>
-      ${r.budget ? `<span class="tag">💰 ${r.budget}₾</span>` : ''}
+      ${r.budget ? `<span class="tag">💰 ${r.budget}₾</span>` : '<span class="tag">💰 შეთანხმებით</span>'}
       ${r.urgency === 'urgent' ? '<span class="tag urg">⚡ გადაუდებელი</span>' : ''}
       <span class="tag">💬 ${offerCount} შეთავაზება</span>
     </div>
@@ -2421,6 +2598,22 @@ function moveReqMedia(index, delta) {
   renderReqMediaGrid();
 }
 
+function toggleNegotiableBudget() {
+  const cb   = document.getElementById('qBudgetNegotiable');
+  const inp  = document.getElementById('qBudget');
+  if (!cb || !inp) return;
+  if (cb.checked) {
+    inp.value = '';
+    inp.disabled = true;
+    inp.style.opacity = '.4';
+    inp.placeholder = 'შეთანხმებით';
+  } else {
+    inp.disabled = false;
+    inp.style.opacity = '';
+    inp.placeholder = '200';
+  }
+}
+
 async function submitRequest() {
   const cu = currentUser;
   if (!cu) { openMo('moLogin'); return; }
@@ -2433,7 +2626,8 @@ async function submitRequest() {
   fd.append('title', title); fd.append('category', cat);
   fd.append('desc', document.getElementById('qDesc').value || '');
   fd.append('city', document.getElementById('qCity').value || 'თბილისი');
-  fd.append('budget', document.getElementById('qBudget').value || '');
+  const negotiable = document.getElementById('qBudgetNegotiable')?.checked;
+  fd.append('budget', negotiable ? '' : (document.getElementById('qBudget').value || ''));
   fd.append('urgency', document.getElementById('qUrg').value || 'normal');
   reqMediaInputFiles.forEach(f => fd.append('media', f));
   try {
@@ -2441,6 +2635,9 @@ async function submitRequest() {
     closeMo('moRequest');
     reqMediaInputFiles = []; renderReqMediaGrid();
     ['qTitle','qDesc','qCity','qBudget'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    // Reset negotiable checkbox
+    const negCb = document.getElementById('qBudgetNegotiable');
+    if (negCb) { negCb.checked = false; toggleNegotiableBudget(); }
     resetQCatGrid();
     toast('📋 მოთხოვნა გამოქვეყნდა!', 'ხელოსნები მალე შემოგთავაზებენ პირობებს', 'ok');
     renderRequests();
@@ -2570,20 +2767,22 @@ function renderRequestDetail(r) {
   const statusLabel = requestStatusLabel(r.status);
   const statusCls   = requestStatusClass(r.status);
 
-  // Build media gallery
+  // Build media gallery — open as gallery with nav arrows / swipe / keyboard
   const galleryHtml = media.length ? `
     <div class="rd-section">
       <h3 style="font-size:15px;margin-bottom:4px">📷 ფოტო და ვიდეო (${media.length})</h3>
       <div class="rd-gallery">
-        ${media.map(m => {
+        ${media.map((m, idx) => {
           const url = sanitize(m.url || '');
+          const items = JSON.stringify(media.map(x => ({ type: x.type || 'image', url: x.url || '' })))
+            .replace(/'/g, "&apos;");
           if (m.type === 'video') {
-            return `<div class="rd-gallery-item" onclick="openLightbox('video','${url}')">
+            return `<div class="rd-gallery-item" onclick='openLightboxGallery(${items}, ${idx})'>
               <video src="${url}" muted playsinline preload="metadata"></video>
               <div class="vid-ind">▶</div>
             </div>`;
           }
-          return `<div class="rd-gallery-item" onclick="openLightbox('image','${url}')">
+          return `<div class="rd-gallery-item" onclick='openLightboxGallery(${items}, ${idx})'>
             <img src="${url}" alt="" loading="lazy">
           </div>`;
         }).join('')}
@@ -2614,8 +2813,9 @@ function renderRequestDetail(r) {
               <span class="status ${o.status === 'pending' ? 'sn' : 'sa'}">${o.status === 'pending' ? 'მოლოდინში' : 'მიღებული'}</span>
             </div>
           </div>
-          ${['open','pending'].includes(r.status) && o.status === 'pending' ? `<div style="margin-top:10px;display:flex;gap:8px">
+          ${['open','pending'].includes(r.status) && o.status === 'pending' ? `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn bp bs" onclick="acceptOfferFromDetail('${sanitize(o.id)}', '${sanitize(r.id)}')">✓ მიღება</button>
+            <button class="btn berr bs" onclick="rejectOfferFromDetail('${sanitize(o.id)}', '${sanitize(r.id)}')">✕ უარყოფა</button>
             <button class="btn bg bs" onclick="showProfile('${sanitize(h?.id)}')">პროფილი</button>
           </div>` : ''}
           ${o.status === 'accepted' ? `<button class="btn bg bs" style="margin-top:8px" onclick="closeMo('moReqDetail');openChatForOffer('${sanitize(o.id)}')">💬 ჩათი</button>` : ''}
@@ -2661,7 +2861,7 @@ function renderRequestDetail(r) {
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
       <span class="tag">${sanitize(r.category || '')}</span>
       <span class="tag">📍 ${sanitize(r.city || '')}</span>
-      ${r.budget ? `<span class="tag">💰 ${r.budget}₾</span>` : ''}
+      ${r.budget ? `<span class="tag">💰 ${r.budget}₾</span>` : '<span class="tag">💰 შეთანხმებით</span>'}
       ${r.urgency === 'urgent' ? '<span class="tag urg">⚡ გადაუდებელი</span>' : ''}
     </div>
 
@@ -2701,6 +2901,18 @@ async function acceptOfferFromDetail(offerId, reqId) {
     toast('✅ შეთავაზება მიღებულია!', 'ჩათი გაიხსნა', 'ok');
     closeMo('moReqDetail');
     openChat(data.chatId);
+  } catch (e) {
+    toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err');
+  }
+}
+
+async function rejectOfferFromDetail(offerId, reqId) {
+  if (!confirm('ნამდვილად გინდა ამ შეთავაზების უარყოფა?')) return;
+  try {
+    await api('/offers/' + offerId + '/reject', { method: 'POST' });
+    toast('✅ შეთავაზება უარყოფილია', '', 'ok');
+    // Reload the detail view to reflect the change
+    if (reqId) openRequestDetail(reqId);
   } catch (e) {
     toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err');
   }
@@ -2796,6 +3008,21 @@ async function renderFavoritesTab() {
   }
 }
 
+function contactPhone(phone, name) {
+  // Always copy to clipboard
+  try {
+    navigator.clipboard?.writeText(phone);
+    toast('📋 ' + (name || ''), 'ნომერი დაკოპირდა: ' + phone, 'ok');
+  } catch (_) {
+    toast('📞 ' + (name || ''), phone, 'ok');
+  }
+  // On mobile, also trigger dialler
+  if (/android|iphone|ipad|ipod/i.test(navigator.userAgent)) {
+    const clean = String(phone).replace(/\s+/g, '');
+    setTimeout(() => { window.location.href = 'tel:' + clean; }, 250);
+  }
+}
+
 async function shareRequest(reqId, title) {
   const url = `${location.origin}/?req=${encodeURIComponent(reqId)}`;
   const shareData = {
@@ -2876,13 +3103,15 @@ async function renderDashboard() {
         <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
           <button class="btn bp" onclick="openMo('moRequest')">+ მოთხოვნა</button>
           <button class="btn bo" onclick="nav('handymen')">🔧 ხელოსნები</button>
-          <button class="btn bg" onclick="openUserSupport()">🎧 სუპორტი</button>
         </div>
-        <h3 style="margin:22px 0 12px;font-size:15px">📋 ჩემი მოთხოვნები</h3>
-        ${myReqs.length ? myReqs.map(r => requestCard(r)).join('') : '<div class="empty"><div class="ei">📋</div><h3>მოთხოვნა არ გაქვს</h3></div>'}
-        <h3 style="margin:22px 0 12px;font-size:15px">💬 ჩათები</h3>
-        ${myChats.length ? myChats.map(c => chatItem(c)).join('') : '<div class="empty"><div class="ei">💬</div><h3>ჩათი ჯერ არ გაქვს</h3></div>'}
+        <!-- TABS -->
+        <div class="dash-tabs" style="margin-top:22px">
+          <div class="dash-tab ${currentUserDashTab === 'requests' ? 'active' : ''}" onclick="switchUserDashTab('requests')">📋 ჩემი მოთხოვნები</div>
+          <div class="dash-tab ${currentUserDashTab === 'chats' ? 'active' : ''}" onclick="switchUserDashTab('chats')">💬 ჩათები</div>
+        </div>
+        <div id="userDashTabContent"></div>
       `;
+      renderUserDashTabContent(myReqs, myChats);
     } else {
       // handyman / company
       const [myOffers, myChats, cu2] = await Promise.all([
@@ -2906,8 +3135,8 @@ async function renderDashboard() {
         setTimeout(() => showUpgradeModal('trial_expired', cu2), 400);
       }
 
-      const vip1Price = isCompany ? 10 : 2;
-      const vipp1Price = isCompany ? 15 : 4;
+      const vip1Price = 2;
+      const vipp1Price = 4;
 
       // Plan badge
       const planBadge = getPlanBadge(cu2);
@@ -2955,6 +3184,26 @@ async function renderDashboard() {
     }
   } catch (e) {
     body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ჩატვირთვა ვერ მოხდა</h3></div>';
+  }
+}
+
+// ─── USER DASHBOARD TABS ──────────────────────────────────
+function switchUserDashTab(tab) {
+  currentUserDashTab = tab;
+  renderDashboard();
+}
+
+function renderUserDashTabContent(myReqs, myChats) {
+  const el = document.getElementById('userDashTabContent');
+  if (!el) return;
+  if (currentUserDashTab === 'requests') {
+    el.innerHTML = myReqs.length
+      ? myReqs.map(r => requestCard(r)).join('')
+      : '<div class="empty"><div class="ei">📋</div><h3>მოთხოვნა არ გაქვს</h3></div>';
+  } else {
+    el.innerHTML = myChats.length
+      ? myChats.map(c => chatItem(c)).join('')
+      : '<div class="empty"><div class="ei">💬</div><h3>ჩათი ჯერ არ გაქვს</h3></div>';
   }
 }
 
@@ -3103,23 +3352,54 @@ function renderMessages(msgs) {
   const body = document.getElementById('chatBody'); if (!body) return;
   const cu = currentUser;
   body.innerHTML = msgs.map(m => {
+    const dataId = m.id ? ` data-msg-id="${sanitize(m.id)}"` : '';
     const isMe = m.fromId === cu?.id;
-    const isSystem = m.fromId === 'system';
-    if (isSystem) return `<div style="text-align:center;color:var(--t2);font-size:12px;padding:8px">${sanitize(m.content)}</div>`;
-    if (m.type === 'image') return `<div class="msg ${isMe ? 'me' : 'them'}"><img src="${sanitize(m.content)}" style="max-width:200px;border-radius:8px;cursor:pointer" onclick="openLightbox('image','${sanitize(m.content)}')"></div>`;
-    if (m.type === 'video') return `<div class="msg ${isMe ? 'me' : 'them'}"><video src="${sanitize(m.content)}" controls style="max-width:200px;border-radius:8px"></video></div>`;
-    if (m.type === 'voice') return `<div class="msg ${isMe ? 'me' : 'them'}"><audio src="${sanitize(m.content)}" controls style="max-width:200px"></audio></div>`;
-    return `<div class="msg ${isMe ? 'me' : 'them'}">${sanitize(m.content)}<div class="mtime">${new Date(m.createdAt).toLocaleTimeString('ka-GE', {hour:'2-digit',minute:'2-digit'})}</div></div>`;
+    const isSystem = m.fromId === 'system' || m.type === 'system';
+    if (isSystem) return `<div${dataId} style="text-align:center;color:var(--t2);font-size:12px;padding:8px">${sanitize(m.content)}</div>`;
+    if (m.type === 'image') return `<div${dataId} class="msg ${isMe ? 'me' : 'them'}"><img src="${sanitize(m.content)}" style="max-width:200px;border-radius:8px;cursor:pointer" onclick="openLightbox('image','${sanitize(m.content)}')"></div>`;
+    if (m.type === 'video') return `<div${dataId} class="msg ${isMe ? 'me' : 'them'}"><video src="${sanitize(m.content)}" controls style="max-width:200px;border-radius:8px"></video></div>`;
+    if (m.type === 'voice') return `<div${dataId} class="msg ${isMe ? 'me' : 'them'}"><audio src="${sanitize(m.content)}" controls style="max-width:200px"></audio></div>`;
+    return `<div${dataId} class="msg ${isMe ? 'me' : 'them'}">${sanitize(m.content)}<div class="mtime">${new Date(m.createdAt).toLocaleTimeString('ka-GE', {hour:'2-digit',minute:'2-digit'})}</div></div>`;
   }).join('');
   body.scrollTop = body.scrollHeight;
 }
 function appendChatMsg(msg) {
   const body = document.getElementById('chatBody'); if (!body) return;
   const cu = currentUser;
+
+  // Deduplicate: skip if a message with this ID is already rendered
+  if (msg.id && body.querySelector(`[data-msg-id="${msg.id}"]`)) return;
+
   const isMe = msg.fromId === cu?.id;
+  const isSystem = msg.fromId === 'system' || msg.type === 'system';
+
   const div = document.createElement('div');
-  div.className = `msg ${isMe ? 'me' : 'them'}`;
-  div.innerHTML = sanitize(msg.content) + `<div class="mtime">${new Date(msg.createdAt || Date.now()).toLocaleTimeString('ka-GE', {hour:'2-digit',minute:'2-digit'})}</div>`;
+  if (msg.id) div.setAttribute('data-msg-id', msg.id);
+
+  if (isSystem) {
+    div.style.cssText = 'text-align:center;color:var(--t2);font-size:12px;padding:8px';
+    div.textContent = msg.content || '';
+  } else if (msg.type === 'image') {
+    div.className = `msg ${isMe ? 'me' : 'them'}`;
+    const url = msg.content || '';
+    div.innerHTML = `<img src="${sanitize(url)}" style="max-width:200px;border-radius:8px;cursor:pointer" onclick="openLightbox('image','${sanitize(url)}')">` +
+      `<div class="mtime">${new Date(msg.createdAt || Date.now()).toLocaleTimeString('ka-GE', {hour:'2-digit',minute:'2-digit'})}</div>`;
+  } else if (msg.type === 'video') {
+    div.className = `msg ${isMe ? 'me' : 'them'}`;
+    const url = msg.content || '';
+    div.innerHTML = `<video src="${sanitize(url)}" controls style="max-width:200px;border-radius:8px"></video>` +
+      `<div class="mtime">${new Date(msg.createdAt || Date.now()).toLocaleTimeString('ka-GE', {hour:'2-digit',minute:'2-digit'})}</div>`;
+  } else if (msg.type === 'voice') {
+    div.className = `msg ${isMe ? 'me' : 'them'}`;
+    const url = msg.content || '';
+    div.innerHTML = `<audio src="${sanitize(url)}" controls style="max-width:200px"></audio>` +
+      `<div class="mtime">${new Date(msg.createdAt || Date.now()).toLocaleTimeString('ka-GE', {hour:'2-digit',minute:'2-digit'})}</div>`;
+  } else {
+    // Plain text
+    div.className = `msg ${isMe ? 'me' : 'them'}`;
+    div.innerHTML = sanitize(msg.content || '') + `<div class="mtime">${new Date(msg.createdAt || Date.now()).toLocaleTimeString('ka-GE', {hour:'2-digit',minute:'2-digit'})}</div>`;
+  }
+
   body.appendChild(div); body.scrollTop = body.scrollHeight;
 }
 async function sendChatMsg() {
@@ -3891,6 +4171,69 @@ function toggleAria() {
   document.getElementById('ariaToggleBtn').textContent = ariaOpen ? '✕' : '💬';
   if (ariaOpen && ariaMessages.length === 0) ariaAddMsg('assistant', 'გამარჯობა! მე ვარ ARIA — ხელოსანი.ge-ის ასისტენტი 🔧\n\nდაგეხმარები ნებისმიერ კითხვაში!');
 }
+
+// ────────────────────────────────────────────────────────
+// Make the ARIA toggle button draggable (mouse + touch)
+// ────────────────────────────────────────────────────────
+(function initAriaDrag() {
+  function init() {
+    const wrap = document.getElementById('ariaToggle');
+    if (!wrap) { setTimeout(init, 200); return; }
+    let dragging = false, moved = false;
+    let startX = 0, startY = 0, offX = 0, offY = 0;
+
+    function onDown(e) {
+      const t = e.touches ? e.touches[0] : e;
+      dragging = true; moved = false;
+      const r = wrap.getBoundingClientRect();
+      startX = t.clientX; startY = t.clientY;
+      offX = t.clientX - r.left; offY = t.clientY - r.top;
+      // switch from bottom/right to top/left positioning for dragging
+      wrap.style.transition = 'none';
+    }
+    function onMove(e) {
+      if (!dragging) return;
+      const t = e.touches ? e.touches[0] : e;
+      const dx = Math.abs(t.clientX - startX);
+      const dy = Math.abs(t.clientY - startY);
+      if (dx > 5 || dy > 5) moved = true;
+      if (!moved) return;
+      e.preventDefault();
+      let x = t.clientX - offX;
+      let y = t.clientY - offY;
+      const maxX = window.innerWidth  - wrap.offsetWidth;
+      const maxY = window.innerHeight - wrap.offsetHeight;
+      x = Math.max(0, Math.min(x, maxX));
+      y = Math.max(0, Math.min(y, maxY));
+      wrap.style.left   = x + 'px';
+      wrap.style.top    = y + 'px';
+      wrap.style.right  = 'auto';
+      wrap.style.bottom = 'auto';
+    }
+    function onUp() {
+      if (!dragging) return;
+      dragging = false;
+      // If it was a real drag (not a click), swallow the click
+      if (moved) {
+        const btn = document.getElementById('ariaToggleBtn');
+        if (btn) {
+          const swallow = (ev) => { ev.stopPropagation(); ev.preventDefault(); btn.removeEventListener('click', swallow, true); };
+          btn.addEventListener('click', swallow, true);
+          setTimeout(() => btn.removeEventListener('click', swallow, true), 100);
+        }
+      }
+    }
+
+    wrap.addEventListener('mousedown',  onDown);
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+
+    wrap.addEventListener('touchstart', onDown, { passive: false });
+    document.addEventListener('touchmove',  onMove, { passive: false });
+    document.addEventListener('touchend',   onUp);
+  }
+  init();
+})();
 function ariaAddMsg(role, text) { ariaMessages.push({role, text}); renderAriaMessages(); }
 function renderAriaMessages() {
   const body = document.getElementById('ariaMsgs'); if (!body) return;
@@ -3979,36 +4322,36 @@ async function renderCardPage() {
               <span style="font-size:22px">${c.brand==='Visa'?'\uD83D\uDCB3':c.brand==='Mastercard'?'\uD83D\uDD34':'\uD83D\uDCB3'}</span>
               <div>
                 <div style="font-weight:700;font-size:14px">${sanitize(c.brand)} \u2022\u2022\u2022\u2022 ${sanitize(c.last4)}</div>
-                <div style="font-size:11px;color:var(--t2)">${c.expiry?'\u03BD: '+sanitize(c.expiry):''} ${c.isDefault?'<span style=\'color:var(--accent)\'>\u2713 \u0eb4\u10d6\u10e0.</span>':''}</div>
+                <div style="font-size:11px;color:var(--t2)">${c.expiry?'ვადა: '+sanitize(c.expiry):''} ${c.isDefault?'<span style=\'color:var(--accent)\'>\u2713 ძირითადი</span>':''}</div>
               </div>
             </div>
             <div style="display:flex;gap:6px;flex-shrink:0">
-              ${!c.isDefault?`<button class="btn bg bs" onclick="setDefaultCard('${c.id}')">\u10eb\u10d8\u10e0.</button>`:''}
+              ${!c.isDefault?`<button class="btn bg bs" onclick="setDefaultCard('${c.id}')">ძირ.</button>`:''}
               <button class="btn berr bs" onclick="deleteCard('${c.id}')">\uD83D\uDDD1</button>
             </div>
           </div>`).join('')}
       </div>`
     : `<div style="padding:18px;text-align:center;color:var(--t2);font-size:13px;background:var(--bg);border-radius:10px;margin-bottom:16px">
-        \uD83D\uDCB3 \u10DB\u10D8\u10D1\u10DB\u10E3\u10DA\u10D8 \u10D1\u10D0\u10E0\u10D0\u10D7\u10D8 \u10D0\u10E0 \u10D2\u10D0\u10E5\u10D5\u10E1
+        \uD83D\uDCB3 მიბმული ბარათი არ გაქვს
       </div>`;
 
   body.innerHTML = `
     <div style="padding:18px;background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:20px">
-      <div style="font-size:12px;color:var(--t2);margin-bottom:6px">\u10DB\u10D8\u10DB\u10D3\u10D8\u10DC\u10D0\u10E0\u10D4 \u10E2\u10D0\u10E0\u10D8\u10E4\u10D8</div>
+      <div style="font-size:12px;color:var(--t2);margin-bottom:6px">მიმდინარე ტარიფი</div>
       <div style="font-size:22px;font-weight:800;margin-bottom:6px">${getPlanBadge(cu2)}</div>
-      ${hasActivePlan?`<div style="font-size:12px;color:var(--t2)">\u03BD\u10D0\u10D3\u10D0: <strong style="color:var(--text)">${expDate}-\u10DB\u10D3\u10D4</strong></div>`:''}
-      ${plan==='start'&&cu2.trialExpiresAt?`<div style="font-size:12px;color:var(--t2)">\u10E2\u10E0\u10D8\u10D0\u10DA\u10D8: <strong style="color:var(--ok)">${new Date(cu2.trialExpiresAt).toLocaleDateString('ka-GE')}-\u10DB\u10D3\u10D4</strong></div>`:''}
+      ${hasActivePlan?`<div style="font-size:12px;color:var(--t2)">ვადა: <strong style="color:var(--text)">${expDate}-მდე</strong></div>`:''}
+      ${plan==='start'&&cu2.trialExpiresAt?`<div style="font-size:12px;color:var(--t2)">ტრიალი: <strong style="color:var(--ok)">${new Date(cu2.trialExpiresAt).toLocaleDateString('ka-GE')}-მდე</strong></div>`:''}
       ${hasActivePlan?`<div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span style="font-size:12px;color:var(--t2)">\u10D0\u10D5\u10E2\u10DD-\u10D2\u10D0\u10DC\u10D0\u10EE\u10DA\u10D4\u10D1\u10D0:</span>
-        <button class="btn bs ${autoRenew?'bok':'bg'}" onclick="toggleAutoRenew(${!autoRenew})">${autoRenew?'\u2705 \u10E9\u10D0\u10E0\u10D7.':'\u274C \u10D2\u10D0\u10DB.'}</button>
+        <span style="font-size:12px;color:var(--t2)">ავტო-განახლება:</span>
+        <button class="btn bs ${autoRenew?'bok':'bg'}" onclick="toggleAutoRenew(${!autoRenew})">${autoRenew?'\u2705 ჩართ.':'\u274C გამ.'}</button>
       </div>`:''}
     </div>
 
-    <div style="margin-bottom:8px;font-size:14px;font-weight:700">\uD83D\uDCB3 \u10DB\u10D8\u10D1\u10DB\u10E3\u10DA\u10D8 \u10D1\u10D0\u10E0\u10D0\u10D7\u10D4\u10D1\u10D8</div>
+    <div style="margin-bottom:8px;font-size:14px;font-weight:700">\uD83D\uDCB3 მიბმული ბარათები</div>
     ${cardsHTML}
 
     <button class="btn bo" style="width:100%;justify-content:center;margin-bottom:20px" onclick="toggleBindForm()">
-      \u2795 \u10D0\u10EE\u10D0\u10DA\u10D8 \u10D1\u10D0\u10E0\u10D0\u10D7\u10D8\u10E1 \u10DB\u10D8\u10D1\u10DB\u10D0
+      \u2795 ახალი ბარათის მიბმა
     </button>
 
     <div id="cardFormSection" style="display:none">
@@ -4021,29 +4364,29 @@ async function renderCardPage() {
       </div>
     </div>
 
-    <div style="margin-bottom:8px;font-size:14px;font-weight:700;color:var(--t2)">\u10E2\u10D0\u10E0\u10D8\u10E4\u10D8\u10E1 \u10E8\u10D4\u10eb\u10D4\u10DC\u10D0</div>
+    <div style="margin-bottom:8px;font-size:14px;font-weight:700;color:var(--t2)">ტარიფის შეძენა</div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div style="padding:16px;border-radius:12px;border:2px solid rgba(255,107,43,.4);background:rgba(255,107,43,.06)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-          <div><div style="font-weight:800;font-size:16px">\u26A1 Pro</div><div style="font-size:12px;color:var(--t2);margin-top:3px">\u10E3\u10DA\u10D8\u10DB. \u10E8\u10D4\u10D7. \u00B7 \u10D2\u10D0\u10DB. \u10DE\u10DD\u10D6. \u00B7 30 \u10D3\u10E6\u10D4</div></div>
+          <div><div style="font-weight:800;font-size:16px">⚡ Pro</div><div style="font-size:12px;color:var(--t2);margin-top:3px">ულიმიტო შეთავაზებების გაგზავნა · მაღალი პოზიცია ძიებაში · ავტომატური განახლება</div></div>
           <div style="font-size:20px;font-weight:800;color:var(--accent)">${prices.pro}₾<span style="font-size:12px;font-weight:400;color:var(--t2)">/თვე</span></div>
         </div>
         <button class="btn bp" style="width:100%;justify-content:center;padding:12px" onclick="doSubscribe('pro',event)">
-          \uD83D\uDCB3 Pro-\u10D6\u10D4 \u10D2\u10D0\u10D3\u10D0\u10E1\u10D5\u10DA\u10D0
+          \uD83D\uDCB3 Pro-ზე გადასვლა
         </button>
       </div>
       <div style="padding:16px;border-radius:12px;border:2px solid rgba(168,85,247,.4);background:rgba(168,85,247,.06)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
-          <div><div style="font-weight:800;font-size:16px">\uD83D\uDD1D TOP</div><div style="font-size:12px;color:var(--t2);margin-top:3px">TOP \u10D1\u10D4\u10ef\u10D8 \u00B7 \u10D0\u10D5\u10E2\u10DD VIP+ \u00B7 \u10E3\u10DA\u10D8\u10DB. \u10E8\u10D4\u10D7.</div></div>
+          <div><div style="font-weight:800;font-size:16px">🔝 TOP</div><div style="font-size:12px;color:var(--t2);margin-top:3px">სპეციალური TOP ბეჯი · ავტომატური VIP+ · ულიმიტო შეთავაზებები</div></div>
           <div style="font-size:20px;font-weight:800;color:var(--vipp)">${prices.top}₾<span style="font-size:12px;font-weight:400;color:var(--t2)">/თვე</span></div>
         </div>
         <button class="btn" style="width:100%;justify-content:center;padding:12px;background:linear-gradient(135deg,rgba(168,85,247,.25),rgba(99,102,241,.2));border:1px solid rgba(168,85,247,.5);color:var(--vipp)" onclick="doSubscribe('top',event)">
-          \uD83D\uDCB3 TOP-\u10D6\u10D4 \u10D2\u10D0\u10D3\u10D0\u10E1\u10D5\u10DA\u10D0
+          \uD83D\uDCB3 TOP-ზე გადასვლა
         </button>
       </div>
     </div>
-    <p style="font-size:11px;color:var(--t2);text-align:center;margin-top:16px">\uD83D\uDD10 TBC Pay \u00B7 SSL 256-bit \u00B7 \u10D0\u10D5\u10E2\u10DD-\u10D2\u10D0\u10DC\u10D0\u10EE\u10DA\u10D4\u10D1\u10D0 30 \u10D3\u10E6\u10D4\u10E8\u10D8</p>
-    <button class="btn bg" style="width:100%;justify-content:center;margin-top:12px" onclick="nav('dashboard')">\u2190 \u10D3\u10D0\u10E4\u10D0\u10D6\u10D4 \u10D3\u10D0\u10D1\u10E0\u10E3\u10DC\u10D4\u10D1\u10D0</button>
+    <p style="font-size:11px;color:var(--t2);text-align:center;margin-top:16px">\uD83D\uDD10 TBC Pay \u00B7 SSL 256-bit \u00B7 ავტო-განახლება 30 დღეში</p>
+    <button class="btn bg" style="width:100%;justify-content:center;margin-top:12px" onclick="nav('dashboard')">\u2190 დაფაზე დაბრუნება</button>
   `;
 }
 
@@ -4196,17 +4539,109 @@ function toast(title, msg, type = 'ok') {
   document.body.appendChild(t);
   setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(20px)'; t.style.transition = '.3s'; setTimeout(() => t.remove(), 300); }, 3500);
 }
+// ────────────────────────────────────────────────────────
+// LIGHTBOX — supports both single image (openLightbox) and
+// multi-item gallery (openLightboxGallery) with keyboard
+// arrow navigation + touch swipe.
+// ────────────────────────────────────────────────────────
+let lbGallery = [];   // [{type:'image'|'video', url:'...'}]
+let lbIndex   = 0;
+
 function openLightbox(type, url) {
-  document.getElementById('lbContent').innerHTML = type === 'video'
-    ? `<video src="${url}" controls autoplay style="max-width:90vw;max-height:88vh;border-radius:12px"></video>`
-    : `<img src="${url}" style="max-width:90vw;max-height:88vh;border-radius:12px;object-fit:contain">`;
+  lbGallery = [{ type, url }];
+  lbIndex = 0;
+  renderLightbox();
   document.getElementById('lightbox').classList.add('open');
   document.body.style.overflow = 'hidden';
+  bindLightboxKeys();
 }
+
+function openLightboxGallery(items, startIndex) {
+  lbGallery = items || [];
+  lbIndex = Math.max(0, Math.min(startIndex || 0, lbGallery.length - 1));
+  if (!lbGallery.length) return;
+  renderLightbox();
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  bindLightboxKeys();
+}
+
+function renderLightbox() {
+  const el = document.getElementById('lbContent');
+  if (!el || !lbGallery.length) return;
+  const item = lbGallery[lbIndex];
+  const hasMany = lbGallery.length > 1;
+
+  const mediaHtml = item.type === 'video'
+    ? `<video src="${sanitize(item.url)}" controls autoplay style="max-width:90vw;max-height:88vh;border-radius:12px"></video>`
+    : `<img src="${sanitize(item.url)}" style="max-width:90vw;max-height:88vh;border-radius:12px;object-fit:contain">`;
+
+  const navBtns = hasMany ? `
+    <button onclick="event.stopPropagation();lbPrev()" aria-label="წინა"
+      style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2">‹</button>
+    <button onclick="event.stopPropagation();lbNext()" aria-label="შემდეგი"
+      style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2">›</button>
+    <div style="position:absolute;top:16px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;z-index:2">${lbIndex + 1} / ${lbGallery.length}</div>
+  ` : '';
+
+  el.innerHTML = `
+    <div style="position:relative;display:inline-block" onclick="event.stopPropagation()">
+      ${mediaHtml}
+      ${navBtns}
+    </div>`;
+}
+
+function lbPrev() {
+  if (!lbGallery.length) return;
+  lbIndex = (lbIndex - 1 + lbGallery.length) % lbGallery.length;
+  renderLightbox();
+}
+function lbNext() {
+  if (!lbGallery.length) return;
+  lbIndex = (lbIndex + 1) % lbGallery.length;
+  renderLightbox();
+}
+
+function bindLightboxKeys() {
+  if (window._lbKeysBound) return;
+  window._lbKeysBound = true;
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    const lb = document.getElementById('lightbox');
+    if (!lb || !lb.classList.contains('open')) return;
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); lbPrev(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); lbNext(); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeLightbox(); }
+  });
+
+  // Touch swipe
+  let touchStartX = 0, touchStartY = 0;
+  const lb = document.getElementById('lightbox');
+  if (lb) {
+    lb.addEventListener('touchstart', (e) => {
+      if (!e.touches[0]) return;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    lb.addEventListener('touchend', (e) => {
+      if (!e.changedTouches[0]) return;
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      // Only horizontal swipes > 50px
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0) lbPrev(); else lbNext();
+      }
+    });
+  }
+}
+
 function closeLightbox() {
   document.getElementById('lightbox').classList.remove('open');
   document.getElementById('lbContent').innerHTML = '';
   document.body.style.overflow = '';
+  lbGallery = [];
+  lbIndex = 0;
 }
 function doSearch() {
   const q = document.getElementById('heroSearch').value.toLowerCase().trim();
@@ -4355,7 +4790,7 @@ function initCats() {
   // Hero pills — show only first 8 categories on home page + "more" link to handymen
   const hp = document.getElementById('heroPills');
   if (hp) {
-    const shown = CATS_DATA.slice(0, 8).map(g =>
+    const shown = CATS_DATA.slice(0, 9).map(g =>
       `<div class="pill" onclick="filterMainCat('${g.id}')">${g.icon} ${g.name}</div>`
     ).join('');
     const more = `<div class="pill pill-more" onclick="nav('handymen')" style="background:rgba(255,107,43,.12);border-color:var(--accent);color:var(--accent)">... სრულად →</div>`;

@@ -79,22 +79,39 @@ async function sendExpoPushToStaff(prisma, payload) {
     });
     if (!records.length) return;
 
-    const messages = records
-      .filter(r => Expo.isExpoPushToken(r.token))
-      .map(r => ({
-        to: r.token,
-        sound: 'default',
-        title: payload.title,
-        body:  payload.body,
-        data:  payload.data ?? {},
-        badge: 1,
-        channelId: 'default',
-      }));
+    // Keep records and messages in sync so we can map ticket index → token
+    const valid = records.filter(r => Expo.isExpoPushToken(r.token));
+    const messages = valid.map(r => ({
+      to: r.token,
+      sound: 'default',
+      title: payload.title,
+      body:  payload.body,
+      data:  payload.data ?? {},
+      badge: 1,
+      channelId: 'default',
+    }));
 
     if (!messages.length) return;
+
+    // ✅ DS#8: collect expired tokens and purge them
+    const expiredTokens = [];
     const chunks = expo.chunkPushNotifications(messages);
+    let cursor = 0;
     for (const chunk of chunks) {
-      await expo.sendPushNotificationsAsync(chunk);
+      const tickets = await expo.sendPushNotificationsAsync(chunk);
+      for (let i = 0; i < tickets.length; i++) {
+        const ticket = tickets[i];
+        if (ticket.status === 'error' && ticket.details?.error === 'DeviceNotRegistered') {
+          expiredTokens.push(valid[cursor + i]?.token);
+        }
+      }
+      cursor += chunk.length;
+    }
+    if (expiredTokens.length) {
+      await prisma.expoPushToken.deleteMany({
+        where: { token: { in: expiredTokens.filter(Boolean) } },
+      });
+      console.log(`[EXPO PUSH] Staff: removed ${expiredTokens.length} expired token(s)`);
     }
   } catch (err) {
     console.error('[EXPO PUSH] sendExpoPushToStaff error:', err.message);

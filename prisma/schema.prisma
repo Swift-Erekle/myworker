@@ -68,9 +68,13 @@ model User {
   pushSubscriptions    PushSubscription[]   // ✅ Web push
   expoPushTokens       ExpoPushToken[]      // ✅ Mobile push
   favoriteRequests     FavoriteRequest[]    // ✅ Bookmarked requests
+  notifications        Notification[]       // ✅ In-app bell notifications
 
   @@index([type])
   @@index([email])
+  // ✅ DS#6: cron performance — plan/vip expiry checks
+  @@index([plan, planExpiresAt])
+  @@index([vipType, vipExpiresAt])
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -112,7 +116,7 @@ model SavedCard {
   last4     String
   brand     String   @default("Card")
   expiry    String   @default("")
-  token     String
+  token     String   @unique    // ✅ DS#9: unique to prevent race-duplicates
   isDefault Boolean  @default(false)
   createdAt DateTime @default(now())
 
@@ -156,6 +160,8 @@ model Request {
   @@index([userId])
   @@index([status])
   @@index([category])
+  // ✅ DS#6: cron — find stale open/pending requests by date
+  @@index([status, createdAt])
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -178,6 +184,8 @@ model Offer {
   @@unique([requestId, handymanId])
   @@index([handymanId])
   @@index([requestId])
+  // ✅ DS#11: dashboard — get my offers sorted by date/status
+  @@index([handymanId, status, createdAt])
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -217,6 +225,8 @@ model Message {
 
   @@index([chatId])
   @@index([fromId])
+  // ✅ DS#11: chat pagination — messages in chat by date
+  @@index([chatId, createdAt])
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -234,6 +244,25 @@ model Review {
 
   @@unique([reviewerId, handymanId])
   @@index([handymanId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Notification — in-app bell notifications (separate from push)
+// ─────────────────────────────────────────────────────────────
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String                          // who receives it
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String                          // 'new_offer', 'offer_accepted', 'offer_rejected', 'new_message', 'request_update', etc.
+  title     String
+  body      String?
+  // Optional link target — e.g. chatId or requestId
+  link      String?                         // e.g. '?chat=xxx' or '?req=yyy'
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -296,6 +325,8 @@ model VipPayment {
 
   @@index([userId])
   @@index([status])
+  // ✅ DS#11: payment history by user + status
+  @@index([userId, status])
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -319,4 +350,6 @@ model SubscriptionPayment {
 
   @@index([userId])
   @@index([status])
+  // ✅ DS#11: payment history by user + status
+  @@index([userId, status])
 }

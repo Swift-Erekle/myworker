@@ -10,6 +10,7 @@ const prisma  = require('../utils/prisma');
 const { requireAuth } = require('../middleware/auth');
 const { sendPushToUser } = require('../utils/webPush');
 const { sendExpoPushToUser } = require('../utils/expoPush');
+const { createNotification } = require('./notifications');
 
 const router = express.Router();
 
@@ -27,6 +28,15 @@ router.post('/', requireAuth, async (req, res) => {
 
     // ── Plan limit check ──────────────────────────────────────
     const plan = req.user.plan || 'start';
+
+    // ✅ DS#7: extra safety — reject if subscriptionStatus explicitly 'expired'
+    if (req.user.subscriptionStatus === 'expired' && plan !== 'start') {
+      return res.status(403).json({
+        error: 'გამოწერა ვადაგასულია. გაახლე ტარიფი.',
+        upgradeRequired: true,
+        planExpired: true,
+      });
+    }
 
     if (plan === 'start') {
       // FIX 1: Check if free trial has expired (null = never set = expired)
@@ -116,6 +126,17 @@ router.post('/', requireAuth, async (req, res) => {
       data:  { requestId, type: 'new_offer' },
     }).catch(() => {});
 
+    // ── In-app bell notification ──────────────────────────────
+    createNotification({
+      prisma,
+      io: req.app.get('io'),
+      userId: request.userId,
+      type:   'new_offer',
+      title:  `${req.user.emoji || '🔧'} ახალი შეთავაზება`,
+      body:   `${req.user.name} ${req.user.surname || ''} — ₾${parseInt(price)}`,
+      link:   `?req=${requestId}`,
+    }).catch(() => {});
+
     res.status(201).json(offer);
   } catch (err) {
     console.error('[OFFERS] create error:', err.message);
@@ -203,6 +224,56 @@ router.patch('/:id', requireAuth, async (req, res) => {
   }
 });
 
+// ── POST /api/offers/:id/reject ───────────────────────────────
+// Request owner rejects a pending offer. Also notifies the handyman.
+router.post('/:id/reject', requireAuth, async (req, res) => {
+  try {
+    if (req.user.type !== 'user') {
+      return res.status(403).json({ error: 'მხოლოდ მომხმარებელს შეუძლია შეთავაზების უარყოფა' });
+    }
+
+    const offer = await prisma.offer.findUnique({
+      where: { id: req.params.id },
+      include: { request: true },
+    });
+    if (!offer) return res.status(404).json({ error: 'შეთავაზება ვერ მოიძებნა' });
+    if (offer.request.userId !== req.user.id) return res.status(403).json({ error: 'წვდომა აკრძალულია' });
+    if (offer.status !== 'pending') return res.status(400).json({ error: 'შეთავაზება უკვე დამუშავებულია' });
+
+    const updated = await prisma.offer.update({
+      where: { id: offer.id },
+      data:  { status: 'rejected' },
+    });
+    res.json({ offer: updated });
+
+    // Notify the handyman their offer was rejected
+    sendPushToUser(prisma, offer.handymanId, {
+      title: 'შეთავაზება არ იქნა მიღებული',
+      body:  `"${offer.request.title}" — მომხმარებელმა უარი თქვა`,
+      tag:   'offer-rejected-' + offer.id,
+    }).catch(() => {});
+    sendExpoPushToUser(prisma, offer.handymanId, {
+      title: 'შეთავაზება არ იქნა მიღებული',
+      body:  `"${offer.request.title}"`,
+      data:  { type: 'offer_rejected', offerId: offer.id },
+      channelId: 'default',
+    }).catch(() => {});
+
+    // ── In-app bell notification ──────────────────────────────
+    createNotification({
+      prisma,
+      io: req.app.get('io'),
+      userId: offer.handymanId,
+      type:   'offer_rejected',
+      title:  'შეთავაზება არ იქნა მიღებული',
+      body:   `"${offer.request.title}"`,
+    }).catch(() => {});
+  } catch (err) {
+    console.error('[OFFERS] reject error:', err.message);
+    res.status(500).json({ error: 'სერვერის შეცდომა' });
+  }
+});
+
 // ── POST /api/offers/:id/accept ───────────────────────────────
 router.post('/:id/accept', requireAuth, async (req, res) => {
   try {
@@ -256,6 +327,17 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
       body:  `"${offer.request.title}"`,
       data:  { chatId: chat.id, type: 'offer_accepted' },
       channelId: 'default',
+    }).catch(() => {});
+
+    // ── In-app bell notification ──────────────────────────────
+    createNotification({
+      prisma,
+      io: req.app.get('io'),
+      userId: offer.handymanId,
+      type:   'offer_accepted',
+      title:  '🎉 შეთავაზება მიღებულია!',
+      body:   `"${offer.request.title}"`,
+      link:   `?chat=${chat.id}`,
     }).catch(() => {});
   } catch (err) {
     console.error('[OFFERS] accept error:', err.message);

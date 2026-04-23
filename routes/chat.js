@@ -6,6 +6,9 @@ const express = require('express');
 const prisma = require('../utils/prisma');
 const { requireAuth } = require('../middleware/auth');
 const { upload, handleCloudinaryUpload } = require('../middleware/upload');
+const { sendPushToUser } = require('../utils/webPush');
+const { sendExpoPushToUser } = require('../utils/expoPush');
+const { createNotification } = require('./notifications');
 
 const router = express.Router();
 
@@ -123,6 +126,33 @@ router.post('/:id/messages', requireAuth, async (req, res) => {
     const io = req.app.get('io');
     if (io) io.to(`chat:${req.params.id}`).emit('newMessage', msg);
 
+    // ── DS#5: also send push to recipient (REST fallback) ────────
+    const recipientId = chat.userId === req.user.id ? chat.handymanId : chat.userId;
+    const senderName  = `${req.user.name || ''} ${req.user.surname || ''}`.trim();
+    const preview     = type === 'text' ? String(content).substring(0, 80)
+                      : type === 'image' ? '📷 ფოტო'
+                      : type === 'video' ? '📹 ვიდეო'
+                      : type === 'voice' ? '🎤 ხმოვანი' : 'ფაილი';
+    sendPushToUser(prisma, recipientId, {
+      title: '💬 ' + (senderName || 'ახალი შეტყობინება'),
+      body:  preview,
+      tag:   'chat-' + req.params.id,
+      url:   '/?chat=' + req.params.id,
+    }).catch(() => {});
+    sendExpoPushToUser(prisma, recipientId, {
+      title: '💬 ' + (senderName || 'ახალი შეტყობინება'),
+      body:  preview,
+      data:  { chatId: req.params.id, type: 'new_message' },
+      channelId: 'default',
+    }).catch(() => {});
+    createNotification({
+      prisma, io, userId: recipientId,
+      type:  'new_message',
+      title: '💬 ახალი შეტყობინება',
+      body:  `${senderName}: ${preview}`,
+      link:  `?chat=${req.params.id}`,
+    }).catch(() => {});
+
     res.status(201).json(msg);
   } catch (err) {
     res.status(500).json({ error: 'სერვერის შეცდომა' });
@@ -161,6 +191,32 @@ router.post(
 
       const io = req.app.get('io');
       if (io) io.to(`chat:${req.params.id}`).emit('newMessage', msg);
+
+      // ── DS#5: push for file uploads too ──────────────
+      const recipientId = chat.userId === req.user.id ? chat.handymanId : chat.userId;
+      const senderName  = `${req.user.name || ''} ${req.user.surname || ''}`.trim();
+      const preview     = file.type === 'image' ? '📷 ფოტო'
+                        : file.type === 'video' ? '📹 ვიდეო'
+                        : file.type === 'voice' ? '🎤 ხმოვანი' : 'ფაილი';
+      sendPushToUser(prisma, recipientId, {
+        title: '💬 ' + (senderName || 'ახალი შეტყობინება'),
+        body:  preview,
+        tag:   'chat-' + req.params.id,
+        url:   '/?chat=' + req.params.id,
+      }).catch(() => {});
+      sendExpoPushToUser(prisma, recipientId, {
+        title: '💬 ' + (senderName || 'ახალი შეტყობინება'),
+        body:  preview,
+        data:  { chatId: req.params.id, type: 'new_message' },
+        channelId: 'default',
+      }).catch(() => {});
+      createNotification({
+        prisma, io, userId: recipientId,
+        type:  'new_message',
+        title: '💬 ახალი შეტყობინება',
+        body:  `${senderName}: ${preview}`,
+        link:  `?chat=${req.params.id}`,
+      }).catch(() => {});
 
       res.status(201).json(msg);
     } catch (err) {

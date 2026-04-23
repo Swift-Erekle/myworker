@@ -20,15 +20,21 @@ const adminRoutes   = require('./routes/admin');
 const paymentRoutes = require('./routes/payment');
 const ariaRoutes    = require('./routes/aria');
 const pushRoutes    = require('./routes/push');
+const notificationRoutes = require('./routes/notifications');
 
 const app    = express();
 app.set('trust proxy', 1);
 const server = http.createServer(app);
 
+// ── CORS configuration ────────────────────────────────────────
+// In production, default to the primary domain. '*' is only allowed in dev.
+const corsOrigin = process.env.CORS_ORIGIN
+  || (process.env.NODE_ENV === 'production' ? 'https://xelosani.ge' : '*');
+
 // ── Socket.io ─────────────────────────────────────────────────
 const io = new Server(server, {
   cors: {
-    origin:  process.env.CORS_ORIGIN || '*',
+    origin:  corsOrigin,
     methods: ['GET', 'POST'],
   },
 });
@@ -38,7 +44,7 @@ app.set('io', io);
 // ── Middleware ─────────────────────────────────────────────────
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({
-  origin:       process.env.CORS_ORIGIN || '*',
+  origin:       corsOrigin,
   methods:      ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -55,6 +61,7 @@ app.use('/api/admin',    adminRoutes);
 app.use('/api/payment',  paymentRoutes);
 app.use('/api/aria',     ariaRoutes);
 app.use('/api/push',     pushRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // ── Health ─────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ ok: true, env: process.env.NODE_ENV }));

@@ -20,11 +20,11 @@ const router = express.Router();
 // ── Pricing tables ─────────────────────────────────────────────
 const VIP_PRICES = {
   handyman: { vip: { 1: 200, 5: 1000 }, vipp: { 1: 400, 5: 1800 } },
-  company:  { vip: { 1: 1000, 5: 4000 }, vipp: { 1: 1500, 5: 6000 } },
+  company:  { vip: { 1: 200, 5: 1000 }, vipp: { 1: 400, 5: 1800 } },
 };
 const PLAN_PRICES = {
   handyman: { pro: 2900, top: 6900 },
-  company:  { pro: 9900, top: 14900 },
+  company:  { pro: 9900, top: 15900 },
 };
 
 const isTbcConfigured = () =>
@@ -609,17 +609,17 @@ function detectBrand(cardNumber) {
 }
 
 async function saveCardFromCallback(userId, recurrentPaymentId, cardDetails) {
-  // Don't save duplicate tokens
-  const exists = await prisma.savedCard.findFirst({ where: { token: recurrentPaymentId } });
-  if (exists) return;
-
+  if (!recurrentPaymentId) return;
   const last4 = cardDetails?.cardNumber?.slice(-4) || '****';
   const brand = detectBrand(cardDetails?.cardNumber || '');
   const expiry = cardDetails?.expiryDate || '';
   const existing = await prisma.savedCard.count({ where: { userId } });
 
-  await prisma.savedCard.create({
-    data: { userId, last4, brand, expiry, token: recurrentPaymentId, isDefault: existing === 0 },
+  // ✅ DS#9: upsert is atomic — prevents race-condition duplicates if callback fires twice
+  await prisma.savedCard.upsert({
+    where:  { token: recurrentPaymentId },
+    update: {},                                            // no-op if already exists
+    create: { userId, last4, brand, expiry, token: recurrentPaymentId, isDefault: existing === 0 },
   });
 }
 

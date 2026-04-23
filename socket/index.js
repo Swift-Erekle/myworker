@@ -5,12 +5,20 @@ const { sendPushToUser, sendPushToStaff } = require('../utils/webPush');
 const { sendExpoPushToUser, sendExpoPushToStaff } = require('../utils/expoPush');
 
 function setupSocket(io) {
-  // Authenticate socket connection via JWT
-  io.use((socket, next) => {
+  // Authenticate socket connection via JWT + check blocked status
+  io.use(async (socket, next) => {
     const token = socket.handshake.auth?.token;
     if (!token) return next(new Error('No token'));
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      // ✅ DS#3: reject blocked users at connection
+      const user = await prisma.user.findUnique({
+        where:  { id: decoded.userId },
+        select: { id: true, blocked: true },
+      });
+      if (!user) return next(new Error('User not found'));
+      if (user.blocked) return next(new Error('Account blocked'));
+
       socket.userId = decoded.userId;
       next();
     } catch (err) {
