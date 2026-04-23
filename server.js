@@ -329,11 +329,28 @@ app.use((err, req, res, next) => {
     }
   });
 
+  // ── 6. Chat cleanup — daily at 04:00 ────────────────────────
+  // Delete chats with no activity for 14+ days to save DB space.
+  // Cascade will delete associated messages too.
+  cron.schedule('0 4 * * *', async () => {
+    console.log('[CRON] Running chat cleanup (14+ days inactive)...');
+    const fourteenDaysAgo = new Date(Date.now() - 14 * 86400000);
+    try {
+      const deleted = await prisma.chat.deleteMany({
+        where: { updatedAt: { lt: fourteenDaysAgo } },
+      });
+      if (deleted.count > 0) console.log(`[CRON] ${deleted.count} inactive chat(s) deleted`);
+    } catch (err) {
+      console.error('[CRON] Chat cleanup error:', err.message);
+    }
+  });
+
   console.log('[CRON] All schedulers started:');
   console.log('  06:00 daily — plan expiry checks');
   console.log('  08:00 daily — subscription auto-renewal');
   console.log('  00:05 daily — TOP plan VIP+ refresh');
   console.log('  03:00 daily — request lifecycle cleanup');
+  console.log('  04:00 daily — chat cleanup (14+ days inactive)');
   console.log('  07:00 Sunday — weekly stats');
 })();
 

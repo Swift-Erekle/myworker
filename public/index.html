@@ -1458,6 +1458,62 @@
       gap: 14px
     }
 
+    /* "ვერ შევთანხმდით" button — inline on desktop, stacked 2-liner on mobile */
+    .chat-disagree-btn {
+      flex-shrink: 0;
+      background: rgba(231,76,60,.12);
+      border: 1px solid var(--err, #e74c3c);
+      color: var(--err, #e74c3c);
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      line-height: 1.2;
+      transition: .15s;
+      margin-left: auto;
+    }
+    .chat-disagree-btn:hover { background: rgba(231,76,60,.22) }
+    .chat-disagree-full { display: inline }
+    .chat-disagree-short { display: none }
+    @media (max-width: 520px) {
+      .chat-disagree-btn { padding: 6px 10px; font-size: 11px; text-align: center }
+      .chat-disagree-full { display: none }
+      .chat-disagree-short { display: inline }
+    }
+
+    /* Admin: clickable stat cards */
+    .adm-stat-clickable { cursor: pointer; transition: .15s; position: relative }
+    .adm-stat-clickable:hover { background: rgba(255,107,43,.1); border-color: var(--accent); transform: translateY(-1px) }
+    .adm-stat-clickable::after { content: '▸'; position: absolute; top: 4px; right: 6px; color: var(--accent); font-size: 11px; opacity: .6 }
+
+    /* "ფასი შეთანხმებით" checkbox — tight on desktop, centered on mobile */
+    .negotiable-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--t2);
+      width: fit-content;
+    }
+    .negotiable-label input[type="checkbox"] {
+      accent-color: var(--accent);
+      cursor: pointer;
+      margin: 0;
+      width: 16px;
+      height: 16px;
+    }
+    .negotiable-label span { line-height: 1 }
+    @media (max-width: 600px) {
+      .negotiable-label {
+        justify-content: center;
+        width: 100%;
+        gap: 6px;
+      }
+    }
+
     .chat-body {
       flex: 1;
       overflow-y: auto;
@@ -2794,7 +2850,7 @@
           მომსახურების წესები</a>
         <a href="/privacy.html" style="color:var(--t2);text-decoration:none;font-size:12px;">🔒 კონფიდენციალურობა</a>
       </div>
-      <div style="font-size:12px;color:var(--t2);">© 2025 xelosani.ge</div>
+      <div style="font-size:12px;color:var(--t2);">© 2026 xelosani.ge</div>
     </footer>
   </div>
 
@@ -3037,10 +3093,15 @@
     <div class="chat-wrap">
       <div class="chat-header">
         <button class="btn bg bs" onclick="nav('dashboard')">← უკან</button>
-        <div style="cursor:pointer" id="chatHeaderInfo" onclick="openChatOtherProfile()">
-          <div style="font-weight:700" id="chatTitle">ჩათი</div>
-          <div style="font-size:11px;color:var(--t2)" id="chatSub"></div>
+        <div style="cursor:pointer;flex:1;min-width:0" id="chatHeaderInfo" onclick="openChatOtherProfile()">
+          <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="chatTitle">ჩათი</div>
+          <div style="font-size:11px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="chatSub"></div>
         </div>
+        <button class="btn bs chat-disagree-btn" id="chatDisagreeBtn" onclick="disagreeFromChat()" style="display:none"
+          title="ვერ შევთანხმდით">
+          <span class="chat-disagree-full">ვერ შევთანხმდით</span>
+          <span class="chat-disagree-short">ვერ<br>შევთანხმდით</span>
+        </button>
       </div>
       <div class="chat-body" id="chatBody"></div>
       <div class="chat-footer">
@@ -3166,10 +3227,8 @@
         <div class="fg">
           <label>ბიუჯეტი (₾)</label>
           <input id="qBudget" type="number" placeholder="200">
-          <label
-            style="display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer;font-size:13px;color:var(--t2)">
-            <input type="checkbox" id="qBudgetNegotiable" onchange="toggleNegotiableBudget()"
-              style="accent-color:var(--accent);cursor:pointer">
+          <label class="negotiable-label">
+            <input type="checkbox" id="qBudgetNegotiable" onchange="toggleNegotiableBudget()">
             <span>ფასი შეთანხმებით</span>
           </label>
         </div>
@@ -3515,6 +3574,33 @@
       <button class="mc" onclick="closeMo('moAdminUserDetail')">✕</button>
       <h2>👤 ანგარიშის დეტალები</h2>
       <div id="adminUserDetailBody"></div>
+    </div>
+  </div>
+
+  <!-- ADMIN USER REQUESTS LIST (side panel) -->
+  <div class="mo" id="moAdminUserRequests">
+    <div class="modal wide" style="max-height:88vh;overflow-y:auto">
+      <button class="mc" onclick="closeMo('moAdminUserRequests')">✕</button>
+      <h2 id="admReqListTitle">📋 მოთხოვნები</h2>
+      <div id="admReqListBody"></div>
+    </div>
+  </div>
+
+  <!-- ADMIN USER OFFERS LIST (side panel) -->
+  <div class="mo" id="moAdminUserOffers">
+    <div class="modal wide" style="max-height:88vh;overflow-y:auto">
+      <button class="mc" onclick="closeMo('moAdminUserOffers')">✕</button>
+      <h2 id="admOfferListTitle">💬 შეთავაზებები</h2>
+      <div id="admOfferListBody"></div>
+    </div>
+  </div>
+
+  <!-- ADMIN SINGLE REQUEST DETAIL (shown when admin clicks a request) -->
+  <div class="mo" id="moAdminReqDetail">
+    <div class="modal wide" style="max-height:88vh;overflow-y:auto">
+      <button class="mc" onclick="closeMo('moAdminReqDetail')">✕</button>
+      <h2 id="admReqDetailTitle">📋 მოთხოვნის დეტალები</h2>
+      <div id="admReqDetailBody"></div>
     </div>
   </div>
 
@@ -5877,8 +5963,20 @@
         const other = cu.id === chat.userId ? chat.handyman : chat.user;
         // Remember the "other" user's id so the header is clickable → profile
         window._chatOtherUserId = other?.id || null;
+        // Remember the offer id for disagree action
+        window._chatOfferId     = chat.offerId || null;
         document.getElementById('chatTitle').textContent = `${other?.name || ''} ${other?.surname || ''}`;
         document.getElementById('chatSub').textContent = chat.offer?.request?.title || '';
+
+        // Show "ვერ შევთანხმდით" button only when:
+        //  - current user is the request owner (role 'user'), AND
+        //  - the associated offer is still 'accepted' (not already disagreed)
+        const disagreeBtn = document.getElementById('chatDisagreeBtn');
+        if (disagreeBtn) {
+          const canDisagree = cu.id === chat.userId && chat.offer?.status === 'accepted';
+          disagreeBtn.style.display = canDisagree ? '' : 'none';
+        }
+
         renderMessages(chat.messages || []);
         if (!socket || !socket.connected) {
           clearInterval(chatPollTimer);
@@ -5892,6 +5990,21 @@
           }, 3000);
         }
       } catch (e) { toast('⚠️ ჩათი ვერ ჩაიტვირთა', '', 'err'); }
+    }
+
+    async function disagreeFromChat() {
+      if (!window._chatOfferId) return;
+      if (!confirm('ნამდვილად გინდა უარი თქვა ამ ხელოსანზე? შეძლებ სხვების შეთავაზებების გადახედვას.')) return;
+      try {
+        await api('/offers/' + window._chatOfferId + '/disagree', { method: 'POST' });
+        toast('✅ უარი თქვი — სხვა შეთავაზებები ისევ ხელმისაწვდომია', '', 'ok');
+        const btn = document.getElementById('chatDisagreeBtn');
+        if (btn) btn.style.display = 'none';
+        // Reload so the system message appears
+        await loadChatMessages();
+      } catch (e) {
+        toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err');
+      }
     }
     function renderMessages(msgs) {
       const body = document.getElementById('chatBody'); if (!body) return;
@@ -6300,6 +6413,8 @@
     let _adminUsers = [];
     let _adminTypeFilter = 'all';
     let _adminPlanFilter = 'all';
+    let _adminBlockedFilter = 'all';   // 'all' | 'blocked' | 'active'
+    let _adminSearch = '';
 
     function _planBadge(u) {
       const now = new Date();
@@ -6329,9 +6444,20 @@
 
     function _adminApplyFilters() {
       const now = new Date();
+      const search = (_adminSearch || '').toLowerCase().trim();
       return _adminUsers.filter(u => {
+        // ✅ Search by name/surname/email/phone
+        if (search) {
+          const hay = (
+            (u.name || '') + ' ' + (u.surname || '') + ' ' + (u.email || '') + ' ' + (u.phone || '')
+          ).toLowerCase();
+          if (!hay.includes(search)) return false;
+        }
         // Type filter
         if (_adminTypeFilter !== 'all' && u.type !== _adminTypeFilter) return false;
+        // ✅ Blocked filter
+        if (_adminBlockedFilter === 'blocked' && !u.blocked)   return false;
+        if (_adminBlockedFilter === 'active'  && u.blocked)    return false;
         // Plan filter
         if (_adminPlanFilter === 'pro') {
           return u.plan === 'pro' && u.planExpiresAt && new Date(u.planExpiresAt) > now;
@@ -6360,7 +6486,12 @@
       const planLabels = { all: 'ყველა ტარიფი', pro: '⚡ Pro', top: '🔝 TOP', vip: '⭐ VIP', vipp: '💜 VIP+', paid: '💳 გადახდილი' };
 
       body.innerHTML = `
-    <!-- Filter bar -->
+    <!-- Search + filter bar -->
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center">
+      <input type="text" placeholder="🔍 ძებნა (სახელი, ელ-ფოსტა, ტელეფონი)"
+        value="${sanitize(_adminSearch || '')}" oninput="_adminSearch=this.value;_renderAccountsTable(document.getElementById('adminBody'))"
+        style="flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:13px">
+    </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center">
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         ${['all', 'user', 'handyman', 'company'].map(t =>
@@ -6376,6 +6507,15 @@
             onclick="_adminPlanFilter='${p}';_renderAccountsTable(document.getElementById('adminBody'))"
           >${planLabels[p]}</button>`
       ).join('')}
+      </div>
+      <div style="width:1px;height:24px;background:var(--border);margin:0 4px"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        <button class="btn bs${_adminBlockedFilter === 'all'     ? ' bp' : ' bg'}" style="font-size:11px"
+          onclick="_adminBlockedFilter='all';_renderAccountsTable(document.getElementById('adminBody'))">ყველა</button>
+        <button class="btn bs${_adminBlockedFilter === 'active'  ? ' bp' : ' bg'}" style="font-size:11px"
+          onclick="_adminBlockedFilter='active';_renderAccountsTable(document.getElementById('adminBody'))">✓ აქტიური</button>
+        <button class="btn bs${_adminBlockedFilter === 'blocked' ? ' bp' : ' bg'}" style="font-size:11px"
+          onclick="_adminBlockedFilter='blocked';_renderAccountsTable(document.getElementById('adminBody'))">🚫 დაბლოკილი</button>
       </div>
     </div>
     <!-- Count -->
@@ -6489,6 +6629,150 @@
       } catch (e) { body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>'; }
     }
 
+    // ── ADMIN: user's requests/offers side panel ─────────────
+    async function openAdminUserRequests(uid, userName) {
+      document.getElementById('admReqListTitle').textContent = '📋 მოთხოვნები — ' + userName;
+      const body = document.getElementById('admReqListBody');
+      body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t2)">⏳...</div>';
+      openMo('moAdminUserRequests');
+      try {
+        const requests = await api('/admin/users/' + uid + '/requests');
+        if (!requests.length) {
+          body.innerHTML = '<div class="empty"><div class="ei">📋</div><h3>მოთხოვნა ჯერ არ არის</h3></div>';
+          return;
+        }
+        body.innerHTML = requests.map(r => {
+          const offerCount = r._count?.offers || 0;
+          const statusLabel = typeof requestStatusLabel === 'function' ? requestStatusLabel(r.status) : r.status;
+          const statusCls   = typeof requestStatusClass === 'function' ? requestStatusClass(r.status) : 'sd';
+          return `<div class="rcard" style="cursor:pointer" onclick="openAdminRequestDetail('${sanitize(r.id)}')">
+            <div class="rhead">
+              <div class="rtitle">${sanitize(r.title || '')}</div>
+              <span class="status ${statusCls}">${statusLabel}</span>
+            </div>
+            <div class="rmeta">
+              <span class="tag">${sanitize(r.category || '')}</span>
+              <span class="tag">📍 ${sanitize(r.city || '')}</span>
+              <span class="tag">💬 ${offerCount}</span>
+              <span class="tag">📅 ${new Date(r.createdAt).toLocaleDateString('ka-GE')}</span>
+            </div>
+            ${r.desc ? `<div style="color:var(--t2);font-size:13px;margin-top:8px">${sanitize(r.desc.substring(0, 120))}${r.desc.length > 120 ? '...' : ''}</div>` : ''}
+          </div>`;
+        }).join('');
+      } catch (e) {
+        body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>';
+      }
+    }
+
+    async function openAdminUserOffers(uid, userName) {
+      document.getElementById('admOfferListTitle').textContent = '💬 შეთავაზებები — ' + userName;
+      const body = document.getElementById('admOfferListBody');
+      body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t2)">⏳...</div>';
+      openMo('moAdminUserOffers');
+      try {
+        const offers = await api('/admin/users/' + uid + '/offers');
+        if (!offers.length) {
+          body.innerHTML = '<div class="empty"><div class="ei">💬</div><h3>შეთავაზება ჯერ არ არის</h3></div>';
+          return;
+        }
+        body.innerHTML = offers.map(o => {
+          const reqTitle = o.request?.title || 'მოთხოვნა';
+          const reqOwner = o.request?.user ? `${o.request.user.name || ''} ${o.request.user.surname || ''}`.trim() : '';
+          const statusCls = o.status === 'pending' ? 'sn' : o.status === 'accepted' ? 'sa' : 'sd';
+          const statusLabel = o.status === 'pending' ? 'მოლოდინში' : o.status === 'accepted' ? 'მიღებული' : 'უარყოფილი';
+          return `<div class="oi" style="cursor:pointer" onclick="openAdminRequestDetail('${sanitize(o.request?.id || '')}')">
+            <div style="flex:1">
+              <div style="font-weight:700">${sanitize(reqTitle)}</div>
+              ${reqOwner ? `<div style="font-size:12px;color:var(--t2)">👤 ${sanitize(reqOwner)}</div>` : ''}
+              <div style="font-size:11px;color:var(--t2);margin-top:4px">📅 ${new Date(o.createdAt).toLocaleDateString('ka-GE')}</div>
+              ${o.comment ? `<div style="font-size:12px;color:var(--t2);margin-top:4px">${sanitize(o.comment.substring(0, 100))}</div>` : ''}
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div class="oprice">₾${o.price}</div>
+              <span class="status ${statusCls}">${statusLabel}</span>
+            </div>
+          </div>`;
+        }).join('');
+      } catch (e) {
+        body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>';
+      }
+    }
+
+    async function openAdminRequestDetail(reqId) {
+      if (!reqId) return;
+      document.getElementById('admReqDetailTitle').textContent = '📋 მოთხოვნის დეტალები';
+      const body = document.getElementById('admReqDetailBody');
+      body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t2)">⏳...</div>';
+      openMo('moAdminReqDetail');
+      try {
+        const r = await api('/requests/' + reqId);
+        const media = Array.isArray(r.media) ? r.media : [];
+        const offers = r.offers || [];
+        const statusLabel = typeof requestStatusLabel === 'function' ? requestStatusLabel(r.status) : r.status;
+        const statusCls   = typeof requestStatusClass === 'function' ? requestStatusClass(r.status) : 'sd';
+
+        // 3-month old requests: hide media (admin view only)
+        const threeMonthsAgo = new Date(Date.now() - 90 * 86400000);
+        const showMedia = new Date(r.createdAt) > threeMonthsAgo && media.length > 0;
+
+        body.innerHTML = `
+          <div style="margin-bottom:12px">
+            <div style="font-size:18px;font-weight:700;margin-bottom:4px">${sanitize(r.title || '')}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+              <span class="status ${statusCls}">${statusLabel}</span>
+              <span class="tag">${sanitize(r.category || '')}</span>
+              <span class="tag">📍 ${sanitize(r.city || '')}</span>
+              ${r.budget ? `<span class="tag">💰 ${r.budget}₾</span>` : '<span class="tag">💰 შეთანხმებით</span>'}
+              <span class="tag">📅 ${new Date(r.createdAt).toLocaleDateString('ka-GE')}</span>
+            </div>
+            ${r.user ? `<div style="font-size:13px;color:var(--t2)">👤 მფლობელი: <span style="cursor:pointer;color:var(--accent);text-decoration:underline" onclick="closeMo('moAdminReqDetail');showProfile('${sanitize(r.user.id)}')">${sanitize(r.user.name || '')} ${sanitize(r.user.surname || '')}</span></div>` : ''}
+            ${r.desc ? `<div style="margin-top:12px;color:var(--t2);font-size:14px;line-height:1.6">${sanitize(r.desc)}</div>` : ''}
+          </div>
+          ${showMedia ? `
+            <div style="margin:14px 0">
+              <h3 style="font-size:14px;margin-bottom:8px">📷 ფოტო / ვიდეო (${media.length})</h3>
+              <div class="rd-gallery">
+                ${media.map((m, idx) => {
+                  const url = sanitize(m.url || '');
+                  const items = JSON.stringify(media.map(x => ({ type: x.type || 'image', url: x.url || '' }))).replace(/'/g, "&apos;");
+                  if (m.type === 'video') {
+                    return `<div class="rd-gallery-item" onclick='openLightboxGallery(${items}, ${idx})'>
+                      <video src="${url}" muted playsinline preload="metadata"></video>
+                      <div class="vid-ind">▶</div>
+                    </div>`;
+                  }
+                  return `<div class="rd-gallery-item" onclick='openLightboxGallery(${items}, ${idx})'>
+                    <img src="${url}" alt="" loading="lazy">
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+          ` : (!showMedia && media.length > 0 ? '<div style="font-size:12px;color:var(--t2);margin:10px 0">🗂️ მედია წაშლილია (3 თვეზე ძველი მოთხოვნა)</div>' : '')}
+          <h3 style="font-size:15px;margin:16px 0 8px">💬 შეთავაზებები (${offers.length})</h3>
+          ${offers.length ? offers.map(o => {
+            const h = o.handyman;
+            const name = `${h?.name || ''} ${h?.surname || ''}`.trim();
+            const profileClick = h?.id ? `onclick="closeMo('moAdminReqDetail');showProfile('${sanitize(h.id)}')"` : '';
+            return `<div class="oi" style="margin-bottom:8px">
+              <div style="flex:1;cursor:pointer" ${profileClick}>
+                <div style="font-weight:700;color:var(--accent)">${sanitize(name)}</div>
+                <div style="font-size:11px;color:var(--t2)">${sanitize(h?.specialty || '')}</div>
+                ${o.comment ? `<div style="font-size:12px;color:var(--t2);margin-top:4px">${sanitize(o.comment)}</div>` : ''}
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div class="oprice">₾${o.price}</div>
+                <span class="status ${o.status === 'pending' ? 'sn' : o.status === 'accepted' ? 'sa' : 'sd'}">
+                  ${o.status === 'pending' ? 'მოლ.' : o.status === 'accepted' ? 'მიღ.' : 'უარყ.'}
+                </span>
+              </div>
+            </div>`;
+          }).join('') : '<div class="empty" style="padding:20px"><div class="ei">💬</div><h3>შეთავაზება ჯერ არ არის</h3></div>'}
+        `;
+      } catch (e) {
+        body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>';
+      }
+    }
+
     async function openAdminUserDetail(uid) {
       const body = document.getElementById('adminUserDetailBody');
       body.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t2)">⏳...</div>';
@@ -6594,12 +6878,16 @@
           ${u.blocked ? '<div style="color:#e74c3c;font-size:12px;margin-top:4px">🚫 ანგარიში დაბლოკილია</div>' : ''}
         </div>
       </div>
-      <!-- Stats -->
+      <!-- Stats (clickable — opens request/offer list panel) -->
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-bottom:14px">
-        <div class="dc"><div class="dn">${u._count?.requests || 0}</div><div class="dl">მოთხოვნები</div></div>
-        <div class="dc"><div class="dn">${u._count?.offers || 0}</div><div class="dl">შეთავაზებები</div></div>
+        <div class="dc adm-stat-clickable" onclick="openAdminUserRequests('${sanitize(u.id)}','${sanitize((u.name || '') + ' ' + (u.surname || ''))}')">
+          <div class="dn">${u._count?.requests || 0}</div><div class="dl">მოთხოვნები</div>
+        </div>
+        <div class="dc adm-stat-clickable" onclick="openAdminUserOffers('${sanitize(u.id)}','${sanitize((u.name || '') + ' ' + (u.surname || ''))}')">
+          <div class="dn">${u._count?.offers || 0}</div><div class="dl">შეთავაზებები</div>
+        </div>
         <div class="dc"><div class="dn">${u.jobs || 0}</div><div class="dl">სამუშაო</div></div>
-        ${u.reviewsReceived?.length ? `<div class="dc"><div class="dn">${u.reviewsReceived.length}</div><div class="dl">შეფასებები</div></div>` : ''}
+        ${u._count?.reviewsReceived ? `<div class="dc"><div class="dn">${u._count.reviewsReceived}</div><div class="dl">შეფასებები</div></div>` : ''}
       </div>
       <!-- Plan + VIP -->
       ${planHtml}
@@ -6803,7 +7091,7 @@
         const history = ariaMessages.slice(0, -1).filter(m => m.text !== '...' && m.role !== 'system');
         const geminiMsgs = history.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.text }] }));
         geminiMsgs.push({ role: 'user', parts: [{ text }] });
-        const data = await api('/aria/chat', { method: 'POST', body: { messages: geminiMsgs } });
+        const data = await api('/aria/chat', { method: 'POST', body: { messages: geminiMsgs, userType: currentUser?.type || 'guest' } });
         ariaMessages.pop();
         const reply = data.reply || '';
         if (reply.includes('[OPERATOR_REQUEST]')) {

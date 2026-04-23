@@ -275,6 +275,87 @@ router.post('/:id/reject', requireAuth, async (req, res) => {
 });
 
 // ── POST /api/offers/:id/accept ───────────────────────────────
+// ── POST /api/offers/:id/disagree ─────────────────────────────
+// User is inside a chat but says "we didn't agree" — undo the acceptance.
+// Mark the offer as rejected and restore the request to 'pending' so that
+// user can review other pending offers or wait for new ones.
+router.post('/:id/disagree', requireAuth, async (req, res) => {
+  try {
+    if (req.user.type !== 'user') {
+      return res.status(403).json({ error: 'მხოლოდ მომხმარებელს შეუძლია' });
+    }
+    const offer = await prisma.offer.findUnique({
+      where: { id: req.params.id },
+      include: { request: true, chat: true },
+    });
+    if (!offer) return res.status(404).json({ error: 'შეთავაზება ვერ მოიძებნა' });
+    if (offer.request.userId !== req.user.id) return res.status(403).json({ error: 'წვდომა აკრძალულია' });
+    if (offer.status !== 'accepted') {
+      return res.status(400).json({ error: 'მხოლოდ მიღებული შეთავაზების უარყოფა შეიძლება' });
+    }
+
+    // 1. Mark this offer as rejected
+    await prisma.offer.update({
+      where: { id: offer.id },
+      data:  { status: 'rejected' },
+    });
+
+    // 2. Check whether ANY other accepted offers remain on the same request
+    const otherAccepted = await prisma.offer.count({
+      where: {
+        requestId: offer.requestId,
+        id:        { not: offer.id },
+        status:    'accepted',
+      },
+    });
+
+    // 3. If no other accepted offers, move request back to 'pending' (still receiving offers)
+    if (otherAccepted === 0) {
+      await prisma.request.update({
+        where: { id: offer.requestId },
+        data:  { status: 'pending' },
+      });
+    }
+
+    // 4. Add a system message to the chat (so handyman sees context)
+    if (offer.chat) {
+      await prisma.message.create({
+        data: {
+          chatId:  offer.chat.id,
+          fromId:  null,
+          type:    'system',
+          content: `მომხმარებელმა უთხრა "ვერ შევთანხმდით". თანამშრომლობა დასრულდა.`,
+        },
+      }).catch(() => {});
+    }
+
+    res.json({ ok: true });
+
+    // Push + bell to handyman
+    sendPushToUser(prisma, offer.handymanId, {
+      title: 'ვერ შევთანხმდით',
+      body:  `"${offer.request.title}" — მომხმარებელმა უარი თქვა`,
+      tag:   'offer-disagree-' + offer.id,
+    }).catch(() => {});
+    sendExpoPushToUser(prisma, offer.handymanId, {
+      title: 'ვერ შევთანხმდით',
+      body:  `"${offer.request.title}"`,
+      data:  { type: 'offer_disagree', offerId: offer.id },
+    }).catch(() => {});
+    createNotification({
+      prisma,
+      io: req.app.get('io'),
+      userId: offer.handymanId,
+      type:   'offer_rejected',
+      title:  'ვერ შევთანხმდით',
+      body:   `"${offer.request.title}"`,
+    }).catch(() => {});
+  } catch (err) {
+    console.error('[OFFERS] disagree error:', err.message);
+    res.status(500).json({ error: 'სერვერის შეცდომა' });
+  }
+});
+
 router.post('/:id/accept', requireAuth, async (req, res) => {
   try {
     if (req.user.type !== 'user') {

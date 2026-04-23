@@ -62,13 +62,18 @@ router.get('/analytics', requireAdmin, async (req, res) => {
 // GET /api/admin/users
 router.get('/users', async (req, res) => {
   try {
-    const { type, search } = req.query;
+    const { type, search, blocked } = req.query;
     const where = { type: { not: 'admin' } };
     if (type && type !== 'all') where.type = type;
+    // ✅ Task 9: explicit blocked filter
+    if (blocked === 'true')  where.blocked = true;
+    if (blocked === 'false') where.blocked = false;
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
+        { name:    { contains: search, mode: 'insensitive' } },
+        { surname: { contains: search, mode: 'insensitive' } },
+        { email:   { contains: search, mode: 'insensitive' } },
+        { phone:   { contains: search, mode: 'insensitive' } },
       ];
     }
     const users = await prisma.user.findMany({
@@ -96,6 +101,8 @@ router.get('/users/:id', async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { id: req.params.id },
       include: {
+        // ✅ Task 10: include accurate counts (not just recent 10)
+        _count: { select: { requests: true, offers: true, reviewsReceived: true } },
         requests: { orderBy: { createdAt: 'desc' }, take: 10 },
         offers: { orderBy: { createdAt: 'desc' }, take: 10, include: { request: { select: { title: true } } } },
         reviewsReceived: { orderBy: { createdAt: 'desc' }, take: 5 },
@@ -106,6 +113,59 @@ router.get('/users/:id', async (req, res) => {
     const { password, ...safe } = user;
     res.json(safe);
   } catch (err) {
+    res.status(500).json({ error: 'სერვერის შეცდომა' });
+  }
+});
+
+// ✅ Task 11: Admin views ALL requests by user (full list, not just recent 10)
+router.get('/users/:id/requests', async (req, res) => {
+  try {
+    const requests = await prisma.request.findMany({
+      where:   { userId: req.params.id },
+      include: {
+        _count: { select: { offers: true } },
+        offers: {
+          include: {
+            handyman: { select: { id: true, name: true, surname: true, emoji: true, avatar: true, type: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Strip media fields if older than 3 months (privacy / storage)
+    const threeMonthsAgo = new Date(Date.now() - 90 * 86400000);
+    const stripped = requests.map(r => {
+      if (r.createdAt < threeMonthsAgo) {
+        return { ...r, media: [] };  // hide old media from admin view
+      }
+      return r;
+    });
+    res.json(stripped);
+  } catch (err) {
+    console.error('[ADMIN] user requests error:', err.message);
+    res.status(500).json({ error: 'სერვერის შეცდომა' });
+  }
+});
+
+// ✅ Task 11: Admin views ALL offers by a handyman/company
+router.get('/users/:id/offers', async (req, res) => {
+  try {
+    const offers = await prisma.offer.findMany({
+      where:   { handymanId: req.params.id },
+      include: {
+        request: {
+          include: {
+            user: { select: { id: true, name: true, surname: true } },
+            _count: { select: { offers: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(offers);
+  } catch (err) {
+    console.error('[ADMIN] user offers error:', err.message);
     res.status(500).json({ error: 'სერვერის შეცდომა' });
   }
 });
