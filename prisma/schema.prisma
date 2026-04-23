@@ -67,6 +67,7 @@ model User {
   savedCards           SavedCard[]
   pushSubscriptions    PushSubscription[]   // ✅ Web push
   expoPushTokens       ExpoPushToken[]      // ✅ Mobile push
+  favoriteRequests     FavoriteRequest[]    // ✅ Bookmarked requests
 
   @@index([type])
   @@index([email])
@@ -143,12 +144,14 @@ model Request {
   city      String   @default("თბილისი")
   budget    Int?
   urgency   String   @default("normal")
-  status    String   @default("open")  // open, in_progress, completed
+  status    String   @default("open")  // open, pending, in_progress, completed, closed, archived
   media     Json     @default("[]")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  offers Offer[]
+  offers    Offer[]
+  chats     Chat[]
+  favorites FavoriteRequest[]
 
   @@index([userId])
   @@index([status])
@@ -185,6 +188,7 @@ model Chat {
   offerId    String   @unique
   offer      Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
   requestId  String
+  request    Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
   userId     String
   user       User     @relation("user",     fields: [userId],     references: [id])
   handymanId String
@@ -196,6 +200,7 @@ model Chat {
 
   @@index([userId])
   @@index([handymanId])
+  @@index([requestId])
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -229,6 +234,22 @@ model Review {
 
   @@unique([reviewerId, handymanId])
   @@index([handymanId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// FavoriteRequest — handyman bookmarks a request for later
+// ─────────────────────────────────────────────────────────────
+model FavoriteRequest {
+  id         String   @id @default(cuid())
+  userId     String                          // the one who favorited (handyman or company)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requestId  String
+  request    Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, requestId])
+  @@index([userId])
+  @@index([requestId])
 }
 
 // ─────────────────────────────────────────────────────────────

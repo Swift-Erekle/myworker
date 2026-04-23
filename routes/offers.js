@@ -218,20 +218,13 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
     if (offer.request.userId !== req.user.id) return res.status(403).json({ error: 'წვდომა აკრძალულია' });
     if (offer.status !== 'pending') return res.status(400).json({ error: 'შეთავაზება უკვე დამუშავებულია' });
 
-    // Accept offer, update request, reject other pending offers, create chat
-    // FIX: system message now uses fromId: null (not 'system' string)
-    const [updatedOffer, , , chat] = await prisma.$transaction([
+    // Accept offer, update request status, create chat
+    // FEATURE 2.5.2: Multiple offers can be accepted on the same request
+    // Each accepted offer gets its own chat. Other pending offers stay pending.
+    const [updatedOffer, , chat] = await prisma.$transaction([
       prisma.offer.update({ where: { id: offer.id }, data: { status: 'accepted' } }),
+      // Keep request in 'in_progress' (even if multiple offers accepted)
       prisma.request.update({ where: { id: offer.requestId }, data: { status: 'in_progress' } }),
-      // Auto-reject any other pending offers on the same request
-      prisma.offer.updateMany({
-        where: {
-          requestId: offer.requestId,
-          id:        { not: offer.id },
-          status:    'pending',
-        },
-        data: { status: 'rejected' },
-      }),
       prisma.chat.create({
         data: {
           offerId:   offer.id,
@@ -240,7 +233,7 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
           handymanId: offer.handymanId,
           messages: {
             create: {
-              fromId:  null,          // ✅ FIX: null for system msg, not 'system'
+              fromId:  null,          // null for system msg
               type:    'system',
               content: `ჩათი გაიხსნა: "${offer.request.title}"`,
             },

@@ -60,6 +60,82 @@ router.get('/mine', requireAuth, async (req, res) => {
   }
 });
 
+// ═══════════════════════════════════════════════════════════
+// FAVORITES (Feature 2.8)
+// Handyman/company bookmarks requests to revisit later.
+// All routes below require auth.
+// ═══════════════════════════════════════════════════════════
+
+// GET /api/requests/favorites — list current user's favorited requests
+router.get('/favorites', requireAuth, async (req, res) => {
+  try {
+    const favorites = await prisma.favoriteRequest.findMany({
+      where: { userId: req.user.id },
+      include: {
+        request: {
+          include: {
+            user: { select: { id: true, name: true, surname: true } },
+            _count: { select: { offers: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    // Return just the requests (with meta). Filter out ones where request was deleted.
+    const result = favorites
+      .filter(f => f.request)
+      .map(f => ({ ...f.request, favoritedAt: f.createdAt }));
+    res.json(result);
+  } catch (err) {
+    console.error('[REQUESTS] favorites list error:', err.message);
+    res.status(500).json({ error: 'სერვერის შეცდომა' });
+  }
+});
+
+// POST /api/requests/:id/favorite — add to favorites
+router.post('/:id/favorite', requireAuth, async (req, res) => {
+  try {
+    // Only handymen/companies can favorite requests
+    if (!['handyman', 'company'].includes(req.user.type)) {
+      return res.status(403).json({ error: 'მხოლოდ ხელოსანს ან კომპანიას შეუძლია შენახვა' });
+    }
+
+    const exists = await prisma.request.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, userId: true },
+    });
+    if (!exists) return res.status(404).json({ error: 'მოთხოვნა ვერ მოიძებნა' });
+    // Can't favorite your own request
+    if (exists.userId === req.user.id) {
+      return res.status(400).json({ error: 'საკუთარი მოთხოვნის შენახვა არ შეიძლება' });
+    }
+
+    // Idempotent — upsert so duplicate calls don't error
+    const fav = await prisma.favoriteRequest.upsert({
+      where: { userId_requestId: { userId: req.user.id, requestId: req.params.id } },
+      update: {},
+      create: { userId: req.user.id, requestId: req.params.id },
+    });
+    res.json({ favorited: true, id: fav.id });
+  } catch (err) {
+    console.error('[REQUESTS] favorite error:', err.message);
+    res.status(500).json({ error: 'სერვერის შეცდომა' });
+  }
+});
+
+// DELETE /api/requests/:id/favorite — remove from favorites
+router.delete('/:id/favorite', requireAuth, async (req, res) => {
+  try {
+    await prisma.favoriteRequest.deleteMany({
+      where: { userId: req.user.id, requestId: req.params.id },
+    });
+    res.json({ favorited: false });
+  } catch (err) {
+    console.error('[REQUESTS] unfavorite error:', err.message);
+    res.status(500).json({ error: 'სერვერის შეცდომა' });
+  }
+});
+
 // GET /api/requests/:id — single request
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
@@ -81,6 +157,18 @@ router.get('/:id', optionalAuth, async (req, res) => {
       },
     });
     if (!req_) return res.status(404).json({ error: 'მოთხოვნა ვერ მოიძებნა' });
+
+    // Add favorited flag for the current user (if logged in as worker)
+    if (req.user && ['handyman', 'company'].includes(req.user.type)) {
+      const fav = await prisma.favoriteRequest.findUnique({
+        where: { userId_requestId: { userId: req.user.id, requestId: req.params.id } },
+        select: { id: true },
+      });
+      req_.favorited = !!fav;
+    } else {
+      req_.favorited = false;
+    }
+
     res.json(req_);
   } catch (err) {
     res.status(500).json({ error: 'სერვერის შეცდომა' });
