@@ -19,8 +19,8 @@ const router = express.Router();
 
 // ── Pricing tables ─────────────────────────────────────────────
 const VIP_PRICES = {
-  handyman: { vip: { 1: 200, 5: 1000 }, vipp: { 1: 400, 5: 1800 } },
-  company:  { vip: { 1: 200, 5: 1000 }, vipp: { 1: 400, 5: 1800 } },
+  handyman: { vip: { 1: 200,  5: 1000 }, vipp: { 1: 400,  5: 1800 } },
+  company:  { vip: { 1: 500,  5: 2500 }, vipp: { 1: 1000, 5: 5000 } },
 };
 const PLAN_PRICES = {
   handyman: { pro: 2900, top: 6900 },

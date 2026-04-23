@@ -645,18 +645,18 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
     <div class="vip-cards">
       <div class="vc vip" onclick="buyVip('vip',1)">
         <h3>⭐ VIP</h3>
-        <div class="vc-price">2₾</div><div style="color:var(--t2);font-size:12px">1 დღე</div>
+        <div class="vc-price" id="vipInfo1d">2₾</div><div style="color:var(--t2);font-size:12px">1 დღე</div>
         <div style="margin:12px 0;border-top:1px solid var(--border);padding-top:12px">
-          <div class="vc-price" style="font-size:22px">10₾</div><div style="color:var(--t2);font-size:12px">5 დღე</div>
+          <div class="vc-price" id="vipInfo5d" style="font-size:22px">10₾</div><div style="color:var(--t2);font-size:12px">5 დღე</div>
         </div>
         <p>სიის სათავეში ჩვენება ძიებაში</p>
         <button class="btn bvip bs" style="width:100%;justify-content:center;margin-top:14px" onclick="event.stopPropagation();openVipModal('vip')">გაახლება</button>
       </div>
       <div class="vc vipp" onclick="openVipModal('vipp')">
         <h3>💜 VIP+</h3>
-        <div class="vc-price">4₾</div><div style="color:var(--t2);font-size:12px">1 დღე</div>
+        <div class="vc-price" id="vippInfo1d">4₾</div><div style="color:var(--t2);font-size:12px">1 დღე</div>
         <div style="margin:12px 0;border-top:1px solid var(--border);padding-top:12px">
-          <div class="vc-price" style="font-size:22px">18₾</div><div style="color:var(--t2);font-size:12px">5 დღე</div>
+          <div class="vc-price" id="vippInfo5d" style="font-size:22px">18₾</div><div style="color:var(--t2);font-size:12px">5 დღე</div>
         </div>
         <p>ყოველთვის VIP-ზე მაღლა — სათავეში ყოველთვის</p>
         <button class="btn bvipp bs" style="width:100%;justify-content:center;margin-top:14px" onclick="event.stopPropagation();openVipModal('vipp')">გაახლება</button>
@@ -678,7 +678,7 @@ footer{border-top:1px solid var(--border);padding:36px 20px;text-align:center;co
   <div class="chat-wrap">
     <div class="chat-header">
       <button class="btn bg bs" onclick="nav('dashboard')">← უკან</button>
-      <div>
+      <div style="cursor:pointer" id="chatHeaderInfo" onclick="openChatOtherProfile()">
         <div style="font-weight:700" id="chatTitle">ჩათი</div>
         <div style="font-size:11px;color:var(--t2)" id="chatSub"></div>
       </div>
@@ -1579,6 +1579,22 @@ function nav(page) {
   else if (page === 'dashboard') renderDashboard();
   else if (page === 'admin') renderAdmin();
   else if (page === 'my-card') renderCardPage();
+  else if (page === 'vip-info') renderVipInfoPrices();
+}
+
+// Update VIP info page prices based on current user's type
+function renderVipInfoPrices() {
+  const cu = currentUser;
+  const isCompany = cu && cu.type === 'company';
+  const vip1  = isCompany ? 5  : 2;
+  const vip5  = isCompany ? 25 : 10;
+  const vipp1 = isCompany ? 10 : 4;
+  const vipp5 = isCompany ? 50 : 18;
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v + '₾'; };
+  set('vipInfo1d',  vip1);
+  set('vipInfo5d',  vip5);
+  set('vippInfo1d', vipp1);
+  set('vippInfo5d', vipp5);
 }
 
 
@@ -2215,9 +2231,10 @@ async function renderHandymen() {
       });
     }
 
-    // Split: companies with active VIP vs everyone else
-    const featuredCompanies = all.filter(h => h.type === 'company' && isVipActive(h));
-    const rest = all.filter(h => !(h.type === 'company' && isVipActive(h)));
+    // Split: feature only companies with VIP+ active OR active TOP subscription
+    // (regular VIP or Pro plans do NOT get featured section)
+    const featuredCompanies = all.filter(h => h.type === 'company' && isCompanyFeatured(h));
+    const rest = all.filter(h => !(h.type === 'company' && isCompanyFeatured(h)));
 
     // Companies section
     if (companiesSection && companiesGrid) {
@@ -2256,6 +2273,17 @@ async function renderHomeGrid() {
 function isVipActive(h) {
   if (!h.vipType || h.vipType === 'none') return false;
   return h.vipExpiresAt && new Date(h.vipExpiresAt) > new Date();
+}
+
+// Companies get the special "featured" section ONLY if they have VIP+ active
+// OR an active TOP plan (which auto-grants VIP+). Regular VIP or Pro/Start
+// companies appear in the normal list alongside handymen.
+function isCompanyFeatured(h) {
+  if (h.type !== 'company') return false;
+  const now = new Date();
+  const vippActive = h.vipType === 'vipp' && h.vipExpiresAt && new Date(h.vipExpiresAt) > now;
+  const topActive  = h.plan === 'top' && h.planExpiresAt && new Date(h.planExpiresAt) > now;
+  return vippActive || topActive;
 }
 function avgRating(reviews) {
   if (!reviews || !reviews.length) return 0;
@@ -2703,14 +2731,15 @@ async function viewOffers(reqId) {
     el.innerHTML = offers.map(o => {
       const h = o.handyman;
       const rating = avgRating(h?.reviewsReceived || []);
+      const profileClick = h?.id ? `onclick="showProfile('${sanitize(h.id)}')" style="cursor:pointer"` : '';
       const avatarHtml = h?.avatar
-        ? `<img src="${sanitize(h.avatar)}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0">`
-        : `<div class="av" style="width:44px;height:44px;font-size:18px;background:${sanitize(h?.color || '#22222f')};color:var(--accent)">${sanitize(h?.emoji || '🔧')}</div>`;
+        ? `<img src="${sanitize(h.avatar)}" ${profileClick} style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;cursor:pointer">`
+        : `<div class="av" ${profileClick} style="width:44px;height:44px;font-size:18px;background:${sanitize(h?.color || '#22222f')};color:var(--accent);cursor:pointer">${sanitize(h?.emoji || '🔧')}</div>`;
       return `<div class="oi">
         <div style="display:flex;gap:12px;align-items:flex-start">
           ${avatarHtml}
           <div style="flex:1">
-            <div style="font-weight:700">${sanitize(h?.name || '')} ${sanitize(h?.surname || '')}</div>
+            <div style="font-weight:700;cursor:pointer;display:inline-block" ${profileClick}>${sanitize(h?.name || '')} ${sanitize(h?.surname || '')}</div>
             <div style="color:var(--accent);font-size:12px">${sanitize(h?.specialty || '')}</div>
             <div style="font-size:11px;color:var(--t2)">${rating > 0 ? rating.toFixed(1) + ' ★' : ''} ${o.duration ? '· ' + sanitize(o.duration) : ''}</div>
             ${o.comment ? `<div style="margin-top:6px;font-size:13px;color:var(--t2)">${sanitize(o.comment)}</div>` : ''}
@@ -2796,14 +2825,15 @@ function renderRequestDetail(r) {
       ${offers.map(o => {
         const h = o.handyman;
         const rating = avgRating(h?.reviewsReceived || []);
+        const profileClick = h?.id ? `onclick="closeMo('moReqDetail');showProfile('${sanitize(h.id)}')" style="cursor:pointer"` : '';
         const avatarHtml = h?.avatar
-          ? `<img src="${sanitize(h.avatar)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0">`
-          : `<div class="av" style="width:40px;height:40px;font-size:16px;background:${sanitize(h?.color || '#22222f')};color:var(--accent)">${sanitize(h?.emoji || '🔧')}</div>`;
+          ? `<img src="${sanitize(h.avatar)}" ${profileClick} style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;cursor:pointer">`
+          : `<div class="av" ${profileClick} style="width:40px;height:40px;font-size:16px;background:${sanitize(h?.color || '#22222f')};color:var(--accent);cursor:pointer">${sanitize(h?.emoji || '🔧')}</div>`;
         return `<div class="oi" style="margin-bottom:10px">
           <div style="display:flex;gap:10px;align-items:flex-start">
             ${avatarHtml}
             <div style="flex:1;min-width:0">
-              <div style="font-weight:700">${sanitize(h?.name || '')} ${sanitize(h?.surname || '')}</div>
+              <div style="font-weight:700;cursor:pointer;display:inline-block" ${profileClick}>${sanitize(h?.name || '')} ${sanitize(h?.surname || '')}</div>
               <div style="color:var(--accent);font-size:12px">${sanitize(h?.specialty || '')}</div>
               <div style="font-size:11px;color:var(--t2)">${rating > 0 ? rating.toFixed(1) + ' ★' : ''} ${o.duration ? '· ' + sanitize(o.duration) : ''}</div>
               ${o.comment ? `<div style="margin-top:6px;font-size:13px;color:var(--t2)">${sanitize(o.comment)}</div>` : ''}
@@ -2816,7 +2846,7 @@ function renderRequestDetail(r) {
           ${['open','pending'].includes(r.status) && o.status === 'pending' ? `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn bp bs" onclick="acceptOfferFromDetail('${sanitize(o.id)}', '${sanitize(r.id)}')">✓ მიღება</button>
             <button class="btn berr bs" onclick="rejectOfferFromDetail('${sanitize(o.id)}', '${sanitize(r.id)}')">✕ უარყოფა</button>
-            <button class="btn bg bs" onclick="showProfile('${sanitize(h?.id)}')">პროფილი</button>
+            <button class="btn bg bs" onclick="closeMo('moReqDetail');showProfile('${sanitize(h?.id)}')">პროფილი</button>
           </div>` : ''}
           ${o.status === 'accepted' ? `<button class="btn bg bs" style="margin-top:8px" onclick="closeMo('moReqDetail');openChatForOffer('${sanitize(o.id)}')">💬 ჩათი</button>` : ''}
         </div>`;
@@ -3135,8 +3165,8 @@ async function renderDashboard() {
         setTimeout(() => showUpgradeModal('trial_expired', cu2), 400);
       }
 
-      const vip1Price = 2;
-      const vipp1Price = 4;
+      const vip1Price = isCompany ? 5 : 2;
+      const vipp1Price = isCompany ? 10 : 4;
 
       // Plan badge
       const planBadge = getPlanBadge(cu2);
@@ -3321,6 +3351,11 @@ async function openChatForOffer(offerId) {
 // CHAT
 // ========================================================
 let chatPollTimer = null;
+
+function openChatOtherProfile() {
+  if (window._chatOtherUserId) showProfile(window._chatOtherUserId);
+}
+
 async function openChat(chatId) {
   currentChatId = chatId; nav('chat');
   if (socket) socket.emit('joinChat', chatId);
@@ -3332,6 +3367,8 @@ async function loadChatMessages() {
     const chat = await api('/chat/' + chatId);
     const cu = currentUser;
     const other = cu.id === chat.userId ? chat.handyman : chat.user;
+    // Remember the "other" user's id so the header is clickable → profile
+    window._chatOtherUserId = other?.id || null;
     document.getElementById('chatTitle').textContent = `${other?.name || ''} ${other?.surname || ''}`;
     document.getElementById('chatSub').textContent = chat.offer?.request?.title || '';
     renderMessages(chat.messages || []);
@@ -3552,9 +3589,9 @@ function openVipModal(type) {
   currentVipType = type; currentVipDays = 1;
   const isPlus = type === 'vipp';
   const isCompany = cu.type === 'company';
-  // Company pricing
-  const price1 = isCompany ? (isPlus ? 15 : 10) : (isPlus ? 4 : 2);
-  const price5 = isCompany ? (isPlus ? 60 : 40) : (isPlus ? 18 : 10);
+  // Company pricing: VIP 5₾/25₾, VIP+ 10₾/50₾; Handyman: 2₾/10₾, 4₾/18₾
+  const price1 = isCompany ? (isPlus ? 10 : 5)  : (isPlus ? 4  : 2);
+  const price5 = isCompany ? (isPlus ? 50 : 25) : (isPlus ? 18 : 10);
   const color = isPlus ? 'var(--vipp)' : 'var(--vip)';
   document.getElementById('vipModalTitle').textContent = isPlus ? '💜 VIP+ გაახლება' : '⭐ VIP გაახლება';
   document.getElementById('vipModalSub').textContent = isCompany
@@ -3579,8 +3616,8 @@ function selectVipDay(days) {
   const cu = currentUser;
   const isCompany = cu?.type === 'company';
   const isPlus = currentVipType === 'vipp';
-  const pr = isCompany ? (isPlus ? (days === 1 ? 15 : 60) : (days === 1 ? 10 : 40))
-                       : (isPlus ? (days === 1 ? 4 : 18) : (days === 1 ? 2 : 10));
+  const pr = isCompany ? (isPlus ? (days === 1 ? 10 : 50) : (days === 1 ? 5 : 25))
+                       : (isPlus ? (days === 1 ? 4  : 18) : (days === 1 ? 2 : 10));
   document.querySelectorAll('.vopt').forEach((v, i) => {
     v.style.borderColor = i === (days === 1 ? 0 : 1) ? 'var(--accent)' : 'var(--border)';
     v.style.transform = i === (days === 1 ? 0 : 1) ? 'scale(1.03)' : 'scale(1)';
