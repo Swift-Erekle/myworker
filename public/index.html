@@ -522,46 +522,187 @@
       font-size: 12px
     }
 
-    /* REQUEST CARD */
+    /* ══════ REQUEST CARD (premium redesigned) ══════════════════ */
     .rcard {
-      background: var(--surface);
+      background: linear-gradient(135deg, var(--surface) 0%, rgba(255,107,43,.02) 100%);
       border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 20px;
-      margin-bottom: 14px;
-      transition: .2s
+      border-radius: 18px;
+      padding: 0;
+      margin: 0;
+      position: relative;
+      overflow: hidden;
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+      display: flex;
+      flex-direction: row;
+      min-height: 140px;
     }
-
+    /* Accent gradient bar on the left */
+    .rcard::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--accent), #ff8c55);
+      opacity: .6;
+      transition: opacity .2s ease;
+    }
     .rcard:hover {
-      border-color: rgba(255, 107, 43, .35)
+      border-color: var(--accent);
+      box-shadow: 0 12px 28px rgba(255,107,43,.12);
+    }
+    .rcard:hover::before { opacity: 1 }
+
+    /* Media column — always present (placeholder if no media) */
+    .rcard-thumb {
+      flex-shrink: 0;
+      width: 140px;
+      align-self: stretch;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--s2), rgba(255,107,43,.05));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .rcard-thumb img,
+    .rcard-thumb video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .rcard-thumb-placeholder {
+      font-size: 40px;
+      opacity: .35;
+    }
+    .rcard-thumb-count {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0,0,0,.7);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
+    }
+    .rcard-thumb-play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 36px;
+      height: 36px;
+      background: rgba(0,0,0,.7);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+    }
+    .rcard-urgent-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: linear-gradient(135deg, #ff6b2b, #ff3838);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 20px;
+      letter-spacing: .3px;
+      box-shadow: 0 4px 10px rgba(255,56,56,.4);
     }
 
+    /* Content column */
+    .rcard-body {
+      flex: 1;
+      min-width: 0;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+    }
     .rh {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 10px
+      gap: 10px;
+      margin-bottom: 6px;
     }
-
     .rt {
       font-size: 16px;
-      font-weight: 700
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      flex: 1;
     }
-
+    .rcard-desc {
+      color: var(--t2);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 10px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
     .rmeta {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
-      margin-top: 8px
+      margin-top: auto;
+      align-items: center;
     }
-
+    .rcard-price {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: rgba(255,107,43,.12);
+      border: 1px solid rgba(255,107,43,.3);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .rcard-price.negotiable {
+      background: rgba(155,89,182,.1);
+      border-color: rgba(155,89,182,.3);
+      color: #9b59b6;
+    }
     .tag {
-      padding: 3px 9px;
+      padding: 4px 9px;
       background: var(--s2);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 11px;
-      color: var(--t2)
+      color: var(--t2);
+      font-weight: 500;
+    }
+    .tag.urg {
+      background: linear-gradient(135deg, rgba(231,76,60,.15), rgba(255,107,43,.1));
+      border-color: rgba(231,76,60,.4);
+      color: #ff6b4a;
+      font-weight: 700;
+    }
+    .tag.offers {
+      background: rgba(46,204,113,.1);
+      border-color: rgba(46,204,113,.3);
+      color: var(--ok);
+      font-weight: 600;
+    }
+
+    /* Desktop: 2-column grid so cards don't stretch uselessly wide */
+    .requests-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+      gap: 14px;
     }
 
     .tag.urg {
@@ -1164,13 +1305,28 @@
         font-size: 12px
       }
 
-      /* Requests */
+      /* Requests — mobile */
       .rcard {
-        padding: 12px
+        min-height: 120px;
+        border-radius: 14px;
       }
-
+      .rcard-thumb {
+        width: 100px;
+      }
+      .rcard-body {
+        padding: 12px;
+      }
       .rt {
-        font-size: 13px
+        font-size: 14px;
+      }
+      .rcard-desc {
+        font-size: 12px;
+        -webkit-line-clamp: 1;
+      }
+      .rcard-thumb-placeholder { font-size: 30px }
+      .requests-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
       }
 
       .oi {
@@ -2719,78 +2875,15 @@
       font-size: 28px
     }
 
-    /* ── Request card media preview ────────────────────────── */
+    /* ── Request card click interaction ────────────────────── */
     .rcard-clickable {
       cursor: pointer;
-      transition: transform .15s ease, border-color .15s ease
     }
-
     .rcard-clickable:hover {
-      transform: translateY(-2px);
-      border-color: rgba(255, 107, 43, .4)
+      transform: translateY(-3px);
     }
-
     .rcard-clickable:active {
       transform: translateY(0)
-    }
-
-    .rcard-media {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      margin-top: 10px;
-      max-width: 320px
-    }
-
-    .rcard-media:has(.rcard-media-item:only-child) {
-      grid-template-columns: 1fr;
-      max-width: 160px
-    }
-
-    .rcard-media-item {
-      position: relative;
-      aspect-ratio: 1;
-      border-radius: 8px;
-      overflow: hidden;
-      background: var(--s2)
-    }
-
-    .rcard-media-item img,
-    .rcard-media-item video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block
-    }
-
-    .rcard-media-icon {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 28px;
-      height: 28px;
-      background: rgba(0, 0, 0, .6);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 11px;
-      pointer-events: none
-    }
-
-    .rcard-media-more {
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, .55);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 16px;
-      font-weight: 800;
-      pointer-events: none
     }
 
     /* ── Request detail modal media gallery ────────────────── */
@@ -5188,7 +5281,7 @@
           grid.innerHTML = '<div class="empty"><div class="ei">📋</div><h3>მოთხოვნა ვერ მოიძებნა</h3></div>';
           return;
         }
-        grid.innerHTML = requests.map(r => requestCard(r)).join('');
+        grid.innerHTML = '<div class="requests-grid">' + requests.map(r => requestCard(r)).join('') + '</div>';
       } catch (e) {
         grid.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ჩატვირთვა ვერ მოხდა</h3></div>';
       }
@@ -5227,42 +5320,65 @@
       const isOwner = cu && cu.id === r.userId;
       const offerCount = r._count?.offers || (r.offers?.length || 0);
       const media = Array.isArray(r.media) ? r.media : [];
-      const preview = media.slice(0, 2);  // max 2 items on the card
-      const extraCount = Math.max(0, media.length - 2);
+      const firstMedia = media[0];
+      const extraCount = Math.max(0, media.length - 1);
 
-      // Build media preview thumbnails (shown inside card, but clickable opens full modal)
-      const mediaHtml = preview.length ? `
-    <div class="rcard-media">
-      ${preview.map((m, i) => {
-        const url = sanitize(m.url || '');
-        if (m.type === 'video') {
-          return `<div class="rcard-media-item">
-            <video src="${url}" muted playsinline preload="metadata"></video>
-            <div class="rcard-media-icon">▶</div>
-            ${i === 1 && extraCount > 0 ? `<div class="rcard-media-more">+${extraCount}</div>` : ''}
-          </div>`;
-        }
-        return `<div class="rcard-media-item">
-          <img src="${url}" alt="" loading="lazy">
-          ${i === 1 && extraCount > 0 ? `<div class="rcard-media-more">+${extraCount}</div>` : ''}
+      // Category → emoji icon fallback (used when no photo/video)
+      const categoryIcon = {
+        'ელექტრიკოსი':      '⚡',
+        'სანტექნიკი':       '🔧',
+        'დურგალი':           '🪚',
+        'მხატვარი (მალიარი)': '🎨',
+        'მშენებელი':         '🏗️',
+        'კონდიციონერის ტექნიკოსი': '❄️',
+        'უნივერსალური ხელოსანი (ჰენდიმენი)': '🛠️',
+        'მებაღე':            '🌳',
+        'ტექნიკოსი':         '💻',
+        'სპეციალიზებული ხელოსანი (პროფესიონალი)': '⭐',
+        'სახლის მომსახურება (დამხმარე)': '🏠',
+        'ფილების მწყობი (კაფელის მწყობი)': '🔲',
+        'შემდუღებელი (შედუღება)': '🔥',
+        'მეკარე (საკეტების ოსტატი)': '🔑',
+      };
+      const icon = categoryIcon[r.category] || '📋';
+
+      let thumbHtml;
+      if (firstMedia) {
+        const url = sanitize(firstMedia.url || '');
+        const isVideo = firstMedia.type === 'video';
+        thumbHtml = `<div class="rcard-thumb">
+          ${isVideo
+            ? `<video src="${url}" muted playsinline preload="metadata"></video><div class="rcard-thumb-play">▶</div>`
+            : `<img src="${url}" alt="" loading="lazy">`}
+          ${extraCount > 0 ? `<div class="rcard-thumb-count">+${extraCount}</div>` : ''}
+          ${r.urgency === 'urgent' ? `<div class="rcard-urgent-badge">⚡ გადაუდებელი</div>` : ''}
         </div>`;
-      }).join('')}
-    </div>` : '';
+      } else {
+        thumbHtml = `<div class="rcard-thumb">
+          <div class="rcard-thumb-placeholder">${icon}</div>
+          ${r.urgency === 'urgent' ? `<div class="rcard-urgent-badge">⚡ გადაუდებელი</div>` : ''}
+        </div>`;
+      }
+
+      const priceHtml = r.budget
+        ? `<span class="rcard-price">💰 ${r.budget}₾</span>`
+        : `<span class="rcard-price negotiable">💰 შეთანხმებით</span>`;
 
       return `<div class="rcard rcard-clickable" onclick="openRequestDetail('${sanitize(r.id)}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openRequestDetail('${sanitize(r.id)}')">
-    <div class="rh">
-      <div class="rt">${sanitize(r.title)}</div>
-      <span class="status ${requestStatusClass(r.status)}">${requestStatusLabel(r.status)}</span>
+    ${thumbHtml}
+    <div class="rcard-body">
+      <div class="rh">
+        <div class="rt">${sanitize(r.title)}</div>
+        <span class="status ${requestStatusClass(r.status)}">${requestStatusLabel(r.status)}</span>
+      </div>
+      ${r.desc ? `<div class="rcard-desc">${sanitize(r.desc)}</div>` : ''}
+      <div class="rmeta">
+        ${priceHtml}
+        <span class="tag">${icon} ${sanitize(r.category || '')}</span>
+        <span class="tag">📍 ${sanitize(r.city || '')}</span>
+        <span class="tag offers">💬 ${offerCount}</span>
+      </div>
     </div>
-    ${r.desc ? `<div style="color:var(--t2);font-size:13px;margin-top:4px">${sanitize(r.desc)}</div>` : ''}
-    <div class="rmeta">
-      <span class="tag">${sanitize(r.category || '')}</span>
-      <span class="tag">📍 ${sanitize(r.city || '')}</span>
-      ${r.budget ? `<span class="tag">💰 ${r.budget}₾</span>` : '<span class="tag">💰 შეთანხმებით</span>'}
-      ${r.urgency === 'urgent' ? '<span class="tag urg">⚡ გადაუდებელი</span>' : ''}
-      <span class="tag">💬 ${offerCount} შეთავაზება</span>
-    </div>
-    ${mediaHtml}
   </div>`;
     }
 
@@ -5802,7 +5918,7 @@
           el.innerHTML = '<div class="empty"><div class="ei">🔖</div><h3>შენახული მოთხოვნა არ გაქვს</h3><p style="color:var(--t2);font-size:13px;margin-top:6px">შენახვის ღილაკი მოთხოვნის დეტალების ფანჯარაშია</p></div>';
           return;
         }
-        el.innerHTML = favs.map(r => requestCard(r)).join('');
+        el.innerHTML = '<div class="requests-grid">' + favs.map(r => requestCard(r)).join('') + '</div>';
       } catch (e) {
         el.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>';
       }
@@ -5998,7 +6114,7 @@
       if (!el) return;
       if (currentUserDashTab === 'requests') {
         el.innerHTML = myReqs.length
-          ? myReqs.map(r => requestCard(r)).join('')
+          ? '<div class="requests-grid">' + myReqs.map(r => requestCard(r)).join('') + '</div>'
           : '<div class="empty"><div class="ei">📋</div><h3>მოთხოვნა არ გაქვს</h3></div>';
       } else {
         el.innerHTML = myChats.length
@@ -6935,24 +7051,16 @@
           body.innerHTML = '<div class="empty"><div class="ei">📋</div><h3>მოთხოვნა ჯერ არ არის</h3></div>';
           return;
         }
-        body.innerHTML = requests.map(r => {
-          const offerCount = r._count?.offers || 0;
-          const statusLabel = typeof requestStatusLabel === 'function' ? requestStatusLabel(r.status) : r.status;
-          const statusCls   = typeof requestStatusClass === 'function' ? requestStatusClass(r.status) : 'sd';
-          return `<div class="rcard" style="cursor:pointer" onclick="openAdminRequestDetail('${sanitize(r.id)}')">
-            <div class="rhead">
-              <div class="rtitle">${sanitize(r.title || '')}</div>
-              <span class="status ${statusCls}">${statusLabel}</span>
-            </div>
-            <div class="rmeta">
-              <span class="tag">${sanitize(r.category || '')}</span>
-              <span class="tag">📍 ${sanitize(r.city || '')}</span>
-              <span class="tag">💬 ${offerCount}</span>
-              <span class="tag">📅 ${new Date(r.createdAt).toLocaleDateString('ka-GE')}</span>
-            </div>
-            ${r.desc ? `<div style="color:var(--t2);font-size:13px;margin-top:8px">${sanitize(r.desc.substring(0, 120))}${r.desc.length > 120 ? '...' : ''}</div>` : ''}
-          </div>`;
-        }).join('');
+        // Use the same requestCard function so admin view is consistent with user view.
+        // Override onclick by wrapping: rendering each card with admin-specific click.
+        body.innerHTML = '<div class="requests-grid">' + requests.map(r => {
+          // Render via requestCard, then swap the onclick to open admin detail
+          const html = requestCard(r);
+          return html.replace(
+            `onclick="openRequestDetail('${sanitize(r.id)}')"`,
+            `onclick="openAdminRequestDetail('${sanitize(r.id)}')"`
+          );
+        }).join('') + '</div>';
       } catch (e) {
         body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>';
       }
