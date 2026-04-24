@@ -522,7 +522,165 @@
       font-size: 12px
     }
 
-    /* ══════ REQUEST CARD (v3 — reference-match) ══════════════════ */
+    /* ══════ HANDYMAN CARD v2 (reference match) ══════════ */
+    .handymen-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 1100px) {
+      .handymen-grid { grid-template-columns: repeat(2, 1fr) }
+    }
+    @media (max-width: 700px) {
+      .handymen-grid { grid-template-columns: 1fr }
+    }
+
+    .hcard-v2 {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+      position: relative;
+    }
+    .hcard-v2:hover {
+      border-color: rgba(255, 107, 43, .4);
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0,0,0,.3);
+    }
+
+    .hcard-top {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .hcard-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      color: #fff;
+    }
+    .hcard-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .hcard-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hcard-spec {
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hcard-loc {
+      font-size: 11px;
+      color: var(--t2);
+      margin-top: 4px;
+    }
+    .hcard-top-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .hcard-plan {
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .3px;
+    }
+    .hcard-verified {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      background: rgba(46,204,113,.12);
+      border: 1px solid rgba(46,204,113,.3);
+      color: var(--ok);
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      width: fit-content;
+    }
+
+    .hcard-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      padding: 10px;
+      background: var(--s2);
+      border-radius: 10px;
+    }
+    .hcard-stat {
+      text-align: center;
+      font-size: 11px;
+      color: var(--t2);
+    }
+    .hcard-stat strong {
+      display: block;
+      font-size: 16px;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .hcard-skills {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .hcard-skill {
+      padding: 4px 9px;
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 10px;
+      color: var(--t2);
+      font-weight: 500;
+    }
+
+    .hcard-action {
+      margin-top: auto;
+      padding: 11px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: .15s;
+      width: 100%;
+    }
+    .hcard-action:hover { filter: brightness(1.1); transform: translateY(-1px) }
+    .hcard-action:active { transform: translateY(0) }
+
+    @media (max-width: 600px) {
+      .hcard-v2 { padding: 14px; border-radius: 14px }
+      .hcard-name { font-size: 14px }
+      .hcard-stats { padding: 8px }
+      .hcard-stat strong { font-size: 14px }
+      .hcard-action { padding: 10px; font-size: 12px }
+    }
     .rcard {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -3046,6 +3204,10 @@
     @media (max-width: 820px) {
       .rd-body-grid { grid-template-columns: 1fr }
     }
+    .rd-body-full {
+      margin-top: 14px;
+      /* When no media exists, details span full width (no empty left column) */
+    }
     .rd-col-left, .rd-col-right { min-width: 0 }
     .rd-gallery-2x2 {
       display: grid;
@@ -3067,6 +3229,22 @@
       object-fit: cover;
       display: block;
     }
+    /* "+N" overlay on the 4th thumbnail when >4 media items exist */
+    .rd-more-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      pointer-events: none;
+    }
+
     .rd-info-list {
       background: var(--s2);
       border-radius: 12px;
@@ -3078,11 +3256,32 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 10px;
       font-size: 13px;
+      /* Allow wrapping so "მომსახურების ტიპი" value doesn't clip */
+      flex-wrap: wrap;
     }
     .rd-info-list .rd-info-row:last-child { border-bottom: none }
-    .rd-info-list .rd-info-row > span:first-child { color: var(--t2) }
-    .rd-info-list .rd-info-row > span:last-child { color: var(--text); font-weight: 600 }
+    .rd-info-list .rd-info-row > span:first-child {
+      color: var(--t2);
+      flex-shrink: 0;
+    }
+    .rd-info-list .rd-info-row > span:last-child {
+      color: var(--text);
+      font-weight: 600;
+      text-align: right;
+      max-width: 100%;
+      word-break: break-word;
+    }
+    /* Category badge inside info row — allow wrap, don't force ellipsis */
+    .rd-info-list .rd-info-row .rcard-cat {
+      max-width: 100%;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      line-height: 1.4;
+      padding: 6px 12px;
+    }
 
     /* Request detail modal tweaks — make modal fit nicely */
     .mo#moReqDetail .modal {
@@ -3093,6 +3292,22 @@
       .rd-hero { flex-direction: column; gap: 12px }
       .rd-hero-actions { width: 100% }
       .rd-hero-actions .btn { flex: 1 }
+      .rd-more-overlay { font-size: 22px }
+    }
+
+    /* Fix offer list item visibility — calm neutral background instead of harsh red */
+    .oi {
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      transition: border-color .15s ease;
+    }
+    .oi:hover { border-color: rgba(255,107,43,.3) }
+    /* For rejected offers, use subtle red accent on left instead of whole tinted card */
+    .oi.rejected {
+      border-left: 3px solid #e74c3c;
+      opacity: .85;
     }
     .rd-gallery {
       display: grid;
@@ -3231,7 +3446,7 @@
         </div>
         <button class="btn bg" onclick="nav('handymen')">ყველა →</button>
       </div>
-      <div class="cards-grid" id="homeGrid"></div>
+      <div class="handymen-grid" id="homeGrid"></div>
     </div>
 
     <div id="heroHandymanCTA"
@@ -3254,31 +3469,40 @@
   <div id="page-handymen" class="page">
     <div class="ph">
       <div class="phi">
-        <div>
-          <h1>ხელოსნების კატალოგი</h1>
-          <p>VIP+ → VIP → რეგულარული (რეიტინგით)</p>
-        </div><button class="btn bp" onclick="nav('vip-info')">⭐ VIP გაახლება</button>
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="width:44px;height:44px;background:linear-gradient(135deg,#8b5cf6,#a855f7);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🔧</div>
+          <div>
+            <h1 style="margin:0;line-height:1.2">ხელოსნები</h1>
+            <div style="color:var(--t2);font-size:13px;margin-top:4px">იპოვე საჭირო და გამოცდილი ხელოსანი შენი პროექტისთვის</div>
+          </div>
+        </div>
+        <button class="btn bp" onclick="nav('vip-info')">⭐ VIP გაახლება</button>
       </div>
     </div>
-    <div class="sec" style="padding-top:28px">
-      <div class="fb" style="flex-direction:column;gap:10px">
-        <div id="mainCatPills" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-          <select id="fCatMain" onchange="updateFSubCatOpts();renderHandymen()" style="min-width:150px">
-            <option value="">— პროფესია —</option>
-          </select>
-          <select id="fCatSub" onchange="renderHandymen()" style="min-width:150px">
-            <option value="">— ქვე-კ. —</option>
-          </select>
-          <select id="fRating" onchange="renderHandymen()">
-            <option value="">ნებისმიერი</option>
-            <option value="4.5">★ 4.5+</option>
-            <option value="4.0">★ 4.0+</option>
-          </select>
-          <button class="btn bg bs" onclick="clearCatFilter()" style="font-size:11px">✕ გასუფთავება</button>
+    <div class="sec" style="padding-top:20px">
+      <!-- Filter row — same design as requests page -->
+      <div class="filter-row">
+        <button class="filter-btn" id="hnyFilterCatBtn" onclick="openHnyCatFilter()">
+          <span id="hnyFilterCatLabel">🏷️ ყველა კატეგორია</span>
+          <span class="arrow">▾</span>
+        </button>
+        <button class="filter-btn" id="hnyFilterCityBtn" onclick="openCityPicker('handyman')">
+          <span id="hnyFilterCityLabel">📍 ყველა ქალაქი</span>
+          <span class="arrow">▾</span>
+        </button>
+        <button class="filter-btn" id="hnyFilterRatingBtn" onclick="toggleHnyRatingFilter()">
+          <span id="hnyFilterRatingLabel">⭐ ნებისმიერი რეიტინგი</span>
+          <span class="arrow">▾</span>
+        </button>
+        <div class="filter-search">
+          <span class="filter-search-icon">🔍</span>
+          <input type="text" id="hnySearchInput" placeholder="მოძებნე ხელოსანი, სახელი, სპეციალობა..." oninput="renderHandymen()">
         </div>
+        <button class="filter-btn filter-mobile" onclick="openMo('moMobileFiltersHny')">
+          ⚙️ ფილტრები
+        </button>
       </div>
-      <!-- Featured companies section (only shown if any company has VIP) -->
+      <!-- Featured companies section (only shown if any company has VIP+) -->
       <div id="companiesSection" style="display:none;margin-bottom:32px">
         <div
           style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:16px 20px;background:linear-gradient(135deg,rgba(52,152,219,.12),rgba(52,152,219,.06));border:1px solid rgba(52,152,219,.3);border-radius:14px">
@@ -3288,14 +3512,14 @@
             <div style="font-size:12px;color:var(--t2)">პროფესიონალური გუნდები და ბრიგადები</div>
           </div>
         </div>
-        <div class="cards-grid" id="companiesGrid"></div>
+        <div class="handymen-grid" id="companiesGrid"></div>
       </div>
       <!-- Regular handymen -->
       <div id="handymenSection">
         <div id="handymenSectionTitle" style="display:none;margin-bottom:16px">
           <div style="font-weight:800;font-size:16px">🔧 ხელოსნები</div>
         </div>
-        <div class="cards-grid" id="handymenGrid"></div>
+        <div class="handymen-grid" id="handymenGrid"></div>
       </div>
     </div>
   </div>
@@ -3811,6 +4035,42 @@
           <span class="arrow">▾</span>
         </button>
         <button class="btn bg" style="justify-content:center" onclick="clearAllReqFilters()">✕ ყველას გასუფთავება</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE FILTERS — for handymen page -->
+  <div class="mo" id="moMobileFiltersHny">
+    <div class="modal" style="max-height:85vh;overflow-y:auto">
+      <button class="mc" onclick="closeMo('moMobileFiltersHny')">✕</button>
+      <h2 style="margin-bottom:16px">⚙️ ფილტრები</h2>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="filter-btn" onclick="openHnyCatFilter()" style="min-width:unset">
+          <span id="mHnyFilterCatLabel">🏷️ ყველა კატეგორია</span>
+          <span class="arrow">▾</span>
+        </button>
+        <button class="filter-btn" onclick="openCityPicker('handyman')" style="min-width:unset">
+          <span id="mHnyFilterCityLabel">📍 ყველა ქალაქი</span>
+          <span class="arrow">▾</span>
+        </button>
+        <button class="filter-btn" onclick="toggleHnyRatingFilter()" style="min-width:unset">
+          <span id="mHnyFilterRatingLabel">⭐ ნებისმიერი რეიტინგი</span>
+          <span class="arrow">▾</span>
+        </button>
+        <button class="btn bg" style="justify-content:center" onclick="clearAllHnyFilters()">✕ ყველას გასუფთავება</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RATING FILTER (handymen) -->
+  <div class="mo" id="moHnyRatingFilter">
+    <div class="modal">
+      <button class="mc" onclick="closeMo('moHnyRatingFilter')">✕</button>
+      <h2 style="margin-bottom:14px">⭐ რეიტინგი</h2>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="filter-btn" style="min-width:unset" onclick="setHnyRating('')">⭐ ნებისმიერი რეიტინგი</button>
+        <button class="filter-btn" style="min-width:unset" onclick="setHnyRating('4.5')">⭐ 4.5+ (მაღალი)</button>
+        <button class="filter-btn" style="min-width:unset" onclick="setHnyRating('4.0')">⭐ 4.0+ (კარგი)</button>
       </div>
     </div>
   </div>
@@ -4734,7 +4994,7 @@
         }
       }
       if (page === 'home') renderHomeGrid();
-      else if (page === 'handymen') renderHandymen();
+      else if (page === 'handymen') { updateHnyFilterLabels?.(); renderHandymen(); }
       else if (page === 'requests') renderRequestsPage();
       else if (page === 'dashboard') renderDashboard();
       else if (page === 'admin') renderAdmin();
@@ -5365,6 +5625,15 @@
     // ========================================================
     // HANDYMEN — LIST WITH COMPANY SECTION
     // ========================================================
+    // ═══ HANDYMAN FILTERS ═══
+    let _hnyFilters = {
+      parentCat: '',
+      subCat:    '',
+      city:      '',
+      minRating: '',
+      search:    '',
+    };
+
     async function renderHandymen() {
       const grid = document.getElementById('handymenGrid');
       const companiesGrid = document.getElementById('companiesGrid');
@@ -5375,33 +5644,40 @@
       grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳ იტვირთება...</div>';
       if (companiesGrid) companiesGrid.innerHTML = '';
 
-      // ✅ FIX (Task 3): pills set dataset.mainCatId (e.g. 'plumber') — resolve to category NAME
-      const fCatMainEl = document.getElementById('fCatMain');
-      let mainCat = fCatMainEl?.value || '';
-      if (!mainCat && fCatMainEl?.dataset.mainCatId) {
-        const found = CATS_DATA.find(g => g.id === fCatMainEl.dataset.mainCatId);
-        if (found) mainCat = found.name;
-      }
-      const subCat = document.getElementById('fCatSub')?.value || '';
-      const minRating = document.getElementById('fRating')?.value || '';
+      const searchInp = document.getElementById('hnySearchInput');
+      if (searchInp) _hnyFilters.search = searchInp.value || '';
 
       try {
         let url = '/users/handymen?';
-        if (mainCat) url += `specialty=${encodeURIComponent(mainCat)}&`;
-        if (minRating) url += `minRating=${minRating}&`;
+        if (_hnyFilters.parentCat) {
+          const cat = CATS_DATA.find(c => c.id === _hnyFilters.parentCat);
+          if (cat) url += `specialty=${encodeURIComponent(cat.name)}&`;
+        }
+        if (_hnyFilters.minRating) url += `minRating=${_hnyFilters.minRating}&`;
         let all = await api(url);
-        // Sub-category client-side filter
-        if (subCat) {
+
+        // Client-side filters
+        if (_hnyFilters.subCat) {
           all = all.filter(h => {
             const services = Array.isArray(h.services) ? h.services : [];
-            const firstWord = subCat.split(' ')[0].toLowerCase();
-            return services.some(s => s.toLowerCase().includes(firstWord)) ||
-              (h.specialty && h.specialty.toLowerCase().includes(firstWord));
+            return services.includes(_hnyFilters.subCat) || (h.specialty && h.specialty === _hnyFilters.subCat);
           });
+        }
+        if (_hnyFilters.city) {
+          const c = _hnyFilters.city.toLowerCase();
+          all = all.filter(h => (h.city || '').toLowerCase().includes(c));
+        }
+        if (_hnyFilters.search && _hnyFilters.search.trim()) {
+          const q = _hnyFilters.search.toLowerCase().trim();
+          all = all.filter(h =>
+            ((h.name || '') + ' ' + (h.surname || '')).toLowerCase().includes(q) ||
+            (h.specialty || '').toLowerCase().includes(q) ||
+            (h.city || '').toLowerCase().includes(q) ||
+            (h.services || []).some(s => s.toLowerCase().includes(q))
+          );
         }
 
         // Split: feature only companies with VIP+ active OR active TOP subscription
-        // (regular VIP or Pro plans do NOT get featured section)
         const featuredCompanies = all.filter(h => h.type === 'company' && isCompanyFeatured(h));
         const rest = all.filter(h => !(h.type === 'company' && isCompanyFeatured(h)));
 
@@ -5427,6 +5703,82 @@
       } catch (e) {
         grid.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ჩატვირთვა ვერ მოხდა</h3></div>';
       }
+    }
+
+    function updateHnyFilterLabels() {
+      let catLabel = '🏷️ ყველა კატეგორია';
+      if (_hnyFilters.subCat) catLabel = '🏷️ ' + _hnyFilters.subCat.slice(0, 20) + (_hnyFilters.subCat.length > 20 ? '...' : '');
+      else if (_hnyFilters.parentCat) {
+        const cat = CATS_DATA.find(c => c.id === _hnyFilters.parentCat);
+        if (cat) catLabel = '🏷️ ' + cat.name;
+      }
+      ['hnyFilterCatLabel', 'mHnyFilterCatLabel'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.textContent = catLabel;
+      });
+      const cityLabel = _hnyFilters.city ? '📍 ' + _hnyFilters.city : '📍 ყველა ქალაქი';
+      ['hnyFilterCityLabel', 'mHnyFilterCityLabel'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.textContent = cityLabel;
+      });
+      let ratingLabel = '⭐ ნებისმიერი რეიტინგი';
+      if (_hnyFilters.minRating === '4.5') ratingLabel = '⭐ 4.5+';
+      else if (_hnyFilters.minRating === '4.0') ratingLabel = '⭐ 4.0+';
+      ['hnyFilterRatingLabel', 'mHnyFilterRatingLabel'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.textContent = ratingLabel;
+      });
+      document.getElementById('hnyFilterCatBtn')?.classList.toggle('active', !!(_hnyFilters.parentCat || _hnyFilters.subCat));
+      document.getElementById('hnyFilterCityBtn')?.classList.toggle('active', !!_hnyFilters.city);
+      document.getElementById('hnyFilterRatingBtn')?.classList.toggle('active', !!_hnyFilters.minRating);
+    }
+
+    function openHnyCatFilter() {
+      closeMo('moMobileFiltersHny');
+      const body = document.getElementById('catFilterBody');
+      body.innerHTML = `
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px">
+          <button class="filter-btn ${!_hnyFilters.parentCat && !_hnyFilters.subCat ? 'active' : ''}" style="min-width:unset"
+            onclick="setHnyCatFilter('', '')">✕ ყველა კატეგორია</button>
+        </div>
+        ${CATS_DATA.map(cat => {
+          const color = CAT_COLORS[cat.id] || { bg: 'rgba(255,107,43,.15)', fg: 'var(--accent)' };
+          const isActive = _hnyFilters.parentCat === cat.id && !_hnyFilters.subCat;
+          return `<div style="margin-bottom:14px">
+            <button class="filter-btn ${isActive ? 'active' : ''}" style="min-width:unset;background:${isActive ? '' : color.bg};color:${isActive ? '' : color.fg};border-color:${isActive ? '' : color.fg};font-weight:700;width:100%;justify-content:flex-start"
+              onclick="setHnyCatFilter('${cat.id}', '')">${cat.icon} ${sanitize(cat.name)}</button>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-left:14px">
+              ${cat.subs.map(sub => `
+                <button class="filter-btn ${_hnyFilters.subCat === sub ? 'active' : ''}" style="min-width:unset;font-size:11px;padding:6px 10px"
+                  onclick="setHnyCatFilter('${cat.id}', '${sanitize(sub).replace(/'/g, "\\'")}')">${sanitize(sub)}</button>
+              `).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      `;
+      setTimeout(() => openMo('moCatFilter'), 50);
+    }
+    function setHnyCatFilter(parentId, subName) {
+      _hnyFilters.parentCat = parentId;
+      _hnyFilters.subCat = subName;
+      updateHnyFilterLabels();
+      closeMo('moCatFilter');
+      closeMo('moMobileFiltersHny');
+      renderHandymen();
+    }
+    function toggleHnyRatingFilter() {
+      closeMo('moMobileFiltersHny');
+      openMo('moHnyRatingFilter');
+    }
+    function setHnyRating(v) {
+      _hnyFilters.minRating = v;
+      updateHnyFilterLabels();
+      closeMo('moHnyRatingFilter');
+      renderHandymen();
+    }
+    function clearAllHnyFilters() {
+      _hnyFilters = { parentCat: '', subCat: '', city: '', minRating: '', search: '' };
+      const si = document.getElementById('hnySearchInput'); if (si) si.value = '';
+      updateHnyFilterLabels();
+      closeMo('moMobileFiltersHny');
+      renderHandymen();
     }
 
     async function renderHomeGrid() {
@@ -5465,40 +5817,66 @@
       const rating = avgRating(h.reviewsReceived);
       const stars = rating > 0 ? '★'.repeat(Math.round(rating)) : '';
       const allSpecs = h.specialties?.length ? h.specialties : (h.specialty ? [h.specialty] : []);
+      const primarySpec = allSpecs[0] || '';
 
-      const avatarHtml = h.avatar
-        ? `<img src="${sanitize(h.avatar)}" style="width:52px;height:52px;border-radius:11px;object-fit:cover;flex-shrink:0">`
-        : `<div class="av" style="background:${sanitize(h.color || '#22222f')};color:var(--accent)">${sanitize(h.emoji || '🔧')}</div>`;
+      // Category color — use primary specialty for gradient
+      const color = getCatColor(primarySpec);
+      const icon = CAT_ICONS[primarySpec] || h.emoji || '🔧';
 
-      const companyBorderStyle = isCompanyCard
-        ? 'border-color:rgba(52,152,219,.5);background:linear-gradient(135deg,var(--surface),rgba(52,152,219,.05));'
+      // Icon tile (left) — uses category gradient
+      const iconTile = `<div class="hcard-icon" style="background:${color.grad}">
+        ${h.avatar
+          ? `<img src="${sanitize(h.avatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">`
+          : `<span style="font-size:26px">${icon}</span>`}
+      </div>`;
+
+      // Plan badge (top-right of card)
+      let planBadgeHtml = '';
+      if (isCompanyCard || (isCompany && vip)) {
+        planBadgeHtml = `<span class="hcard-plan" style="background:rgba(52,152,219,.18);color:#3498db;border:1px solid #3498db">💜 VIP+</span>`;
+      } else if (vip && h.vipType === 'vipp') {
+        planBadgeHtml = `<span class="hcard-plan" style="background:rgba(168,85,247,.18);color:#a855f7;border:1px solid #a855f7">💜 VIP+</span>`;
+      } else if (vip) {
+        planBadgeHtml = `<span class="hcard-plan" style="background:rgba(241,196,15,.18);color:#eab308;border:1px solid #eab308">⭐ VIP</span>`;
+      }
+
+      // Verified badge
+      const verifiedHtml = h.verified
+        ? `<div class="hcard-verified">✅ ვერიფიცირებული</div>`
         : '';
 
-      return `<div class="hcard${vip && h.vipType === 'vipp' ? ' is-vipp' : vip ? ' is-vip' : ''}" 
-    style="${companyBorderStyle}" onclick="showProfile('${h.id}')">
-    ${isCompanyCard ? `<div class="vip-ribbon" style="background:rgba(52,152,219,.15);color:#3498db;border:1px solid rgba(52,152,219,.4)">🏢 კომპანია</div>` :
-          vip ? `<div class="vip-ribbon ${h.vipType}">${h.vipType === 'vipp' ? '💜 VIP+' : '⭐ VIP'}</div>` : ''}
-    <div class="ct">
-      ${avatarHtml}
-      <div class="ci">
-        <h3>${sanitize(h.name)} ${sanitize(h.surname || '')}</h3>
-        <div class="sp">${allSpecs.slice(0, 2).map(s => sanitize(s)).join(' · ')}</div>
-        <div class="loc">📍 ${sanitize(h.city || '')}</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
-      ${h.verified ? '<span class="badge bv">✓ ვერიფიცირებული</span>' : ''}
-      ${isCompany && !isCompanyCard && vip ? `<span class="badge" style="background:rgba(52,152,219,.12);color:#3498db">🏢</span>` : ''}
-      ${!isCompany && vip && h.vipType === 'vipp' ? '<span class="badge" style="background:rgba(168,85,247,.12);color:var(--vipp)">💜 VIP+</span>' :
-          !isCompany && vip ? '<span class="badge" style="background:rgba(241,196,15,.12);color:var(--vip)">⭐ VIP</span>' : ''}
-    </div>
-    <div class="cs">
-      <div class="cst"><strong>${rating > 0 ? rating.toFixed(1) + ' ' + stars : '—'}</strong> რეიტინგი</div>
-      <div class="cst"><strong>${(h.reviewsReceived || []).length}</strong> შეფასება</div>
-      <div class="cst"><strong>${h.jobs || 0}</strong> სამუშაო</div>
-    </div>
-    ${h.services && h.services.length ? `<div style="margin-top:10px;display:flex;gap:4px;flex-wrap:wrap">${h.services.slice(0, 3).map(s => `<span class="tag">${sanitize(s)}</span>`).join('')}</div>` : ''}
-  </div>`;
+      // Stats (rating + reviews + jobs)
+      const statsHtml = `
+        <div class="hcard-stats">
+          <div class="hcard-stat"><strong>${rating > 0 ? rating.toFixed(1) : '—'}</strong> <span>რეიტინგი</span></div>
+          <div class="hcard-stat"><strong>${(h.reviewsReceived || []).length}</strong> <span>შეფასება</span></div>
+          <div class="hcard-stat"><strong>${h.jobs || 0}</strong> <span>სამუშაო</span></div>
+        </div>`;
+
+      // Skills (services) tags
+      const skillsHtml = h.services && h.services.length
+        ? `<div class="hcard-skills">${h.services.slice(0, 3).map(s => `<span class="hcard-skill">${sanitize(s)}</span>`).join('')}</div>`
+        : '';
+
+      return `<div class="hcard-v2" onclick="showProfile('${sanitize(h.id)}')">
+        <div class="hcard-top">
+          ${iconTile}
+          <div class="hcard-info">
+            <div class="hcard-name">${sanitize(h.name || '')} ${sanitize(h.surname || '')}</div>
+            ${primarySpec ? `<div class="hcard-spec" style="color:${color.fg}">${sanitize(primarySpec)}</div>` : ''}
+            <div class="hcard-loc">📍 ${sanitize(h.city || '—')}</div>
+          </div>
+          <div class="hcard-top-right">
+            ${planBadgeHtml}
+          </div>
+        </div>
+        ${verifiedHtml}
+        ${statsHtml}
+        ${skillsHtml}
+        <button class="hcard-action" style="background:${color.grad}" onclick="event.stopPropagation();showProfile('${sanitize(h.id)}')">
+          👁 პროფილის ნახვა
+        </button>
+      </div>`;
     }
 
     // ========================================================
@@ -5697,6 +6075,8 @@
 
     // ═══ CATEGORY FILTER MODAL ═══
     function openReqCatFilter() {
+      // ✅ Close parent mobile-filters modal first so nested modal isn't hidden behind it
+      closeMo('moMobileFilters');
       const body = document.getElementById('catFilterBody');
       body.innerHTML = `
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px">
@@ -5718,7 +6098,8 @@
           </div>`;
         }).join('')}
       `;
-      openMo('moCatFilter');
+      // Open after short delay so parent is visually gone first
+      setTimeout(() => openMo('moCatFilter'), 50);
     }
     function setReqCatFilter(parentId, subName) {
       _reqFilters.parentCat = parentId;
@@ -5735,9 +6116,11 @@
     function openCityPicker(forWhat, callback) {
       _cityPickerFor = forWhat;
       _cityPickerCallback = callback || null;
+      // Close mobile-filters parent first (nested modal z-index issue)
+      closeMo('moMobileFilters');
       document.getElementById('citySearchInput').value = '';
       renderCityList();
-      openMo('moCityPicker');
+      setTimeout(() => openMo('moCityPicker'), 50);
     }
     function renderCityList() {
       const q = (document.getElementById('citySearchInput')?.value || '').toLowerCase().trim();
@@ -5786,9 +6169,10 @@
 
     // ═══ PRICE FILTER ═══
     function toggleReqPriceFilter() {
+      closeMo('moMobileFilters');
       document.getElementById('reqFilterPriceMin').value = _reqFilters.priceMin ?? '';
       document.getElementById('reqFilterPriceMax').value = _reqFilters.priceMax ?? '';
-      openMo('moPriceFilter');
+      setTimeout(() => openMo('moPriceFilter'), 50);
     }
     function applyReqPriceFilter() {
       const mn = parseInt(document.getElementById('reqFilterPriceMin').value);
@@ -6186,21 +6570,31 @@
         : `<div style="width:48px;height:48px;border-radius:50%;background:${sanitize(r.user?.color || '#3b3b4f')};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px">${sanitize(r.user?.emoji || '👤')}</div>`;
 
       // Gallery (left column on desktop)
+      // Show up to 4 media items in 2x2 grid; add "+N" overlay on the 4th if more exist.
+      const MAX_VISIBLE = 4;
+      const visibleMedia = media.slice(0, MAX_VISIBLE);
+      const hiddenCount = Math.max(0, media.length - MAX_VISIBLE);
       const galleryHtml = media.length ? `
         <div class="rd-section">
           <h3 style="font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:6px">📷 ფოტო და ვიდეო (${media.length})</h3>
           <div class="rd-gallery-2x2">
-            ${media.map((m, idx) => {
+            ${visibleMedia.map((m, idx) => {
               const url = sanitize(m.url || '');
               const items = JSON.stringify(media.map(x => ({ type: x.type || 'image', url: x.url || '' }))).replace(/'/g, "&apos;");
+              const isLast = (idx === visibleMedia.length - 1) && hiddenCount > 0;
+              const overlayHtml = isLast
+                ? `<div class="rd-more-overlay">+${hiddenCount}</div>`
+                : '';
               if (m.type === 'video') {
                 return `<div class="rd-gallery-item" onclick='openLightboxGallery(${items}, ${idx})'>
                   <video src="${url}" muted playsinline preload="metadata"></video>
                   <div class="vid-ind">▶</div>
+                  ${overlayHtml}
                 </div>`;
               }
               return `<div class="rd-gallery-item" onclick='openLightboxGallery(${items}, ${idx})'>
                 <img src="${url}" alt="" loading="lazy">
+                ${overlayHtml}
               </div>`;
             }).join('')}
           </div>
@@ -6243,7 +6637,8 @@
             const avatarHtml = h?.avatar
               ? `<img src="${sanitize(h.avatar)}" ${profileClick} style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;cursor:pointer">`
               : `<div class="av" ${profileClick} style="width:40px;height:40px;font-size:16px;background:${sanitize(h?.color || '#22222f')};color:var(--accent);cursor:pointer">${sanitize(h?.emoji || '🔧')}</div>`;
-            return `<div class="oi" style="margin-bottom:10px">
+            const isRejected = ['rejected', 'disagreed'].includes(o.status);
+            return `<div class="oi ${isRejected ? 'rejected' : ''}" style="margin-bottom:10px;flex-direction:column;align-items:stretch">
               <div style="display:flex;gap:10px;align-items:flex-start">
                 ${avatarHtml}
                 <div style="flex:1;min-width:0">
@@ -6322,11 +6717,15 @@
           </div>
         </div>
 
-        <!-- 2-column body (stacks on mobile) -->
-        <div class="rd-body-grid">
-          <div class="rd-col-left">${galleryHtml}</div>
-          <div class="rd-col-right">${detailsHtml}</div>
-        </div>
+        <!-- Adaptive body: 2-column only if media exists; full-width details otherwise -->
+        ${media.length ? `
+          <div class="rd-body-grid">
+            <div class="rd-col-left">${galleryHtml}</div>
+            <div class="rd-col-right">${detailsHtml}</div>
+          </div>
+        ` : `
+          <div class="rd-body-full">${detailsHtml}</div>
+        `}
 
         ${offerCtaHtml}
         ${offersHtml}
