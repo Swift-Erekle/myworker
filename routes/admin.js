@@ -276,26 +276,74 @@ router.get('/support', async (req, res) => {
 // POST /api/admin/support — create support request (called from frontend/ARIA)
 router.post('/support', requireAuth, async (req, res) => {
   try {
-    const { message } = req.body;
-    // Check for existing open request
+    const { message, content } = req.body;
+    const text = content || message;
+    // Check for existing open request; if yes, just append message there
     const existing = await prisma.supportRequest.findFirst({
       where: { userId: req.user.id, status: { not: 'closed' } },
+      orderBy: { createdAt: 'desc' },
     });
-    if (existing) return res.status(409).json({ supportId: existing.id, message: 'უკვე გახსნილი მოთხოვნა არსებობს' });
+    if (existing) {
+      if (text) {
+        const msg = await prisma.supportMessage.create({
+          data: {
+            supportRequestId: existing.id,
+            fromRole: 'user',
+            content: String(text),
+          },
+        });
+        await prisma.supportRequest.update({
+          where: { id: existing.id },
+          data:  { lastMsg: String(text).substring(0, 100), updatedAt: new Date() },
+        });
+        const io = req.app.get('io');
+        if (io) io.to(`support:${existing.id}`).emit('supportMessage', msg);
+        return res.status(201).json(msg);
+      }
+      return res.status(200).json({ supportId: existing.id });
+    }
 
     const sr = await prisma.supportRequest.create({
       data: {
         userId: req.user.id,
-        lastMsg: (message || '').substring(0, 100),
+        lastMsg: (text || '').substring(0, 100),
         messages: {
-          create: message ? { fromRole: 'user', content: String(message) } : undefined,
+          create: text ? { fromRole: 'user', content: String(text) } : undefined,
         },
       },
+      include: { messages: true },
     });
     const io = req.app.get('io');
     if (io) io.emit('newSupportRequest', { supportId: sr.id });
-    res.status(201).json(sr);
+    // Return last message for immediate display in mobile
+    const lastMsg = sr.messages[sr.messages.length - 1] || null;
+    res.status(201).json(lastMsg || sr);
   } catch (err) {
+    console.error('[ADMIN] support POST error:', err.message);
+    res.status(500).json({ error: 'სერვერის შეცდომა' });
+  }
+});
+
+// ✅ GET /api/admin/support/mine — current user's support chat (for mobile app)
+router.get('/support/mine', requireAuth, async (req, res) => {
+  try {
+    const sr = await prisma.supportRequest.findFirst({
+      where:   { userId: req.user.id, status: { not: 'closed' } },
+      include: { messages: { orderBy: { createdAt: 'asc' } } },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!sr) return res.json({ messages: [] });
+    // Normalize messages so UI can use fromId === user.id check
+    const messages = sr.messages.map(m => ({
+      id: m.id,
+      fromId: m.fromRole === 'user' ? req.user.id : 'staff',
+      fromRole: m.fromRole,
+      content: m.content,
+      createdAt: m.createdAt,
+    }));
+    res.json({ supportId: sr.id, status: sr.status, messages });
+  } catch (err) {
+    console.error('[ADMIN] support/mine error:', err.message);
     res.status(500).json({ error: 'სერვერის შეცდომა' });
   }
 });
