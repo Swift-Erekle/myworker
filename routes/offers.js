@@ -21,9 +21,12 @@ router.post('/', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'მხოლოდ ხელოსანს შეუძლია შეთავაზება' });
     }
 
-    const { requestId, price, duration, comment } = req.body;
+    const { requestId, price, duration, durationMinutes, comment } = req.body;
     if (!requestId || !price) {
       return res.status(400).json({ error: 'მოთხოვნის ID და ფასი სავალდებულოა' });
+    }
+    if (!durationMinutes || parseInt(durationMinutes) <= 0) {
+      return res.status(400).json({ error: 'სამუშაოს ხანგრძლივობა (წუთებში) სავალდებულოა' });
     }
 
     // ── Plan limit check ──────────────────────────────────────
@@ -80,10 +83,17 @@ router.post('/', requireAuth, async (req, res) => {
     if (!['open', 'pending'].includes(request.status)) return res.status(400).json({ error: 'მოთხოვნა აღარ იღებს შეთავაზებებს' });
 
     // ── Check duplicate ───────────────────────────────────────
+    // ✅ Task 6: Allow re-sending if previous offer was rejected or disagreed
     const existing = await prisma.offer.findUnique({
       where: { requestId_handymanId: { requestId, handymanId: req.user.id } },
     });
-    if (existing) return res.status(409).json({ error: 'შეთავაზება უკვე გაგზავნილია' });
+    if (existing) {
+      if (['rejected', 'disagreed'].includes(existing.status)) {
+        await prisma.offer.delete({ where: { id: existing.id } }).catch(() => {});
+      } else {
+        return res.status(409).json({ error: 'შეთავაზება უკვე გაგზავნილია' });
+      }
+    }
 
     // ── Bump request status: open → pending (first offer) ─────
     // Stays 'pending' until owner accepts one
@@ -100,6 +110,7 @@ router.post('/', requireAuth, async (req, res) => {
         handymanId: req.user.id,
         price:    parseInt(price),
         duration: duration || null,
+        durationMinutes: parseInt(durationMinutes),
         comment:  comment  || null,
       },
       include: {
@@ -166,7 +177,7 @@ router.get('/mine', requireAuth, async (req, res) => {
 // Allowed fields: price, duration, comment.
 router.patch('/:id', requireAuth, async (req, res) => {
   try {
-    const { price, duration, comment } = req.body;
+    const { price, duration, durationMinutes, comment } = req.body;
 
     const offer = await prisma.offer.findUnique({
       where: { id: req.params.id },
@@ -198,8 +209,9 @@ router.patch('/:id', requireAuth, async (req, res) => {
       }
       data.price = parsed;
     }
-    if (duration !== undefined) data.duration = duration || null;
-    if (comment  !== undefined) data.comment  = comment  || null;
+    if (duration        !== undefined) data.duration        = duration || null;
+    if (durationMinutes !== undefined) data.durationMinutes = parseInt(durationMinutes) || null;
+    if (comment         !== undefined) data.comment         = comment  || null;
 
     if (Object.keys(data).length === 0) {
       return res.status(400).json({ error: 'არცერთი ველი არ შეცვლილა' });
@@ -246,20 +258,21 @@ router.post('/:id/reject', requireAuth, async (req, res) => {
     });
     res.json({ offer: updated });
 
-    // Notify the handyman their offer was rejected
+    // Notify the handyman their offer was rejected — with link to request so they can retry
     sendPushToUser(prisma, offer.handymanId, {
       title: 'შეთავაზება არ იქნა მიღებული',
-      body:  `"${offer.request.title}" — მომხმარებელმა უარი თქვა`,
+      body:  `"${offer.request.title}"`,
       tag:   'offer-rejected-' + offer.id,
+      url:   `/?req=${offer.requestId}`,
     }).catch(() => {});
     sendExpoPushToUser(prisma, offer.handymanId, {
       title: 'შეთავაზება არ იქნა მიღებული',
       body:  `"${offer.request.title}"`,
-      data:  { type: 'offer_rejected', offerId: offer.id },
+      data:  { type: 'offer_rejected', offerId: offer.id, requestId: offer.requestId },
       channelId: 'default',
     }).catch(() => {});
 
-    // ── In-app bell notification ──────────────────────────────
+    // ── In-app bell notification — clickable → opens request detail ──
     createNotification({
       prisma,
       io: req.app.get('io'),
@@ -267,6 +280,7 @@ router.post('/:id/reject', requireAuth, async (req, res) => {
       type:   'offer_rejected',
       title:  'შეთავაზება არ იქნა მიღებული',
       body:   `"${offer.request.title}"`,
+      link:   `?req=${offer.requestId}`,
     }).catch(() => {});
   } catch (err) {
     console.error('[OFFERS] reject error:', err.message);
@@ -274,11 +288,10 @@ router.post('/:id/reject', requireAuth, async (req, res) => {
   }
 });
 
-// ── POST /api/offers/:id/accept ───────────────────────────────
 // ── POST /api/offers/:id/disagree ─────────────────────────────
-// User is inside a chat but says "we didn't agree" — undo the acceptance.
-// Mark the offer as rejected and restore the request to 'pending' so that
-// user can review other pending offers or wait for new ones.
+// User is inside a chat but says "ვერ შევთანხმდით" — undo acceptance.
+// Mark the offer as 'disagreed' (= rejected in UI), restore request to
+// pending so the user can review other offers. Chat auto-deletes in 24h.
 router.post('/:id/disagree', requireAuth, async (req, res) => {
   try {
     if (req.user.type !== 'user') {
@@ -290,57 +303,65 @@ router.post('/:id/disagree', requireAuth, async (req, res) => {
     });
     if (!offer) return res.status(404).json({ error: 'შეთავაზება ვერ მოიძებნა' });
     if (offer.request.userId !== req.user.id) return res.status(403).json({ error: 'წვდომა აკრძალულია' });
-    if (offer.status !== 'accepted') {
-      return res.status(400).json({ error: 'მხოლოდ მიღებული შეთავაზების უარყოფა შეიძლება' });
+    if (!['accepted', 'agreed'].includes(offer.status)) {
+      return res.status(400).json({ error: 'მხოლოდ მიღებული/შეთანხმებული შეთავაზების გაუქმება შეიძლება' });
     }
 
-    // 1. Mark this offer as rejected
+    // 1. Mark this offer as disagreed (distinct from 'rejected' on pending)
     await prisma.offer.update({
       where: { id: offer.id },
-      data:  { status: 'rejected' },
+      data:  { status: 'disagreed' },
     });
 
-    // 2. Check whether ANY other accepted offers remain on the same request
-    const otherAccepted = await prisma.offer.count({
+    // 2. Check whether ANY other active offers remain on the same request
+    const otherActive = await prisma.offer.count({
       where: {
         requestId: offer.requestId,
         id:        { not: offer.id },
-        status:    'accepted',
+        status:    { in: ['accepted', 'agreed'] },
       },
     });
 
-    // 3. If no other accepted offers, move request back to 'pending' (still receiving offers)
-    if (otherAccepted === 0) {
+    // 3. If no other active offers, move request back to 'pending' (still receiving offers)
+    if (otherActive === 0) {
       await prisma.request.update({
         where: { id: offer.requestId },
         data:  { status: 'pending' },
       });
     }
 
-    // 4. Add a system message to the chat (so handyman sees context)
+    // 4. Add a system message (user's requested text) and mark chat for deletion in ~24h
     if (offer.chat) {
       await prisma.message.create({
         data: {
           chatId:  offer.chat.id,
           fromId:  null,
           type:    'system',
-          content: `მომხმარებელმა უთხრა "ვერ შევთანხმდით". თანამშრომლობა დასრულდა.`,
+          content: `"ვერ შევთანხმდით". თანამშრომლობა დასრულდა.`,
         },
+      }).catch(() => {});
+      // Set updatedAt to 13 days ago. Chat cleanup cron (04:00 daily) deletes 14+ day chats.
+      // So this chat will be deleted within the next 24 hours.
+      const thirteenDaysAgo = new Date(Date.now() - 13 * 86400000);
+      await prisma.chat.update({
+        where: { id: offer.chat.id },
+        data:  { updatedAt: thirteenDaysAgo },
       }).catch(() => {});
     }
 
     res.json({ ok: true });
 
-    // Push + bell to handyman
+    // Push + bell to handyman — link back to request so they can re-bid
     sendPushToUser(prisma, offer.handymanId, {
       title: 'ვერ შევთანხმდით',
       body:  `"${offer.request.title}" — მომხმარებელმა უარი თქვა`,
       tag:   'offer-disagree-' + offer.id,
+      url:   `/?req=${offer.requestId}`,
     }).catch(() => {});
     sendExpoPushToUser(prisma, offer.handymanId, {
       title: 'ვერ შევთანხმდით',
       body:  `"${offer.request.title}"`,
-      data:  { type: 'offer_disagree', offerId: offer.id },
+      data:  { type: 'offer_disagree', offerId: offer.id, requestId: offer.requestId },
     }).catch(() => {});
     createNotification({
       prisma,
@@ -349,9 +370,77 @@ router.post('/:id/disagree', requireAuth, async (req, res) => {
       type:   'offer_rejected',
       title:  'ვერ შევთანხმდით',
       body:   `"${offer.request.title}"`,
+      link:   `?req=${offer.requestId}`,
     }).catch(() => {});
   } catch (err) {
     console.error('[OFFERS] disagree error:', err.message);
+    res.status(500).json({ error: 'სერვერის შეცდომა' });
+  }
+});
+
+// ── POST /api/offers/:id/agree ─────────────────────────────────
+// User presses "შევთანხმდით" — finalizes agreement, starts countdown.
+router.post('/:id/agree', requireAuth, async (req, res) => {
+  try {
+    if (req.user.type !== 'user') {
+      return res.status(403).json({ error: 'მხოლოდ მომხმარებელს შეუძლია' });
+    }
+    const offer = await prisma.offer.findUnique({
+      where:   { id: req.params.id },
+      include: { request: true, chat: true },
+    });
+    if (!offer) return res.status(404).json({ error: 'შეთავაზება ვერ მოიძებნა' });
+    if (offer.request.userId !== req.user.id) return res.status(403).json({ error: 'წვდომა აკრძალულია' });
+    if (offer.status !== 'accepted') {
+      return res.status(400).json({ error: 'მხოლოდ მიღებული შეთავაზებისთვის მოქმედებს' });
+    }
+
+    const now = new Date();
+    const mins = offer.durationMinutes || (24 * 60);     // default: 1 day fallback
+    const completedAt = new Date(now.getTime() + mins * 60 * 1000);
+
+    await prisma.offer.update({
+      where: { id: offer.id },
+      data:  { status: 'agreed', agreedAt: now, completedAt },
+    });
+
+    // System message in chat
+    if (offer.chat) {
+      await prisma.message.create({
+        data: {
+          chatId:  offer.chat.id,
+          fromId:  null,
+          type:    'system',
+          content: `"შევთანხმდით, თანამშრომლობა დაიწყო"`,
+        },
+      }).catch(() => {});
+    }
+
+    res.json({ ok: true, completedAt });
+
+    // Notify handyman
+    sendPushToUser(prisma, offer.handymanId, {
+      title: '🤝 შევთანხმდით',
+      body:  `"${offer.request.title}" — თანამშრომლობა დაიწყო`,
+      tag:   'offer-agreed-' + offer.id,
+      url:   `/?chat=${offer.chat?.id || ''}`,
+    }).catch(() => {});
+    sendExpoPushToUser(prisma, offer.handymanId, {
+      title: '🤝 შევთანხმდით',
+      body:  `"${offer.request.title}"`,
+      data:  { type: 'offer_agreed', offerId: offer.id, chatId: offer.chat?.id },
+    }).catch(() => {});
+    createNotification({
+      prisma,
+      io: req.app.get('io'),
+      userId: offer.handymanId,
+      type:   'offer_accepted',
+      title:  '🤝 შევთანხმდით',
+      body:   `"${offer.request.title}" — თანამშრომლობა დაიწყო`,
+      link:   `?chat=${offer.chat?.id || ''}`,
+    }).catch(() => {});
+  } catch (err) {
+    console.error('[OFFERS] agree error:', err.message);
     res.status(500).json({ error: 'სერვერის შეცდომა' });
   }
 });

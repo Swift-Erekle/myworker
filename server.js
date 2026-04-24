@@ -345,12 +345,87 @@ app.use((err, req, res, next) => {
     }
   });
 
+  // ── 7. Offer completion + review reminders — every 10 minutes ──
+  // When an 'agreed' offer passes its completedAt deadline, mark it 'completed'
+  // and send a review reminder to the request owner.
+  const { createNotification } = require('./routes/notifications');
+  const { sendPushToUser }     = require('./utils/webPush');
+  const { sendExpoPushToUser } = require('./utils/expoPush');
+
+  cron.schedule('*/10 * * * *', async () => {
+    try {
+      const now = new Date();
+      const due = await prisma.offer.findMany({
+        where: {
+          status:      'agreed',
+          completedAt: { lte: now, not: null },
+          reviewReminderSent: false,
+        },
+        include: {
+          request:  { select: { id: true, title: true, userId: true } },
+          handyman: { select: { id: true, name: true, surname: true } },
+        },
+        take: 50,
+      });
+
+      for (const offer of due) {
+        // Mark as completed + reviewReminderSent
+        await prisma.offer.update({
+          where: { id: offer.id },
+          data:  { status: 'completed', reviewReminderSent: true },
+        }).catch(() => {});
+
+        // Close request if no other active offers
+        const otherActive = await prisma.offer.count({
+          where: {
+            requestId: offer.requestId,
+            id:        { not: offer.id },
+            status:    { in: ['accepted', 'agreed'] },
+          },
+        });
+        if (otherActive === 0) {
+          await prisma.request.update({
+            where: { id: offer.requestId },
+            data:  { status: 'completed' },
+          }).catch(() => {});
+        }
+
+        const ownerId = offer.request.userId;
+        const handymanName = `${offer.handyman.name || ''} ${offer.handyman.surname || ''}`.trim();
+        const title = '⭐ შეაფასე სამუშაო';
+        const body  = `${handymanName} — "${offer.request.title}"`;
+
+        sendPushToUser(prisma, ownerId, {
+          title, body,
+          tag: 'review-' + offer.id,
+          url: `/?review=${offer.handymanId}`,
+        }).catch(() => {});
+        sendExpoPushToUser(prisma, ownerId, {
+          title, body,
+          data: { type: 'review_reminder', handymanId: offer.handymanId, offerId: offer.id },
+        }).catch(() => {});
+        createNotification({
+          prisma,
+          io: app.get('io'),
+          userId: ownerId,
+          type:   'review_reminder',
+          title, body,
+          link:   `?review=${offer.handymanId}`,
+        }).catch(() => {});
+      }
+      if (due.length > 0) console.log(`[CRON] ${due.length} offer(s) marked completed — review reminders sent`);
+    } catch (err) {
+      console.error('[CRON] Offer completion error:', err.message);
+    }
+  });
+
   console.log('[CRON] All schedulers started:');
   console.log('  06:00 daily — plan expiry checks');
   console.log('  08:00 daily — subscription auto-renewal');
   console.log('  00:05 daily — TOP plan VIP+ refresh');
   console.log('  03:00 daily — request lifecycle cleanup');
   console.log('  04:00 daily — chat cleanup (14+ days inactive)');
+  console.log('  every 10 min — offer completion / review reminders');
   console.log('  07:00 Sunday — weekly stats');
 })();
 

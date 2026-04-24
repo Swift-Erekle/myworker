@@ -174,9 +174,13 @@ model Offer {
   handymanId String
   handyman   User     @relation(fields: [handymanId], references: [id], onDelete: Cascade)
   price      Int
-  duration   String?
+  duration        String?       // human-readable e.g. "2 დღე"
+  durationMinutes Int?          // precise minutes for server-side countdown
   comment    String?
-  status     String   @default("pending")  // pending, accepted, rejected
+  status     String   @default("pending")  // pending, accepted, agreed, completed, rejected, disagreed
+  agreedAt   DateTime?                     // when user pressed "შევთანხმდით"
+  completedAt DateTime?                    // deadline when work is due
+  reviewReminderSent Boolean @default(false)
   createdAt  DateTime @default(now())
 
   chat Chat?
@@ -184,8 +188,8 @@ model Offer {
   @@unique([requestId, handymanId])
   @@index([handymanId])
   @@index([requestId])
-  // ✅ DS#11: dashboard — get my offers sorted by date/status
   @@index([handymanId, status, createdAt])
+  @@index([status, completedAt])
 }
 
 // ─────────────────────────────────────────────────────────────
