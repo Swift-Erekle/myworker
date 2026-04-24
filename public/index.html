@@ -5540,7 +5540,10 @@
       const offers = r.offers || [];
       const offerCount = offers.length;
       const media = Array.isArray(r.media) ? r.media : [];
-      const hasOffered = cu && offers.some(o => o.handymanId === cu.id);
+      // ✅ Only count offers that are still active (pending/accepted/agreed/completed)
+      // Rejected/disagreed offers don't block re-sending a new one
+      const hasActiveOffer   = cu && offers.some(o => o.handymanId === cu.id && !['rejected', 'disagreed'].includes(o.status));
+      const hasRejectedOffer = cu && offers.some(o => o.handymanId === cu.id &&  ['rejected', 'disagreed'].includes(o.status));
 
       // Status label + color (full support for all 5 statuses)
       const statusLabel = requestStatusLabel(r.status);
@@ -5608,13 +5611,17 @@
       const favBtnClass = r.favorited ? 'btn bp bs' : 'btn bg bs';
       const actionsHtml = `
     <div class="rd-section" style="display:flex;gap:8px;flex-wrap:wrap">
-      ${isWorker && !isOwner && ['open', 'pending'].includes(r.status) && !hasOffered ? `
+      ${isWorker && !isOwner && ['open', 'pending'].includes(r.status) && !hasActiveOffer ? `
         <button class="btn bp" onclick="closeMo('moReqDetail');openSendOffer('${sanitize(r.id)}','${sanitize(r.title)}')">
           + შეთავაზების გაგზავნა
         </button>` : ''}
-      ${isWorker && hasOffered ? `
+      ${isWorker && hasActiveOffer ? `
         <div style="padding:10px 14px;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.3);border-radius:10px;color:var(--ok);font-size:13px">
           ✅ შენი შეთავაზება უკვე გაგზავნილია
+        </div>` : ''}
+      ${isWorker && hasRejectedOffer && !hasActiveOffer ? `
+        <div style="padding:10px 14px;background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);border-radius:10px;color:#e74c3c;font-size:13px">
+          ❌ შენი შეთავაზება უარყოფილია — შეგიძლია ახლის გაგზავნა
         </div>` : ''}
       ${isWorker && !isOwner ? `
         <button class="${favBtnClass}" id="favBtn_${sanitize(r.id)}" onclick="toggleFavorite('${sanitize(r.id)}')">
