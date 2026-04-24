@@ -28,7 +28,7 @@ const CATS_TAXONOMY = {
 
 router.get('/', optionalAuth, async (req, res) => {
   try {
-    const { category, city, urgency, status } = req.query;
+    const { category, city, urgency, status, userId } = req.query;
     const where = {};
     // ✅ Task 15: if category is a parent (e.g. "ელექტრიკოსი"), expand to all subs
     if (category) {
@@ -40,11 +40,14 @@ router.get('/', optionalAuth, async (req, res) => {
     }
     if (city) where.city = { contains: city, mode: 'insensitive' };
     if (urgency) where.urgency = urgency;
+    // ✅ Filter by specific user (owner's other requests on detail view)
+    if (userId) where.userId = userId;
     // Allow filtering by specific status or show all "active" (open + pending)
     if (status) {
       where.status = status;
-    } else {
+    } else if (!userId) {
       // Default: show requests that still accept offers
+      // BUT when userId is specified, show all their requests regardless of status
       where.status = { in: ['open', 'pending'] };
     }
 

@@ -522,117 +522,74 @@
       font-size: 12px
     }
 
-    /* ══════ REQUEST CARD (premium redesigned) ══════════════════ */
+    /* ══════ REQUEST CARD (v3 — reference-match) ══════════════════ */
     .rcard {
-      background: linear-gradient(135deg, var(--surface) 0%, rgba(255,107,43,.02) 100%);
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 0;
+      border-radius: 16px;
+      padding: 18px;
       margin: 0;
       position: relative;
       overflow: hidden;
       transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
       display: flex;
-      flex-direction: row;
-      min-height: 140px;
-    }
-    /* Accent gradient bar on the left */
-    .rcard::before {
-      content: '';
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      width: 4px;
-      background: linear-gradient(180deg, var(--accent), #ff8c55);
-      opacity: .6;
-      transition: opacity .2s ease;
+      flex-direction: column;
+      gap: 12px;
     }
     .rcard:hover {
-      border-color: var(--accent);
-      box-shadow: 0 12px 28px rgba(255,107,43,.12);
-    }
-    .rcard:hover::before { opacity: 1 }
-
-    /* Media column — always present (placeholder if no media) */
-    .rcard-thumb {
-      flex-shrink: 0;
-      width: 140px;
-      align-self: stretch;
-      position: relative;
-      overflow: hidden;
-      background: linear-gradient(135deg, var(--s2), rgba(255,107,43,.05));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .rcard-thumb img,
-    .rcard-thumb video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    .rcard-thumb-placeholder {
-      font-size: 40px;
-      opacity: .35;
-    }
-    .rcard-thumb-count {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: rgba(0,0,0,.7);
-      color: #fff;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 3px 7px;
-      border-radius: 20px;
-      backdrop-filter: blur(4px);
-    }
-    .rcard-thumb-play {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 36px;
-      height: 36px;
-      background: rgba(0,0,0,.7);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 14px;
-    }
-    .rcard-urgent-badge {
-      position: absolute;
-      top: 8px;
-      left: 8px;
-      background: linear-gradient(135deg, #ff6b2b, #ff3838);
-      color: #fff;
-      font-size: 10px;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 20px;
-      letter-spacing: .3px;
-      box-shadow: 0 4px 10px rgba(255,56,56,.4);
+      border-color: rgba(255, 107, 43, .4);
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0,0,0,.3);
     }
 
-    /* Content column */
-    .rcard-body {
-      flex: 1;
-      min-width: 0;
-      padding: 16px 18px;
-      display: flex;
-      flex-direction: column;
-    }
-    .rh {
+    /* Top row: category badge (left) + status + favorite (right) */
+    .rcard-top {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      gap: 10px;
-      margin-bottom: 6px;
+      align-items: center;
+      gap: 8px;
     }
-    .rt {
-      font-size: 16px;
+    .rcard-cat {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      max-width: 65%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .rcard-top-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0 }
+    .rcard-status {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 50px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .rcard-status.new     { background: rgba(46,204,113,.18); color: var(--ok); }
+    .rcard-status.pending { background: rgba(255,107,43,.18); color: var(--accent); }
+    .rcard-status.closed  { background: rgba(153,152,176,.18); color: var(--t2); }
+    .rcard-fav {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 15px;
+      color: var(--t2);
+      background: transparent;
+      border: none;
+      transition: .15s;
+    }
+    .rcard-fav:hover { background: rgba(231,76,60,.15); color: #ff4848 }
+    .rcard-fav.active { color: #ff4848 }
+
+    /* Title */
+    .rcard-title {
+      font-size: 17px;
       font-weight: 700;
       color: var(--text);
       line-height: 1.3;
@@ -640,69 +597,239 @@
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      flex: 1;
     }
+    /* Description */
     .rcard-desc {
       color: var(--t2);
       font-size: 13px;
-      line-height: 1.5;
-      margin-bottom: 10px;
+      line-height: 1.55;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      min-height: 40px;
     }
-    .rmeta {
+
+    /* Meta row: location, price, offer count */
+    .rcard-meta-row {
       display: flex;
       gap: 6px;
       flex-wrap: wrap;
-      margin-top: auto;
-      align-items: center;
     }
-    .rcard-price {
+    .rcard-meta {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      padding: 4px 10px;
-      background: rgba(255,107,43,.12);
-      border: 1px solid rgba(255,107,43,.3);
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--accent);
-    }
-    .rcard-price.negotiable {
-      background: rgba(155,89,182,.1);
-      border-color: rgba(155,89,182,.3);
-      color: #9b59b6;
-    }
-    .tag {
-      padding: 4px 9px;
-      background: var(--s2);
+      padding: 5px 10px;
+      background: rgba(30,30,40,.5);
       border: 1px solid var(--border);
       border-radius: 8px;
       font-size: 11px;
       color: var(--t2);
-      font-weight: 500;
-    }
-    .tag.urg {
-      background: linear-gradient(135deg, rgba(231,76,60,.15), rgba(255,107,43,.1));
-      border-color: rgba(231,76,60,.4);
-      color: #ff6b4a;
-      font-weight: 700;
-    }
-    .tag.offers {
-      background: rgba(46,204,113,.1);
-      border-color: rgba(46,204,113,.3);
-      color: var(--ok);
       font-weight: 600;
     }
+    .rcard-meta-price { color: #fbbf24 }
+    .rcard-meta-offers { color: var(--ok) }
 
-    /* Desktop: 2-column grid so cards don't stretch uselessly wide */
+    /* Action button — full width, category-colored gradient */
+    .rcard-action {
+      margin-top: auto;
+      padding: 11px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: .15s;
+      width: 100%;
+    }
+    .rcard-action:hover { transform: translateY(-1px); filter: brightness(1.1) }
+    .rcard-action:active { transform: translateY(0) }
+
+    /* Desktop grid */
     .requests-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 1100px) {
+      .requests-grid { grid-template-columns: repeat(2, 1fr) }
+    }
+
+    /* ═══ FILTER BAR (reference-match) ══════════════════════════ */
+    .filter-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 11px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: .15s;
+      min-width: 140px;
+    }
+    .filter-btn:hover { border-color: rgba(255,107,43,.5) }
+    .filter-btn.active {
+      background: rgba(255,107,43,.1);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .filter-btn .arrow { color: var(--t2); font-size: 11px }
+    .filter-search {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 12px;
+      flex: 1;
+      min-width: 200px;
+    }
+    .filter-search input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      padding: 11px 0;
+      font-size: 13px;
+      flex: 1;
+      width: 100%;
+    }
+    .filter-search-icon { color: var(--t2); font-size: 14px; flex-shrink: 0 }
+    .filter-icon-btn {
+      width: 42px; height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 15px;
+      transition: .15s;
+      flex-shrink: 0;
+    }
+    .filter-icon-btn:hover { border-color: var(--accent); color: var(--accent) }
+    .filter-icon-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* Mobile: single "ფილტრები" button opens modal */
+    .filter-mobile {
+      display: none;
+      flex: 1;
+      padding: 11px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ══ CITY PICKER modal ════════════════════════════════════ */
+    .city-picker-list {
+      max-height: 60vh;
+      overflow-y: auto;
+      margin: 10px 0;
+    }
+    .city-item {
+      padding: 12px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: .1s;
+      border: 1px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .city-item:hover { background: var(--s2); border-color: var(--border) }
+    .city-item.selected {
+      background: rgba(255,107,43,.1);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .city-search-box {
+      margin-bottom: 10px;
+      padding: 10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      width: 100%;
+      font-size: 14px;
+    }
+
+    /* ══ CTA banner "შენი მოთხოვნა არ არის ნახვენი?" ═══════════ */
+    .cta-banner {
+      margin-top: 24px;
+      padding: 22px 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .cta-banner-icon {
+      font-size: 36px;
+      flex-shrink: 0;
+    }
+    .cta-banner-content { flex: 1; min-width: 0 }
+    .cta-banner-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .cta-banner-sub {
+      color: var(--t2);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .cta-banner-btn {
+      padding: 12px 22px;
+      background: linear-gradient(135deg, var(--accent), #ff8c55);
+      color: #fff;
+      border-radius: 10px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .cta-banner-btn:hover { filter: brightness(1.1) }
+    @media (max-width: 600px) {
+      .cta-banner { flex-direction: column; text-align: center }
+      .cta-banner-btn { width: 100% }
     }
 
     .tag.urg {
@@ -1306,28 +1433,29 @@
       }
 
       /* Requests — mobile */
-      .rcard {
-        min-height: 120px;
-        border-radius: 14px;
-      }
-      .rcard-thumb {
-        width: 100px;
-      }
-      .rcard-body {
-        padding: 12px;
-      }
-      .rt {
-        font-size: 14px;
-      }
-      .rcard-desc {
-        font-size: 12px;
-        -webkit-line-clamp: 1;
-      }
-      .rcard-thumb-placeholder { font-size: 30px }
       .requests-grid {
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 12px;
       }
+      .rcard {
+        padding: 14px;
+        border-radius: 14px;
+      }
+      .rcard-title { font-size: 15px }
+      .rcard-desc {
+        -webkit-line-clamp: 1;
+        font-size: 12px;
+        min-height: unset;
+      }
+      .rcard-meta { font-size: 10px; padding: 4px 8px }
+      .rcard-action { padding: 10px; font-size: 12px }
+
+      /* Hide full filter row, show single mobile filter button */
+      .filter-row .filter-btn:not(.filter-mobile) {
+        display: none;
+      }
+      .filter-row .filter-search { flex: 1 }
+      .filter-mobile { display: flex !important }
 
       .oi {
         flex-direction: column;
@@ -2886,7 +3014,86 @@
       transform: translateY(0)
     }
 
-    /* ── Request detail modal media gallery ────────────────── */
+    /* ═══ REQUEST DETAIL — v2 layout ═══ */
+    .rd-hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .rd-hero-left {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      flex: 1;
+      min-width: 0;
+    }
+    .rd-hero-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .rd-body-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 14px;
+    }
+    @media (max-width: 820px) {
+      .rd-body-grid { grid-template-columns: 1fr }
+    }
+    .rd-col-left, .rd-col-right { min-width: 0 }
+    .rd-gallery-2x2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .rd-gallery-2x2 .rd-gallery-item {
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      background: var(--s2);
+      cursor: pointer;
+    }
+    .rd-gallery-2x2 .rd-gallery-item img,
+    .rd-gallery-2x2 .rd-gallery-item video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .rd-info-list {
+      background: var(--s2);
+      border-radius: 12px;
+      padding: 6px 14px;
+    }
+    .rd-info-list .rd-info-row {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+    .rd-info-list .rd-info-row:last-child { border-bottom: none }
+    .rd-info-list .rd-info-row > span:first-child { color: var(--t2) }
+    .rd-info-list .rd-info-row > span:last-child { color: var(--text); font-weight: 600 }
+
+    /* Request detail modal tweaks — make modal fit nicely */
+    .mo#moReqDetail .modal {
+      padding: 24px;
+    }
+    @media (max-width: 600px) {
+      .mo#moReqDetail .modal { padding: 16px }
+      .rd-hero { flex-direction: column; gap: 12px }
+      .rd-hero-actions { width: 100% }
+      .rd-hero-actions .btn { flex: 1 }
+    }
     .rd-gallery {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -3107,31 +3314,51 @@
     <div id="reqContent" style="display:none">
       <div class="ph">
         <div class="phi">
-          <div>
-            <h1>მოთხოვნების დაფა</h1>
+          <div style="display:flex;align-items:center;gap:14px">
+            <div style="width:44px;height:44px;background:linear-gradient(135deg,var(--accent),#ff8c55);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📋</div>
+            <div>
+              <h1 style="margin:0;line-height:1.2">მოთხოვნები</h1>
+              <div style="color:var(--t2);font-size:13px;margin-top:4px">აირჩიე შენთვის სასურველი სამუშაო და დაიწყე მუშაობა!</div>
+            </div>
           </div>
           <div id="addReqBtn"></div>
         </div>
       </div>
-      <div class="sec" style="padding-top:28px">
-        <div class="fb" style="flex-direction:column;gap:10px">
-          <div id="reqCatPills" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-            <select id="rCatMain" onchange="updateReqSubCatOpts();renderRequests()" style="min-width:150px">
-              <option value="">— პროფესია —</option>
-            </select>
-            <select id="rCatSub" onchange="renderRequests()" style="min-width:150px">
-              <option value="">— ქვე-კ. —</option>
-            </select>
-            <select id="rUrg" onchange="renderRequests()">
-              <option value="">ყველა</option>
-              <option value="urgent">გადაუდებელი</option>
-              <option value="normal">ჩვეულებრივი</option>
-            </select>
-            <button class="btn bg bs" onclick="clearReqCatFilter()" style="font-size:11px">✕ გასუფთავება</button>
+      <div class="sec" style="padding-top:20px">
+        <!-- Filter row — matches reference photo -->
+        <div class="filter-row">
+          <button class="filter-btn" id="reqFilterCatBtn" onclick="openReqCatFilter()">
+            <span id="reqFilterCatLabel">🏷️ ყველა კატეგორია</span>
+            <span class="arrow">▾</span>
+          </button>
+          <button class="filter-btn" id="reqFilterCityBtn" onclick="openCityPicker('req')">
+            <span id="reqFilterCityLabel">📍 ყველა ქალაქი</span>
+            <span class="arrow">▾</span>
+          </button>
+          <button class="filter-btn" id="reqFilterPriceBtn" onclick="toggleReqPriceFilter()">
+            <span id="reqFilterPriceLabel">💰 ყველა ფასი</span>
+            <span class="arrow">▾</span>
+          </button>
+          <div class="filter-search">
+            <span class="filter-search-icon">🔍</span>
+            <input type="text" id="reqSearchInput" placeholder="მოძებნე მოთხოვნა..." oninput="renderRequests()">
           </div>
+          <!-- Mobile-only: single filters button -->
+          <button class="filter-btn filter-mobile" onclick="openMo('moMobileFilters')">
+            ⚙️ ფილტრები
+          </button>
         </div>
         <div id="requestsGrid"></div>
+
+        <!-- CTA banner — prompt to create new request -->
+        <div class="cta-banner" id="createReqCta" style="display:none">
+          <div class="cta-banner-icon">🚀</div>
+          <div class="cta-banner-content">
+            <div class="cta-banner-title">შენი მოთხოვნა არ არის ნახვენი?</div>
+            <div class="cta-banner-sub">დაამატე ახალი მოთხოვნა და მიიღე სწრაფად სასურველი შემოთავაზებები!</div>
+          </div>
+          <button class="cta-banner-btn" onclick="openMo('moAddReq')">+ ახალი მოთხოვნა</button>
+        </div>
       </div>
     </div>
   </div>
@@ -3414,7 +3641,14 @@
       <div class="fg"><label>აღწერა</label><textarea id="qDesc"
           placeholder="დეტალები — რაც უფრო ვრცლად დაწერთ, მით უკეთ..."></textarea></div>
       <div class="fr">
-        <div class="fg"><label>ქალაქი / უბანი</label><input id="qCity" placeholder="ვაკე, თბილისი"></div>
+        <div class="fg">
+          <label>ქალაქი *</label>
+          <button type="button" class="filter-btn" style="min-width:unset;width:100%;padding:10px 12px" onclick="openCityPickerForForm('qCity')">
+            <span id="qCityLabel" style="color:var(--t2)">📍 აირჩიე ქალაქი</span>
+            <span class="arrow">▾</span>
+          </button>
+          <input type="hidden" id="qCity" value="">
+        </div>
         <div class="fg">
           <label>ბიუჯეტი (₾)</label>
           <input id="qBudget" type="number" placeholder="200">
@@ -3515,8 +3749,74 @@
     </div>
   </div>
 
+  <!-- CATEGORY FILTER (requests/handymen) -->
+  <div class="mo" id="moCatFilter">
+    <div class="modal wide" style="max-height:82vh;overflow-y:auto">
+      <button class="mc" onclick="closeMo('moCatFilter')">✕</button>
+      <h2 style="margin-bottom:4px">🏷️ კატეგორიის არჩევა</h2>
+      <div class="sub">აირჩიე მთავარი კატეგორია ან კონკრეტული ქვე-კატეგორია</div>
+      <div id="catFilterBody" style="margin-top:16px"></div>
+    </div>
+  </div>
+
+  <!-- CITY PICKER -->
+  <div class="mo" id="moCityPicker">
+    <div class="modal" style="max-height:82vh">
+      <button class="mc" onclick="closeMo('moCityPicker')">✕</button>
+      <h2 style="margin-bottom:4px">📍 ქალაქის არჩევა</h2>
+      <input type="text" id="citySearchInput" class="city-search-box" placeholder="🔍 ძებნა..." oninput="renderCityList()">
+      <div class="city-picker-list" id="cityList"></div>
+    </div>
+  </div>
+
+  <!-- PRICE FILTER -->
+  <div class="mo" id="moPriceFilter">
+    <div class="modal">
+      <button class="mc" onclick="closeMo('moPriceFilter')">✕</button>
+      <h2 style="margin-bottom:4px">💰 ფასის ფილტრი</h2>
+      <div class="sub">დააყენე მინიმალური/მაქსიმალური ფასი (₾)</div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <div class="fg" style="flex:1">
+          <label>დან (₾)</label>
+          <input type="number" id="reqFilterPriceMin" placeholder="0" min="0">
+        </div>
+        <div class="fg" style="flex:1">
+          <label>მდე (₾)</label>
+          <input type="number" id="reqFilterPriceMax" placeholder="10000" min="0">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="btn bg" style="flex:1;justify-content:center" onclick="clearReqPriceFilter()">გასუფთავება</button>
+        <button class="btn bp" style="flex:1;justify-content:center" onclick="applyReqPriceFilter()">გამოყენება</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE FILTERS — combines all filters in one modal -->
+  <div class="mo" id="moMobileFilters">
+    <div class="modal" style="max-height:85vh;overflow-y:auto">
+      <button class="mc" onclick="closeMo('moMobileFilters')">✕</button>
+      <h2 style="margin-bottom:16px">⚙️ ფილტრები</h2>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="filter-btn" onclick="openReqCatFilter()" style="min-width:unset">
+          <span id="mReqFilterCatLabel">🏷️ ყველა კატეგორია</span>
+          <span class="arrow">▾</span>
+        </button>
+        <button class="filter-btn" onclick="openCityPicker('req')" style="min-width:unset">
+          <span id="mReqFilterCityLabel">📍 ყველა ქალაქი</span>
+          <span class="arrow">▾</span>
+        </button>
+        <button class="filter-btn" onclick="toggleReqPriceFilter()" style="min-width:unset">
+          <span id="mReqFilterPriceLabel">💰 ყველა ფასი</span>
+          <span class="arrow">▾</span>
+        </button>
+        <button class="btn bg" style="justify-content:center" onclick="clearAllReqFilters()">✕ ყველას გასუფთავება</button>
+      </div>
+    </div>
+  </div>
+
   <div class="mo" id="moReqDetail">
-    <div class="modal wide">
+    <div class="modal wide" style="max-height:92vh;overflow-y:auto">
       <button class="mc" onclick="closeMo('moReqDetail')">✕</button>
       <div id="moReqDetailBody">
         <div style="text-align:center;padding:40px;color:var(--t2)">⏳ იტვირთება...</div>
@@ -3999,6 +4299,42 @@
     // ========================================================
     // CATEGORIES — updated Georgian profession names
     // ========================================================
+    // ═══════════════════════════════════════════════════════════
+    // GEORGIA CITIES LIST — for location picker
+    // ═══════════════════════════════════════════════════════════
+    const GEORGIA_CITIES = [
+      'თბილისი', 'ბათუმი', 'ქუთაისი', 'რუსთავი', 'გორი', 'ზუგდიდი',
+      'ფოთი', 'თელავი', 'ახალციხე', 'ოზურგეთი', 'ქობულეთი', 'ხაშური',
+      'სამტრედია', 'სენაკი', 'ზესტაფონი', 'მარნეული', 'ბოლნისი', 'გარდაბანი',
+      'კასპი', 'ქარელი', 'ცხინვალი', 'ჭიათურა', 'ტყიბული', 'ხონი',
+      'ვანი', 'ბაღდათი', 'თერჯოლა', 'საჩხერე', 'ამბროლაური', 'ცაგერი',
+      'ლენტეხი', 'მესტია', 'ონი', 'ლაგოდეხი', 'საგარეჯო', 'გურჯაანი',
+      'სიღნაღი', 'ყვარელი', 'დედოფლისწყარო', 'ახმეტა', 'თეთრიწყარო',
+      'წალკა', 'დმანისი', 'ცალენჯიხა', 'ჩხოროწყუ', 'აბაშა', 'მარტვილი',
+      'წყალტუბო', 'ხობი', 'ახალქალაქი', 'ასპინძა', 'ადიგენი', 'ბორჯომი',
+      'ლანჩხუთი', 'ჩოხატაური', 'შუახევი', 'ხელვაჩაური', 'ქედა', 'ხულო',
+    ];
+
+    // ═══════════════════════════════════════════════════════════
+    // CATEGORY COLOR MAP — each category has its own accent
+    // ═══════════════════════════════════════════════════════════
+    const CAT_COLORS = {
+      electrician: { bg: 'rgba(155,89,182,.18)',  fg: '#a855f7', grad: 'linear-gradient(135deg,#8b5cf6,#a855f7)' },
+      plumber:     { bg: 'rgba(59,130,246,.18)',  fg: '#3b82f6', grad: 'linear-gradient(135deg,#2563eb,#3b82f6)' },
+      carpenter:   { bg: 'rgba(139,92,246,.18)',  fg: '#8b5cf6', grad: 'linear-gradient(135deg,#6d28d9,#8b5cf6)' },
+      painter:     { bg: 'rgba(236,72,153,.18)',  fg: '#ec4899', grad: 'linear-gradient(135deg,#db2777,#ec4899)' },
+      builder:     { bg: 'rgba(245,158,11,.18)',  fg: '#f59e0b', grad: 'linear-gradient(135deg,#d97706,#f59e0b)' },
+      hvac:        { bg: 'rgba(16,185,129,.18)',  fg: '#10b981', grad: 'linear-gradient(135deg,#059669,#10b981)' },
+      handyman:    { bg: 'rgba(6,182,212,.18)',   fg: '#06b6d4', grad: 'linear-gradient(135deg,#0891b2,#06b6d4)' },
+      gardener:    { bg: 'rgba(34,197,94,.18)',   fg: '#22c55e', grad: 'linear-gradient(135deg,#16a34a,#22c55e)' },
+      technician:  { bg: 'rgba(99,102,241,.18)',  fg: '#6366f1', grad: 'linear-gradient(135deg,#4f46e5,#6366f1)' },
+      specialist:  { bg: 'rgba(234,179,8,.18)',   fg: '#eab308', grad: 'linear-gradient(135deg,#ca8a04,#eab308)' },
+      household:   { bg: 'rgba(14,165,233,.18)',  fg: '#0ea5e9', grad: 'linear-gradient(135deg,#0284c7,#0ea5e9)' },
+      tiler:       { bg: 'rgba(251,113,133,.18)', fg: '#fb7185', grad: 'linear-gradient(135deg,#e11d48,#fb7185)' },
+      welder:      { bg: 'rgba(239,68,68,.18)',   fg: '#ef4444', grad: 'linear-gradient(135deg,#dc2626,#ef4444)' },
+      locksmith:   { bg: 'rgba(168,85,247,.18)',  fg: '#a855f7', grad: 'linear-gradient(135deg,#9333ea,#a855f7)' },
+    };
+
     const CATS_DATA = [
       {
         id: 'electrician', icon: '⚡', name: 'ელექტრიკოსი', subs: [
@@ -4173,6 +4509,13 @@
     );
     function getCatParent(sub) {
       return CATS_DATA.find(g => g.subs.includes(sub))?.name || sub;
+    }
+    // Look up color theme for a category (by name or sub-name)
+    function getCatColor(catName) {
+      const cat = CATS_DATA.find(c => c.name === catName || c.subs?.includes(catName));
+      return (cat && CAT_COLORS[cat.id]) || {
+        bg: 'rgba(255,107,43,.15)', fg: 'var(--accent)', grad: 'linear-gradient(135deg,#ff6b2b,#ff8c55)'
+      };
     }
 
     // ========================================================
@@ -5253,38 +5596,225 @@
         addBtn.innerHTML = cu.type === 'user'
           ? `<button class="btn bp" onclick="openMo('moRequest')">+ მოთხოვნა</button>` : '';
       }
+      updateReqFilterLabels();
       await renderRequests();
     }
+
+    // ═══ REQUESTS FILTER STATE ═══
+    let _reqFilters = {
+      parentCat: '',    // 'electrician'
+      subCat:    '',    // specific sub-category name
+      city:      '',
+      priceMin:  null,
+      priceMax:  null,
+      search:    '',
+    };
 
     async function renderRequests() {
       const grid = document.getElementById('requestsGrid');
       if (!grid) return;
       grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳ იტვირთება...</div>';
-      const mainCat = document.getElementById('rCatMain')?.value || '';
-      const subCat = document.getElementById('rCatSub')?.value || '';
-      const urg = document.getElementById('rUrg')?.value || '';
+      const searchInp = document.getElementById('reqSearchInput');
+      if (searchInp) _reqFilters.search = searchInp.value || '';
+
       try {
-        // Show both 'open' and 'pending' (requests that still accept offers)
         let url = '/requests?';
-        if (mainCat) url += `category=${encodeURIComponent(mainCat)}&`;
-        if (urg) url += `urgency=${urg}&`;
-        let requests = await api(url);
-        // Sub-category client-side filter
-        if (subCat) {
-          requests = requests.filter(r => {
-            const cat = (r.category || '').toLowerCase();
-            const firstWord = subCat.split(' ')[0].toLowerCase();
-            return cat.includes(firstWord) || cat === subCat.toLowerCase();
-          });
+        // Pass parent category (backend expands to all sub-categories)
+        if (_reqFilters.parentCat) {
+          const cat = CATS_DATA.find(c => c.id === _reqFilters.parentCat);
+          if (cat) url += `category=${encodeURIComponent(cat.name)}&`;
         }
+        let requests = await api(url);
+
+        // Client-side: sub-category filter
+        if (_reqFilters.subCat) {
+          requests = requests.filter(r => r.category === _reqFilters.subCat);
+        }
+        // City filter
+        if (_reqFilters.city) {
+          requests = requests.filter(r => (r.city || '').toLowerCase().includes(_reqFilters.city.toLowerCase()));
+        }
+        // Price filter
+        if (_reqFilters.priceMin != null) {
+          requests = requests.filter(r => r.budget && r.budget >= _reqFilters.priceMin);
+        }
+        if (_reqFilters.priceMax != null) {
+          requests = requests.filter(r => r.budget && r.budget <= _reqFilters.priceMax);
+        }
+        // Search filter
+        if (_reqFilters.search && _reqFilters.search.trim()) {
+          const q = _reqFilters.search.toLowerCase().trim();
+          requests = requests.filter(r =>
+            (r.title || '').toLowerCase().includes(q) ||
+            (r.desc || '').toLowerCase().includes(q) ||
+            (r.category || '').toLowerCase().includes(q) ||
+            (r.city || '').toLowerCase().includes(q)
+          );
+        }
+
         if (!requests.length) {
           grid.innerHTML = '<div class="empty"><div class="ei">📋</div><h3>მოთხოვნა ვერ მოიძებნა</h3></div>';
+          const cta = document.getElementById('createReqCta');
+          if (cta && currentUser?.type === 'user') cta.style.display = 'flex';
           return;
         }
         grid.innerHTML = '<div class="requests-grid">' + requests.map(r => requestCard(r)).join('') + '</div>';
+        // Show CTA banner only for regular users (not handymen/companies)
+        const cta = document.getElementById('createReqCta');
+        if (cta) cta.style.display = currentUser?.type === 'user' ? 'flex' : 'none';
       } catch (e) {
         grid.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ჩატვირთვა ვერ მოხდა</h3></div>';
       }
+    }
+
+    // ═══ FILTER LABELS — update button text when filter changes ═══
+    function updateReqFilterLabels() {
+      let catLabel = '🏷️ ყველა კატეგორია';
+      if (_reqFilters.subCat) catLabel = '🏷️ ' + _reqFilters.subCat.slice(0, 20) + (_reqFilters.subCat.length > 20 ? '...' : '');
+      else if (_reqFilters.parentCat) {
+        const cat = CATS_DATA.find(c => c.id === _reqFilters.parentCat);
+        if (cat) catLabel = '🏷️ ' + cat.name;
+      }
+      ['reqFilterCatLabel', 'mReqFilterCatLabel'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.textContent = catLabel;
+      });
+      const cityLabel = _reqFilters.city ? '📍 ' + _reqFilters.city : '📍 ყველა ქალაქი';
+      ['reqFilterCityLabel', 'mReqFilterCityLabel'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.textContent = cityLabel;
+      });
+      let priceLabel = '💰 ყველა ფასი';
+      if (_reqFilters.priceMin != null && _reqFilters.priceMax != null) priceLabel = `💰 ${_reqFilters.priceMin}–${_reqFilters.priceMax}₾`;
+      else if (_reqFilters.priceMin != null) priceLabel = `💰 ${_reqFilters.priceMin}₾+`;
+      else if (_reqFilters.priceMax != null) priceLabel = `💰 მდე ${_reqFilters.priceMax}₾`;
+      ['reqFilterPriceLabel', 'mReqFilterPriceLabel'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.textContent = priceLabel;
+      });
+      // Active state on buttons
+      document.getElementById('reqFilterCatBtn')?.classList.toggle('active', !!(_reqFilters.parentCat || _reqFilters.subCat));
+      document.getElementById('reqFilterCityBtn')?.classList.toggle('active', !!_reqFilters.city);
+      document.getElementById('reqFilterPriceBtn')?.classList.toggle('active', _reqFilters.priceMin != null || _reqFilters.priceMax != null);
+    }
+
+    // ═══ CATEGORY FILTER MODAL ═══
+    function openReqCatFilter() {
+      const body = document.getElementById('catFilterBody');
+      body.innerHTML = `
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px">
+          <button class="filter-btn ${!_reqFilters.parentCat && !_reqFilters.subCat ? 'active' : ''}" style="min-width:unset"
+            onclick="setReqCatFilter('', '')">✕ ყველა კატეგორია</button>
+        </div>
+        ${CATS_DATA.map(cat => {
+          const color = CAT_COLORS[cat.id] || { bg: 'rgba(255,107,43,.15)', fg: 'var(--accent)' };
+          const isActive = _reqFilters.parentCat === cat.id && !_reqFilters.subCat;
+          return `<div style="margin-bottom:14px">
+            <button class="filter-btn ${isActive ? 'active' : ''}" style="min-width:unset;background:${isActive ? '' : color.bg};color:${isActive ? '' : color.fg};border-color:${isActive ? '' : color.fg};font-weight:700;width:100%;justify-content:flex-start"
+              onclick="setReqCatFilter('${cat.id}', '')">${cat.icon} ${sanitize(cat.name)}</button>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-left:14px">
+              ${cat.subs.map(sub => `
+                <button class="filter-btn ${_reqFilters.subCat === sub ? 'active' : ''}" style="min-width:unset;font-size:11px;padding:6px 10px"
+                  onclick="setReqCatFilter('${cat.id}', '${sanitize(sub).replace(/'/g, "\\'")}')">${sanitize(sub)}</button>
+              `).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      `;
+      openMo('moCatFilter');
+    }
+    function setReqCatFilter(parentId, subName) {
+      _reqFilters.parentCat = parentId;
+      _reqFilters.subCat = subName;
+      updateReqFilterLabels();
+      closeMo('moCatFilter');
+      closeMo('moMobileFilters');
+      renderRequests();
+    }
+
+    // ═══ CITY PICKER ═══
+    let _cityPickerFor = 'req'; // 'req' | 'handyman' | 'form'
+    let _cityPickerCallback = null;
+    function openCityPicker(forWhat, callback) {
+      _cityPickerFor = forWhat;
+      _cityPickerCallback = callback || null;
+      document.getElementById('citySearchInput').value = '';
+      renderCityList();
+      openMo('moCityPicker');
+    }
+    function renderCityList() {
+      const q = (document.getElementById('citySearchInput')?.value || '').toLowerCase().trim();
+      const list = document.getElementById('cityList'); if (!list) return;
+      const filtered = q ? GEORGIA_CITIES.filter(c => c.toLowerCase().includes(q)) : GEORGIA_CITIES;
+      const selected = _cityPickerFor === 'req' ? _reqFilters.city
+                     : _cityPickerFor === 'handyman' ? (_hnyFilters?.city || '')
+                     : '';
+      list.innerHTML =
+        `<div class="city-item ${!selected ? 'selected' : ''}" onclick="selectCity('')">📍 ყველა ქალაქი</div>` +
+        filtered.map(c =>
+          `<div class="city-item ${selected === c ? 'selected' : ''}" onclick="selectCity('${sanitize(c).replace(/'/g, "\\'")}')">📍 ${sanitize(c)}</div>`
+        ).join('');
+    }
+    function selectCity(cityName) {
+      if (_cityPickerCallback) {
+        _cityPickerCallback(cityName);
+        _cityPickerCallback = null;
+      } else if (_cityPickerFor === 'req') {
+        _reqFilters.city = cityName;
+        updateReqFilterLabels();
+        renderRequests();
+      } else if (_cityPickerFor === 'handyman') {
+        if (typeof _hnyFilters !== 'undefined') {
+          _hnyFilters.city = cityName;
+          updateHnyFilterLabels?.();
+          renderHandymen?.();
+        }
+      }
+      closeMo('moCityPicker');
+    }
+
+    // Generic form-field city picker — opens picker and writes back to input + label
+    function openCityPickerForForm(inputId, labelId) {
+      labelId = labelId || (inputId + 'Label');
+      openCityPicker('form', (cityName) => {
+        const inp = document.getElementById(inputId);
+        const lbl = document.getElementById(labelId);
+        if (inp) inp.value = cityName || '';
+        if (lbl) {
+          lbl.textContent = cityName ? ('📍 ' + cityName) : '📍 აირჩიე ქალაქი';
+          lbl.style.color = cityName ? 'var(--text)' : 'var(--t2)';
+        }
+      });
+    }
+
+    // ═══ PRICE FILTER ═══
+    function toggleReqPriceFilter() {
+      document.getElementById('reqFilterPriceMin').value = _reqFilters.priceMin ?? '';
+      document.getElementById('reqFilterPriceMax').value = _reqFilters.priceMax ?? '';
+      openMo('moPriceFilter');
+    }
+    function applyReqPriceFilter() {
+      const mn = parseInt(document.getElementById('reqFilterPriceMin').value);
+      const mx = parseInt(document.getElementById('reqFilterPriceMax').value);
+      _reqFilters.priceMin = isNaN(mn) ? null : mn;
+      _reqFilters.priceMax = isNaN(mx) ? null : mx;
+      updateReqFilterLabels();
+      closeMo('moPriceFilter');
+      closeMo('moMobileFilters');
+      renderRequests();
+    }
+    function clearReqPriceFilter() {
+      _reqFilters.priceMin = null;
+      _reqFilters.priceMax = null;
+      document.getElementById('reqFilterPriceMin').value = '';
+      document.getElementById('reqFilterPriceMax').value = '';
+      updateReqFilterLabels();
+      closeMo('moPriceFilter');
+      renderRequests();
+    }
+    function clearAllReqFilters() {
+      _reqFilters = { parentCat: '', subCat: '', city: '', priceMin: null, priceMax: null, search: '' };
+      const si = document.getElementById('reqSearchInput'); if (si) si.value = '';
+      updateReqFilterLabels();
+      closeMo('moMobileFilters');
+      renderRequests();
     }
 
 
@@ -5319,66 +5849,43 @@
       const cu = currentUser;
       const isOwner = cu && cu.id === r.userId;
       const offerCount = r._count?.offers || (r.offers?.length || 0);
-      const media = Array.isArray(r.media) ? r.media : [];
-      const firstMedia = media[0];
-      const extraCount = Math.max(0, media.length - 1);
 
-      // Category → emoji icon fallback (used when no photo/video)
-      const categoryIcon = {
-        'ელექტრიკოსი':      '⚡',
-        'სანტექნიკი':       '🔧',
-        'დურგალი':           '🪚',
-        'მხატვარი (მალიარი)': '🎨',
-        'მშენებელი':         '🏗️',
-        'კონდიციონერის ტექნიკოსი': '❄️',
-        'უნივერსალური ხელოსანი (ჰენდიმენი)': '🛠️',
-        'მებაღე':            '🌳',
-        'ტექნიკოსი':         '💻',
-        'სპეციალიზებული ხელოსანი (პროფესიონალი)': '⭐',
-        'სახლის მომსახურება (დამხმარე)': '🏠',
-        'ფილების მწყობი (კაფელის მწყობი)': '🔲',
-        'შემდუღებელი (შედუღება)': '🔥',
-        'მეკარე (საკეტების ოსტატი)': '🔑',
-      };
-      const icon = categoryIcon[r.category] || '📋';
+      // Category color (gradient for action button, tint for category badge)
+      const parent = getCatParent(r.category);
+      const color = getCatColor(parent);
+      const icon = CAT_ICONS[parent] || CAT_ICONS[r.category] || '📋';
 
-      let thumbHtml;
-      if (firstMedia) {
-        const url = sanitize(firstMedia.url || '');
-        const isVideo = firstMedia.type === 'video';
-        thumbHtml = `<div class="rcard-thumb">
-          ${isVideo
-            ? `<video src="${url}" muted playsinline preload="metadata"></video><div class="rcard-thumb-play">▶</div>`
-            : `<img src="${url}" alt="" loading="lazy">`}
-          ${extraCount > 0 ? `<div class="rcard-thumb-count">+${extraCount}</div>` : ''}
-          ${r.urgency === 'urgent' ? `<div class="rcard-urgent-badge">⚡ გადაუდებელი</div>` : ''}
-        </div>`;
-      } else {
-        thumbHtml = `<div class="rcard-thumb">
-          <div class="rcard-thumb-placeholder">${icon}</div>
-          ${r.urgency === 'urgent' ? `<div class="rcard-urgent-badge">⚡ გადაუდებელი</div>` : ''}
-        </div>`;
-      }
+      // Status badge: new (open), in progress (pending/in_progress), closed
+      let stCls = 'new', stLabel = 'ახალი';
+      if (r.status === 'pending' || r.status === 'in_progress') { stCls = 'pending'; stLabel = 'მიმდინარე'; }
+      else if (r.status === 'completed' || r.status === 'closed' || r.status === 'archived') { stCls = 'closed'; stLabel = 'დახურული'; }
+
+      const favActive = r.favorited ? 'active' : '';
+      const favIcon = r.favorited ? '❤' : '♡';
+      const canFav = cu && (cu.type === 'handyman' || cu.type === 'company') && !isOwner;
 
       const priceHtml = r.budget
-        ? `<span class="rcard-price">💰 ${r.budget}₾</span>`
-        : `<span class="rcard-price negotiable">💰 შეთანხმებით</span>`;
+        ? `<span class="rcard-meta rcard-meta-price">💰 ${r.budget}₾</span>`
+        : `<span class="rcard-meta" style="color:#c084fc">💰 შეთანხმებით</span>`;
 
       return `<div class="rcard rcard-clickable" onclick="openRequestDetail('${sanitize(r.id)}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openRequestDetail('${sanitize(r.id)}')">
-    ${thumbHtml}
-    <div class="rcard-body">
-      <div class="rh">
-        <div class="rt">${sanitize(r.title)}</div>
-        <span class="status ${requestStatusClass(r.status)}">${requestStatusLabel(r.status)}</span>
-      </div>
-      ${r.desc ? `<div class="rcard-desc">${sanitize(r.desc)}</div>` : ''}
-      <div class="rmeta">
-        ${priceHtml}
-        <span class="tag">${icon} ${sanitize(r.category || '')}</span>
-        <span class="tag">📍 ${sanitize(r.city || '')}</span>
-        <span class="tag offers">💬 ${offerCount}</span>
+    <div class="rcard-top">
+      <span class="rcard-cat" style="background:${color.bg};color:${color.fg}">${icon} ${sanitize(parent)}</span>
+      <div class="rcard-top-right">
+        <span class="rcard-status ${stCls}">${stLabel}</span>
+        ${canFav ? `<button class="rcard-fav ${favActive}" onclick="event.stopPropagation();toggleFavorite('${sanitize(r.id)}')" title="შენახვა">${favIcon}</button>` : ''}
       </div>
     </div>
+    <div class="rcard-title">${sanitize(r.title)}</div>
+    <div class="rcard-desc">${r.desc ? sanitize(r.desc) : ''}</div>
+    <div class="rcard-meta-row">
+      <span class="rcard-meta">📍 ${sanitize(r.city || '—')}</span>
+      ${priceHtml}
+      <span class="rcard-meta rcard-meta-offers">💬 ${offerCount} შეთავაზება</span>
+    </div>
+    <button class="rcard-action" style="background:${color.grad}" onclick="event.stopPropagation();openRequestDetail('${sanitize(r.id)}')">
+      დეტალურად ნახვა →
+    </button>
   </div>`;
     }
 
@@ -5497,12 +6004,14 @@
       if (cu.type !== 'user') { toast('⚠️ მხოლოდ მომხმარებელს შეუძლია', '', 'err'); return; }
       const title = document.getElementById('qTitle').value.trim();
       let cat = selectedQCatSub || selectedQCatMain;
+      const city = document.getElementById('qCity').value;
       if (!title) { toast('⚠️ სათაური შეიყვანე', '', 'err'); return; }
-      if (!cat) { toast('⚠️ კატეგორია აირჩიე', '', 'err'); return; }
+      if (!cat)   { toast('⚠️ კატეგორია აირჩიე', '', 'err'); return; }
+      if (!city)  { toast('⚠️ ქალაქი აირჩიე', '', 'err'); return; }
       const fd = new FormData();
       fd.append('title', title); fd.append('category', cat);
       fd.append('desc', document.getElementById('qDesc').value || '');
-      fd.append('city', document.getElementById('qCity').value || 'თბილისი');
+      fd.append('city', city);
       const negotiable = document.getElementById('qBudgetNegotiable')?.checked;
       fd.append('budget', negotiable ? '' : (document.getElementById('qBudget').value || ''));
       fd.append('urgency', document.getElementById('qUrg').value || 'normal');
@@ -5512,6 +6021,9 @@
         closeMo('moRequest');
         reqMediaInputFiles = []; renderReqMediaGrid();
         ['qTitle', 'qDesc', 'qCity', 'qBudget'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        // Reset city picker label
+        const cityLbl = document.getElementById('qCityLabel');
+        if (cityLbl) { cityLbl.textContent = '📍 აირჩიე ქალაქი'; cityLbl.style.color = 'var(--t2)'; }
         // Reset negotiable checkbox
         const negCb = document.getElementById('qBudgetNegotiable');
         if (negCb) { negCb.checked = false; toggleNegotiableBudget(); }
@@ -5630,20 +6142,18 @@
     // REQUEST DETAIL MODAL — full view of a single request
     // ════════════════════════════════════════════════════════════
     async function openRequestDetail(reqId) {
-      const body = document.getElementById('moReqDetailBody');
-      if (!body) return;
-      body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳ იტვირთება...</div>';
+      const cu = currentUser;
+      if (!cu) { openMo('moLogin'); return; }
       openMo('moReqDetail');
-
+      document.getElementById('moReqDetailBody').innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳ იტვირთება...</div>';
       try {
         const r = await api('/requests/' + reqId);
         renderRequestDetail(r);
+        // Also load other requests from this user
+        loadOwnerOtherRequests(r.userId, r.id);
       } catch (e) {
-        body.innerHTML = `<div style="text-align:center;padding:40px">
-      <div style="font-size:48px;margin-bottom:12px">⚠️</div>
-      <h3 style="color:var(--err);margin-bottom:8px">ვერ ჩაიტვირთა</h3>
-      <p style="color:var(--t2)">${sanitize(e.error || 'შეცდომა')}</p>
-    </div>`;
+        document.getElementById('moReqDetailBody').innerHTML =
+          '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>';
       }
     }
 
@@ -5656,132 +6166,192 @@
       const offers = r.offers || [];
       const offerCount = offers.length;
       const media = Array.isArray(r.media) ? r.media : [];
-      // ✅ Only count offers that are still active (pending/accepted/agreed/completed)
-      // Rejected/disagreed offers don't block re-sending a new one
       const hasActiveOffer   = cu && offers.some(o => o.handymanId === cu.id && !['rejected', 'disagreed'].includes(o.status));
       const hasRejectedOffer = cu && offers.some(o => o.handymanId === cu.id &&  ['rejected', 'disagreed'].includes(o.status));
 
-      // Status label + color (full support for all 5 statuses)
-      const statusLabel = requestStatusLabel(r.status);
-      const statusCls = requestStatusClass(r.status);
+      // Status
+      let stCls = 'new', stLabel = 'ახალი';
+      if (r.status === 'pending' || r.status === 'in_progress') { stCls = 'pending'; stLabel = 'მიმდინარე'; }
+      else if (r.status === 'completed' || r.status === 'closed' || r.status === 'archived') { stCls = 'closed'; stLabel = 'დახურული'; }
 
-      // Build media gallery — open as gallery with nav arrows / swipe / keyboard
-      const galleryHtml = media.length ? `
-    <div class="rd-section">
-      <h3 style="font-size:15px;margin-bottom:4px">📷 ფოტო და ვიდეო (${media.length})</h3>
-      <div class="rd-gallery">
-        ${media.map((m, idx) => {
-        const url = sanitize(m.url || '');
-        const items = JSON.stringify(media.map(x => ({ type: x.type || 'image', url: x.url || '' })))
-          .replace(/'/g, "&apos;");
-        if (m.type === 'video') {
-          return `<div class="rd-gallery-item" onclick='openLightboxGallery(${items}, ${idx})'>
-              <video src="${url}" muted playsinline preload="metadata"></video>
-              <div class="vid-ind">▶</div>
-            </div>`;
-        }
-        return `<div class="rd-gallery-item" onclick='openLightboxGallery(${items}, ${idx})'>
-            <img src="${url}" alt="" loading="lazy">
-          </div>`;
-      }).join('')}
-      </div>
-    </div>` : '';
-
-      // Offers list (only visible to owner)
-      const offersHtml = isOwner && offerCount ? `
-    <div class="rd-section">
-      <h3 style="font-size:15px;margin-bottom:10px">💬 შეთავაზებები (${offerCount})</h3>
-      ${offers.map(o => {
-        const h = o.handyman;
-        const rating = avgRating(h?.reviewsReceived || []);
-        const profileClick = h?.id ? `onclick="closeMo('moReqDetail');showProfile('${sanitize(h.id)}')" style="cursor:pointer"` : '';
-        const avatarHtml = h?.avatar
-          ? `<img src="${sanitize(h.avatar)}" ${profileClick} style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;cursor:pointer">`
-          : `<div class="av" ${profileClick} style="width:40px;height:40px;font-size:16px;background:${sanitize(h?.color || '#22222f')};color:var(--accent);cursor:pointer">${sanitize(h?.emoji || '🔧')}</div>`;
-        return `<div class="oi" style="margin-bottom:10px">
-          <div style="display:flex;gap:10px;align-items:flex-start">
-            ${avatarHtml}
-            <div style="flex:1;min-width:0">
-              <div style="font-weight:700;cursor:pointer;display:inline-block" ${profileClick}>${sanitize(h?.name || '')} ${sanitize(h?.surname || '')}</div>
-              <div style="color:var(--accent);font-size:12px">${sanitize(h?.specialty || '')}</div>
-              <div style="font-size:11px;color:var(--t2)">${rating > 0 ? rating.toFixed(1) + ' ★' : ''} ${o.duration ? '· ' + sanitize(o.duration) : ''}</div>
-              ${o.comment ? `<div style="margin-top:6px;font-size:13px;color:var(--t2)">${sanitize(o.comment)}</div>` : ''}
-            </div>
-            <div style="text-align:right;flex-shrink:0">
-              <div class="oprice">₾${o.price}</div>
-              <span class="status ${o.status === 'pending' ? 'sn' : o.status === 'accepted' ? 'sa' : o.status === 'agreed' ? 'sa' : o.status === 'completed' ? 'sa' : 'sd'}">${o.status === 'pending' ? 'მოლოდინში' : o.status === 'accepted' ? 'მიღებული' : o.status === 'agreed' ? '🤝 შევთანხმდით' : o.status === 'completed' ? '✓ დასრულებული' : 'უარყოფილი'}</span>
-            </div>
-          </div>
-          ${['open', 'pending'].includes(r.status) && o.status === 'pending' ? `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn bp bs" onclick="acceptOfferFromDetail('${sanitize(o.id)}', '${sanitize(r.id)}')">✓ მიღება</button>
-            <button class="btn berr bs" onclick="rejectOfferFromDetail('${sanitize(o.id)}', '${sanitize(r.id)}')">✕ უარყოფა</button>
-            <button class="btn bg bs" onclick="closeMo('moReqDetail');showProfile('${sanitize(h?.id)}')">პროფილი</button>
-          </div>` : ''}
-          ${o.status === 'accepted' ? `<button class="btn bg bs" style="margin-top:8px" onclick="closeMo('moReqDetail');openChatForOffer('${sanitize(o.id)}')">💬 ჩათი</button>` : ''}
-        </div>`;
-      }).join('')}
-    </div>` : '';
-
-      // Actions footer
-      const favBtnLabel = r.favorited ? '🔖 შენახულია' : '🔖 შენახვა';
-      const favBtnClass = r.favorited ? 'btn bp bs' : 'btn bg bs';
-      const actionsHtml = `
-    <div class="rd-section" style="display:flex;gap:8px;flex-wrap:wrap">
-      ${isWorker && !isOwner && ['open', 'pending'].includes(r.status) && !hasActiveOffer ? `
-        <button class="btn bp" onclick="closeMo('moReqDetail');openSendOffer('${sanitize(r.id)}','${sanitize(r.title)}')">
-          + შეთავაზების გაგზავნა
-        </button>` : ''}
-      ${isWorker && hasActiveOffer ? `
-        <div style="padding:10px 14px;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.3);border-radius:10px;color:var(--ok);font-size:13px">
-          ✅ შენი შეთავაზება უკვე გაგზავნილია
-        </div>` : ''}
-      ${isWorker && hasRejectedOffer && !hasActiveOffer ? `
-        <div style="padding:10px 14px;background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);border-radius:10px;color:#e74c3c;font-size:13px">
-          ❌ შენი შეთავაზება უარყოფილია — შეგიძლია ახლის გაგზავნა
-        </div>` : ''}
-      ${isWorker && !isOwner ? `
-        <button class="${favBtnClass}" id="favBtn_${sanitize(r.id)}" onclick="toggleFavorite('${sanitize(r.id)}')">
-          ${favBtnLabel}
-        </button>` : ''}
-      <button class="btn bg bs" onclick="shareRequest('${sanitize(r.id)}','${sanitize(r.title)}')">
-        📤 გაზიარება
-      </button>
-      ${isOwner ? `
-        <button class="btn berr bs" onclick="deleteRequest('${sanitize(r.id)}')" style="margin-left:auto">
-          🗑️ წაშლა
-        </button>` : ''}
-    </div>`;
+      // Category color + icon
+      const parent = getCatParent(r.category);
+      const color = getCatColor(parent);
+      const catIcon = CAT_ICONS[parent] || CAT_ICONS[r.category] || '📋';
 
       // Owner info
       const ownerName = sanitize((r.user?.name || '') + ' ' + (r.user?.surname || '')).trim() || 'მომხმარებელი';
+      const ownerAvatar = r.user?.avatar
+        ? `<img src="${sanitize(r.user.avatar)}" style="width:48px;height:48px;border-radius:50%;object-fit:cover">`
+        : `<div style="width:48px;height:48px;border-radius:50%;background:${sanitize(r.user?.color || '#3b3b4f')};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px">${sanitize(r.user?.emoji || '👤')}</div>`;
+
+      // Gallery (left column on desktop)
+      const galleryHtml = media.length ? `
+        <div class="rd-section">
+          <h3 style="font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:6px">📷 ფოტო და ვიდეო (${media.length})</h3>
+          <div class="rd-gallery-2x2">
+            ${media.map((m, idx) => {
+              const url = sanitize(m.url || '');
+              const items = JSON.stringify(media.map(x => ({ type: x.type || 'image', url: x.url || '' }))).replace(/'/g, "&apos;");
+              if (m.type === 'video') {
+                return `<div class="rd-gallery-item" onclick='openLightboxGallery(${items}, ${idx})'>
+                  <video src="${url}" muted playsinline preload="metadata"></video>
+                  <div class="vid-ind">▶</div>
+                </div>`;
+              }
+              return `<div class="rd-gallery-item" onclick='openLightboxGallery(${items}, ${idx})'>
+                <img src="${url}" alt="" loading="lazy">
+              </div>`;
+            }).join('')}
+          </div>
+        </div>` : '';
+
+      // Details table (right column on desktop)
+      const detailsHtml = `
+        <div class="rd-section">
+          <h3 style="font-size:15px;margin-bottom:12px;display:flex;align-items:center;gap:6px">🔧 მოთხოვნის დეტალები</h3>
+          <div class="rd-info-list">
+            <div class="rd-info-row">
+              <span>მომსახურების ტიპი</span>
+              <span class="rcard-cat" style="background:${color.bg};color:${color.fg};max-width:unset">${catIcon} ${sanitize(r.category || '')}</span>
+            </div>
+            <div class="rd-info-row">
+              <span>ბიუჯეტი</span>
+              <span style="color:#fbbf24;font-weight:700">${r.budget ? '💰 ' + r.budget + '₾' : '💰 შეთანხმებით'}</span>
+            </div>
+            <div class="rd-info-row"><span>მისამართი</span><span>📍 ${sanitize(r.city || '—')}</span></div>
+            <div class="rd-info-row"><span>გამოქვეყნდა</span><span>📅 ${new Date(r.createdAt).toLocaleDateString('ka-GE', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
+            <div class="rd-info-row"><span>განახლდა</span><span>⏱ ${new Date(r.updatedAt || r.createdAt).toLocaleDateString('ka-GE', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
+            <div class="rd-info-row"><span>შეთავაზებები</span><span style="color:var(--ok)">💬 ${offerCount}</span></div>
+          </div>
+        </div>
+        ${r.desc ? `
+        <div class="rd-section rd-desc-box" style="background:${color.bg};border:1px solid ${color.fg};border-radius:12px;padding:14px 16px;margin-top:12px">
+          <h3 style="font-size:14px;margin-bottom:6px;color:${color.fg};display:flex;align-items:center;gap:6px">📝 აღწერა</h3>
+          <div style="color:var(--text);font-size:14px;line-height:1.6;white-space:pre-wrap">${sanitize(r.desc)}</div>
+        </div>` : ''}
+      `;
+
+      // Offers list (only visible to owner)
+      const offersHtml = isOwner && offerCount ? `
+        <div class="rd-section" style="margin-top:14px">
+          <h3 style="font-size:15px;margin-bottom:10px">💬 შეთავაზებები (${offerCount})</h3>
+          ${offers.map(o => {
+            const h = o.handyman;
+            const rating = avgRating(h?.reviewsReceived || []);
+            const profileClick = h?.id ? `onclick="closeMo('moReqDetail');showProfile('${sanitize(h.id)}')" style="cursor:pointer"` : '';
+            const avatarHtml = h?.avatar
+              ? `<img src="${sanitize(h.avatar)}" ${profileClick} style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;cursor:pointer">`
+              : `<div class="av" ${profileClick} style="width:40px;height:40px;font-size:16px;background:${sanitize(h?.color || '#22222f')};color:var(--accent);cursor:pointer">${sanitize(h?.emoji || '🔧')}</div>`;
+            return `<div class="oi" style="margin-bottom:10px">
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                ${avatarHtml}
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:700;cursor:pointer;display:inline-block" ${profileClick}>${sanitize(h?.name || '')} ${sanitize(h?.surname || '')}</div>
+                  <div style="color:var(--accent);font-size:12px">${sanitize(h?.specialty || '')}</div>
+                  <div style="font-size:11px;color:var(--t2)">${rating > 0 ? rating.toFixed(1) + ' ★' : ''} ${o.duration ? '· ' + sanitize(o.duration) : ''}</div>
+                  ${o.comment ? `<div style="margin-top:6px;font-size:13px;color:var(--t2)">${sanitize(o.comment)}</div>` : ''}
+                </div>
+                <div style="text-align:right;flex-shrink:0">
+                  <div class="oprice">₾${o.price}</div>
+                  <span class="status ${o.status === 'pending' ? 'sn' : o.status === 'accepted' ? 'sa' : o.status === 'agreed' ? 'sa' : o.status === 'completed' ? 'sa' : 'sd'}">${o.status === 'pending' ? 'მოლოდინში' : o.status === 'accepted' ? 'მიღებული' : o.status === 'agreed' ? '🤝 შევთანხმდით' : o.status === 'completed' ? '✓ დასრულებული' : 'უარყოფილი'}</span>
+                </div>
+              </div>
+              ${['open', 'pending'].includes(r.status) && o.status === 'pending' ? `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn bp bs" onclick="acceptOfferFromDetail('${sanitize(o.id)}', '${sanitize(r.id)}')">✓ მიღება</button>
+                <button class="btn berr bs" onclick="rejectOfferFromDetail('${sanitize(o.id)}', '${sanitize(r.id)}')">✕ უარყოფა</button>
+                <button class="btn bg bs" onclick="closeMo('moReqDetail');showProfile('${sanitize(h?.id)}')">პროფილი</button>
+              </div>` : ''}
+              ${o.status === 'accepted' ? `<button class="btn bg bs" style="margin-top:8px" onclick="closeMo('moReqDetail');openChatForOffer('${sanitize(o.id)}')">💬 ჩათი</button>` : ''}
+            </div>`;
+          }).join('')}
+        </div>` : '';
+
+      // Offer CTA — for workers
+      const offerCtaHtml = isWorker && !isOwner ? `
+        <div class="rd-section" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div style="flex:1;min-width:200px">
+            <div style="font-weight:700;color:var(--text);margin-bottom:3px">დაინტერესებული ხარ ამ მოთხოვნით?</div>
+            <div style="font-size:12px;color:var(--t2)">გაუგზავნე შეთავაზება და დაელოდე მომხმარებლის პასუხს.</div>
+          </div>
+          ${['open', 'pending'].includes(r.status) && !hasActiveOffer ? `
+            <button class="btn bp" onclick="closeMo('moReqDetail');openSendOffer('${sanitize(r.id)}','${sanitize(r.title)}')">
+              + შეთავაზების გაგზავნა
+            </button>` : ''}
+          ${hasActiveOffer ? `
+            <div style="padding:10px 14px;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.3);border-radius:10px;color:var(--ok);font-size:13px">
+              ✅ შენი შეთავაზება უკვე გაგზავნილია
+            </div>` : ''}
+          ${hasRejectedOffer && !hasActiveOffer ? `
+            <div style="padding:10px 14px;background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);border-radius:10px;color:#e74c3c;font-size:13px">
+              ❌ შეთავაზება უარყოფილია — გააგზავნე ახალი
+            </div>` : ''}
+        </div>` : '';
+
+      // Favorite button (worker only)
+      const favActive = r.favorited ? 'active' : '';
+      const favIcon = r.favorited ? '❤' : '♡';
+      const canFav = cu && (cu.type === 'handyman' || cu.type === 'company') && !isOwner;
+
+      // Price chip for header
+      const priceChip = r.budget
+        ? `<span class="rcard-meta rcard-meta-price">💰 ${r.budget}₾</span>`
+        : `<span class="rcard-meta" style="color:#c084fc">💰 შეთანხმებით</span>`;
 
       body.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px">
-      <h2 style="font-size:22px;flex:1">${sanitize(r.title)}</h2>
-      <span class="status ${statusCls}" style="flex-shrink:0">${statusLabel}</span>
-    </div>
+        <!-- Top: owner + inline meta + action buttons -->
+        <div class="rd-hero">
+          <div class="rd-hero-left">
+            ${ownerAvatar}
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <div style="font-size:17px;font-weight:700">${ownerName}</div>
+                <span class="rcard-status ${stCls}">${stLabel}</span>
+              </div>
+              <div style="color:var(--t2);font-size:13px;margin-top:3px">${sanitize(r.title)}</div>
+              <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+                ${priceChip}
+                <span class="rcard-meta">📍 ${sanitize(r.city || '—')}</span>
+              </div>
+            </div>
+          </div>
+          <div class="rd-hero-actions">
+            <button class="btn bg bs" onclick="shareRequest('${sanitize(r.id)}','${sanitize(r.title)}')">📤 გაზიარება</button>
+            ${canFav ? `<button class="btn ${r.favorited ? 'bp' : 'bg'} bs" id="favBtn_${sanitize(r.id)}" onclick="toggleFavorite('${sanitize(r.id)}')">${favIcon} ${r.favorited ? 'შენახულია' : 'შენახვა'}</button>` : ''}
+            ${isOwner ? `<button class="btn berr bs" onclick="deleteRequest('${sanitize(r.id)}')">🗑️ წაშლა</button>` : ''}
+          </div>
+        </div>
 
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
-      <span class="tag">${sanitize(r.category || '')}</span>
-      <span class="tag">📍 ${sanitize(r.city || '')}</span>
-      ${r.budget ? `<span class="tag">💰 ${r.budget}₾</span>` : '<span class="tag">💰 შეთანხმებით</span>'}
-      ${r.urgency === 'urgent' ? '<span class="tag urg">⚡ გადაუდებელი</span>' : ''}
-    </div>
+        <!-- 2-column body (stacks on mobile) -->
+        <div class="rd-body-grid">
+          <div class="rd-col-left">${galleryHtml}</div>
+          <div class="rd-col-right">${detailsHtml}</div>
+        </div>
 
-    ${r.desc ? `<div style="color:var(--text);font-size:14px;line-height:1.6;white-space:pre-wrap">${sanitize(r.desc)}</div>` : ''}
+        ${offerCtaHtml}
+        ${offersHtml}
 
-    ${galleryHtml}
+        <!-- Owner's other requests — populated async; hidden when empty -->
+        <div id="ownerOtherReqsSection" style="display:none;margin-top:20px">
+          <h3 style="font-size:15px;margin-bottom:10px">მომხმარებლის სხვა მოთხოვნები</h3>
+          <div id="ownerOtherReqsList" class="requests-grid"></div>
+        </div>
+      `;
+    }
 
-    <div class="rd-section">
-      <div class="rd-info-row"><span>👤 მომხმარებელი</span><span>${ownerName}</span></div>
-      <div class="rd-info-row"><span>📅 გამოქვეყნდა</span><span>${new Date(r.createdAt).toLocaleDateString('ka-GE', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
-      <div class="rd-info-row"><span>💬 შეთავაზებები</span><span>${offerCount}</span></div>
-    </div>
-
-    ${offersHtml}
-
-    ${actionsHtml}
-  `;
+    // Load the owner's OTHER recent requests (excluding current). Hide the section if none.
+    async function loadOwnerOtherRequests(ownerId, currentReqId) {
+      if (!ownerId) return;
+      try {
+        const all = await api('/requests?userId=' + encodeURIComponent(ownerId));
+        const others = (all || []).filter(r => r.id !== currentReqId).slice(0, 4);
+        const sec  = document.getElementById('ownerOtherReqsSection');
+        const list = document.getElementById('ownerOtherReqsList');
+        if (!sec || !list) return;
+        if (!others.length) { sec.style.display = 'none'; return; }
+        list.innerHTML = others.map(r => requestCard(r)).join('');
+        sec.style.display = 'block';
+      } catch (_) { /* silent */ }
     }
 
     async function deleteRequest(reqId) {
