@@ -22,6 +22,7 @@ const paymentRoutes = require('./routes/payment');
 const ariaRoutes    = require('./routes/aria');
 const pushRoutes    = require('./routes/push');
 const notificationRoutes = require('./routes/notifications');
+const proposalRoutes     = require('./routes/proposals');
 
 const app    = express();
 app.set('trust proxy', 1);
@@ -89,6 +90,7 @@ app.use('/api/payment',  paymentRoutes);
 app.use('/api/aria',     ariaRoutes);
 app.use('/api/push',     pushRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/proposals', writeHeavyLimiter, proposalRoutes);
 
 // ── Health ─────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ ok: true, env: process.env.NODE_ENV }));

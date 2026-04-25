@@ -523,6 +523,165 @@
     }
 
     /* ══════ HANDYMAN CARD v2 (reference match) ══════════ */
+    /* VIP+ COMPANIES showcase — purple gradient frame, reference-match */
+    .vipp-showcase {
+      background: linear-gradient(135deg, rgba(139,92,246,.16), rgba(155,89,182,.10) 50%, rgba(59,130,246,.08));
+      border: 1px solid rgba(155,89,182,.35);
+      border-radius: 20px;
+      padding: 22px 24px 26px;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .vipp-showcase::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(168,85,247,.25), transparent 70%);
+      pointer-events: none;
+    }
+    .vipp-showcase-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+    }
+    .vipp-crown {
+      font-size: 32px;
+      filter: drop-shadow(0 4px 10px rgba(255,193,7,.4));
+    }
+    .vipp-showcase-titles { flex: 1; min-width: 0 }
+    .vipp-showcase-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -.3px;
+    }
+    .vipp-showcase-sub {
+      color: var(--t2);
+      font-size: 13px;
+      margin-top: 2px;
+      line-height: 1.5;
+    }
+
+    .vipp-showcase-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      position: relative;
+      z-index: 1;
+    }
+    @media (max-width: 1200px) {
+      .vipp-showcase-grid { grid-template-columns: repeat(3, 1fr) }
+    }
+    @media (max-width: 900px) {
+      .vipp-showcase-grid { grid-template-columns: repeat(2, 1fr) }
+    }
+    @media (max-width: 520px) {
+      .vipp-showcase-grid { grid-template-columns: 1fr }
+      .vipp-showcase { padding: 18px 16px }
+      .vipp-showcase-title { font-size: 17px }
+    }
+
+    /* Compact company card (inside showcase) — no action button */
+    .vipp-company {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: .2s ease;
+      position: relative;
+    }
+    .vipp-company:hover {
+      border-color: rgba(168,85,247,.5);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 28px rgba(168,85,247,.2);
+    }
+    .vipp-company-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .vipp-company-logo {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--s2);
+      font-size: 20px;
+    }
+    .vipp-company-logo img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .vipp-company-info { flex: 1; min-width: 0 }
+    .vipp-company-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.25;
+    }
+    .vipp-company-name .vipp-tag {
+      padding: 2px 6px;
+      background: rgba(168,85,247,.18);
+      color: #a855f7;
+      border: 1px solid rgba(168,85,247,.45);
+      border-radius: 6px;
+      font-size: 9px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .vipp-company-spec {
+      font-size: 11px;
+      color: var(--t2);
+      margin-top: 3px;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .vipp-company-city {
+      font-size: 11px;
+      color: var(--t2);
+      margin-top: 3px;
+    }
+    .vipp-company-stats {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text);
+    }
+    .vipp-company-stats .rating {
+      color: #fbbf24;
+      font-weight: 700;
+    }
+    .vipp-company-verified {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      background: rgba(46,204,113,.12);
+      color: var(--ok);
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      width: fit-content;
+    }
+
+    /* ══════ HANDYMAN CARD v2 ══════════ */
     .handymen-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -3502,17 +3661,16 @@
           ⚙️ ფილტრები
         </button>
       </div>
-      <!-- Featured companies section (only shown if any company has VIP+) -->
-      <div id="companiesSection" style="display:none;margin-bottom:32px">
-        <div
-          style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:16px 20px;background:linear-gradient(135deg,rgba(52,152,219,.12),rgba(52,152,219,.06));border:1px solid rgba(52,152,219,.3);border-radius:14px">
-          <span style="font-size:22px">🏢</span>
-          <div>
-            <div style="font-weight:800;font-size:16px">კომპანიები</div>
-            <div style="font-size:12px;color:var(--t2)">პროფესიონალური გუნდები და ბრიგადები</div>
+      <!-- Featured VIP+ companies showcase (only visible when any company has VIP+/TOP) -->
+      <div id="companiesSection" class="vipp-showcase" style="display:none">
+        <div class="vipp-showcase-header">
+          <span class="vipp-crown">👑</span>
+          <div class="vipp-showcase-titles">
+            <div class="vipp-showcase-title">VIP+ კომპანიები</div>
+            <div class="vipp-showcase-sub">რჩეული VIP+ კომპანიები — სანდო, პროფესიონალი და შემმოწმებელი სერვისები.</div>
           </div>
         </div>
-        <div class="handymen-grid" id="companiesGrid"></div>
+        <div class="vipp-showcase-grid" id="companiesGrid"></div>
       </div>
       <!-- Regular handymen -->
       <div id="handymenSection">
@@ -4071,6 +4229,69 @@
         <button class="filter-btn" style="min-width:unset" onclick="setHnyRating('')">⭐ ნებისმიერი რეიტინგი</button>
         <button class="filter-btn" style="min-width:unset" onclick="setHnyRating('4.5')">⭐ 4.5+ (მაღალი)</button>
         <button class="filter-btn" style="min-width:unset" onclick="setHnyRating('4.0')">⭐ 4.0+ (კარგი)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROPOSAL (user → handyman/company) -->
+  <div class="mo" id="moProposal">
+    <div class="modal" style="max-height:90vh;overflow-y:auto">
+      <button class="mc" onclick="closeMo('moProposal')">✕</button>
+      <h2 style="margin-bottom:4px">💬 შემოთავაზება</h2>
+      <div class="sub" id="proposalRecipient" style="margin-bottom:14px">ადრესატი</div>
+      <div class="fg">
+        <label>სათაური *</label>
+        <input id="ppTitle" placeholder="მაგ: ელექტრო გაყვანილობის მონტაჟი" maxlength="200">
+      </div>
+      <div class="fg">
+        <label>კატეგორია *</label>
+        <button type="button" class="filter-btn" style="min-width:unset;width:100%;padding:10px 12px" onclick="openProposalCatPicker()">
+          <span id="ppCatLabel" style="color:var(--t2)">🏷️ აირჩიე კატეგორია</span>
+          <span class="arrow">▾</span>
+        </button>
+        <input type="hidden" id="ppCat" value="">
+      </div>
+      <div class="fg">
+        <label>დეტალები</label>
+        <textarea id="ppDesc" rows="3" maxlength="2000" placeholder="აღწერე სამუშაოს დეტალები..."></textarea>
+      </div>
+      <div class="fr">
+        <div class="fg">
+          <label>ქალაქი</label>
+          <button type="button" class="filter-btn" style="min-width:unset;width:100%;padding:10px 12px" onclick="openCityPickerForForm('ppCity')">
+            <span id="ppCityLabel" style="color:var(--t2)">📍 აირჩიე ქალაქი</span>
+            <span class="arrow">▾</span>
+          </button>
+          <input type="hidden" id="ppCity" value="">
+        </div>
+        <div class="fg">
+          <label>ბიუჯეტი (₾)</label>
+          <input id="ppBudget" type="number" placeholder="200">
+        </div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>დღეები</label><input id="ppDays" type="number" min="0" placeholder="0"></div>
+        <div class="fg"><label>საათები</label><input id="ppHours" type="number" min="0" placeholder="0"></div>
+      </div>
+      <button class="btn bp" style="width:100%;justify-content:center;margin-top:8px" onclick="submitProposal()">📤 შემოთავაზების გაგზავნა</button>
+    </div>
+  </div>
+
+  <!-- PROPOSAL CATEGORY PICKER -->
+  <div class="mo" id="moProposalCatPicker">
+    <div class="modal wide" style="max-height:82vh;overflow-y:auto">
+      <button class="mc" onclick="closeMo('moProposalCatPicker')">✕</button>
+      <h2 style="margin-bottom:14px">🏷️ კატეგორიის არჩევა</h2>
+      <div id="proposalCatBody"></div>
+    </div>
+  </div>
+
+  <!-- PROPOSAL VIEW (read-only) -->
+  <div class="mo" id="moProposalView">
+    <div class="modal" style="max-height:90vh;overflow-y:auto">
+      <button class="mc" onclick="closeMo('moProposalView')">✕</button>
+      <div id="proposalViewBody">
+        <div style="text-align:center;padding:40px;color:var(--t2)">⏳ იტვირთება...</div>
       </div>
     </div>
   </div>
@@ -5187,13 +5408,15 @@
       // Follow link if present
       if (link) {
         document.getElementById('notifDropdown')?.classList.remove('open');
-        // Parse link — support ?chat=xxx, ?req=yyy, or ?review=handymanId
+        // Parse link — support ?chat=xxx, ?req=yyy, ?review=handymanId, ?proposal=xxx
         const params = new URLSearchParams(link.startsWith('?') ? link.slice(1) : link);
-        const chatId    = params.get('chat');
-        const reqId     = params.get('req');
-        const reviewId  = params.get('review');
+        const chatId     = params.get('chat');
+        const reqId      = params.get('req');
+        const reviewId   = params.get('review');
+        const proposalId = params.get('proposal');
         if (chatId)     { openChat(chatId); }
         else if (reqId) { openRequestDetail(reqId); }
+        else if (proposalId) { openProposalView(proposalId); }
         else if (reviewId) {
           // Open handyman's profile and auto-focus the review form
           showProfile(reviewId);
@@ -5685,7 +5908,7 @@
         if (companiesSection && companiesGrid) {
           if (featuredCompanies.length > 0) {
             companiesSection.style.display = 'block';
-            companiesGrid.innerHTML = featuredCompanies.map(h => handymanCard(h, true)).join('');
+            companiesGrid.innerHTML = featuredCompanies.map(h => companyShowcaseCard(h)).join('');
             if (handymenSectionTitle) handymenSectionTitle.style.display = rest.length ? 'block' : 'none';
           } else {
             companiesSection.style.display = 'none';
@@ -5809,6 +6032,35 @@
     function avgRating(reviews) {
       if (!reviews || !reviews.length) return 0;
       return reviews.reduce((s, r) => s + r.stars, 0) / reviews.length;
+    }
+
+    // Compact company card — only used inside VIP+ showcase. Click → profile, no buttons.
+    function companyShowcaseCard(h) {
+      const rating = avgRating(h.reviewsReceived);
+      const reviewsCount = (h.reviewsReceived || []).length;
+      const primarySpec = (h.specialties?.[0]) || h.specialty || '';
+      const logoHtml = h.avatar
+        ? `<img src="${sanitize(h.avatar)}" alt="">`
+        : `<span>${sanitize(h.emoji || '🏢')}</span>`;
+      return `<div class="vipp-company" onclick="showProfile('${sanitize(h.id)}')">
+        <div class="vipp-company-top">
+          <div class="vipp-company-logo">${logoHtml}</div>
+          <div class="vipp-company-info">
+            <div class="vipp-company-name">
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sanitize(h.name || '')} ${sanitize(h.surname || '')}</span>
+              <span class="vipp-tag">VIP+</span>
+            </div>
+            ${primarySpec ? `<div class="vipp-company-spec">${sanitize(primarySpec)}</div>` : ''}
+            <div class="vipp-company-city">📍 ${sanitize(h.city || '—')}</div>
+          </div>
+        </div>
+        <div class="vipp-company-stats">
+          <span class="rating">★ ${rating > 0 ? rating.toFixed(1) : '—'}</span>
+          <span style="color:var(--t2)">(${reviewsCount})</span>
+          <span style="color:var(--t2);margin-left:auto">${h.jobs || 0} პროექტი</span>
+        </div>
+        ${h.verified ? '<div class="vipp-company-verified">✓ ვერიფიცირებული</div>' : ''}
+      </div>`;
     }
 
     function handymanCard(h, isCompanyCard = false) {
@@ -5949,8 +6201,8 @@
         <button class="btn bg bs" onclick="loadPortfolio();openMo('moPortfolio')">🖼️ პორტფოლიო</button>
         ${(h.type === 'handyman' || h.type === 'company') ? `<button class="btn bg bs" onclick="openChangePlanModal()">📦 ტარიფი</button>` : ''}
         <button class="btn bg bs" onclick="nav('my-card')">💳 ბარათი</button>` : ''}
-      ${!isOwner && (h.type === 'handyman' || h.type === 'company') && cu
-            ? `<button class="btn bp" onclick="openSendOffer('${h.id}')">💬 შეთავაზება</button>` : ''}
+      ${!isOwner && (h.type === 'handyman' || h.type === 'company') && cu && cu.type === 'user'
+            ? `<button class="btn bp" onclick="openProposalModal('${sanitize(h.id)}','${sanitize(h.name || '')} ${sanitize(h.surname || '')}')">💬 შემოთავაზება</button>` : ''}
       ${canReview ? `<button class="btn bo bs" onclick="openReviewModal('${hid}')">⭐ შეფასება</button>` : ''}
       ${h.phone && cu ? `<button class="btn bo bs" onclick="contactPhone('${sanitize(h.phone)}','${sanitize(h.name)}')">📞</button>` : ''}
     `;
@@ -6116,8 +6368,9 @@
     function openCityPicker(forWhat, callback) {
       _cityPickerFor = forWhat;
       _cityPickerCallback = callback || null;
-      // Close mobile-filters parent first (nested modal z-index issue)
+      // Close both mobile-filters parents first (nested modal z-index issue)
       closeMo('moMobileFilters');
+      closeMo('moMobileFiltersHny');
       document.getElementById('citySearchInput').value = '';
       renderCityList();
       setTimeout(() => openMo('moCityPicker'), 50);
@@ -6151,6 +6404,162 @@
         }
       }
       closeMo('moCityPicker');
+    }
+
+    // ═══ PROPOSALS (user → handyman/company) ═══
+    let _proposalRecipientId = null;
+    let _ppSelectedCatParent = '';
+    let _ppSelectedCatSub    = '';
+    function openProposalModal(recipientId, recipientName) {
+      const cu = currentUser;
+      if (!cu) { openMo('moLogin'); return; }
+      if (cu.type !== 'user') { toast('⚠️ შეთავაზება მხოლოდ მომხმარებელს შეუძლია', '', 'err'); return; }
+      _proposalRecipientId = recipientId;
+      _ppSelectedCatParent = '';
+      _ppSelectedCatSub    = '';
+      // Reset form
+      ['ppTitle', 'ppCat', 'ppDesc', 'ppCity', 'ppBudget', 'ppDays', 'ppHours'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      document.getElementById('ppCatLabel').textContent = '🏷️ აირჩიე კატეგორია';
+      document.getElementById('ppCatLabel').style.color = 'var(--t2)';
+      document.getElementById('ppCityLabel').textContent = '📍 აირჩიე ქალაქი';
+      document.getElementById('ppCityLabel').style.color = 'var(--t2)';
+      document.getElementById('proposalRecipient').textContent = 'ადრესატი: ' + (recipientName || '');
+      openMo('moProposal');
+    }
+
+    function openProposalCatPicker() {
+      const body = document.getElementById('proposalCatBody');
+      body.innerHTML = CATS_DATA.map(cat => {
+        const color = CAT_COLORS[cat.id] || { bg: 'rgba(255,107,43,.15)', fg: 'var(--accent)' };
+        return `<div style="margin-bottom:14px">
+          <button class="filter-btn ${_ppSelectedCatParent === cat.id && !_ppSelectedCatSub ? 'active' : ''}" style="min-width:unset;background:${color.bg};color:${color.fg};border-color:${color.fg};font-weight:700;width:100%;justify-content:flex-start"
+            onclick="setProposalCat('${cat.id}', '${sanitize(cat.name).replace(/'/g, "\\'")}')">${cat.icon} ${sanitize(cat.name)}</button>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-left:14px">
+            ${cat.subs.map(sub => `
+              <button class="filter-btn ${_ppSelectedCatSub === sub ? 'active' : ''}" style="min-width:unset;font-size:11px;padding:6px 10px"
+                onclick="setProposalCat('${cat.id}', '${sanitize(sub).replace(/'/g, "\\'")}')">${sanitize(sub)}</button>
+            `).join('')}
+          </div>
+        </div>`;
+      }).join('');
+      openMo('moProposalCatPicker');
+    }
+    function setProposalCat(parentId, subName) {
+      const parent = CATS_DATA.find(c => c.id === parentId);
+      _ppSelectedCatParent = parentId;
+      _ppSelectedCatSub = (parent && parent.name === subName) ? '' : subName;
+      const chosenName = _ppSelectedCatSub || (parent?.name || '');
+      document.getElementById('ppCat').value = chosenName;
+      const lbl = document.getElementById('ppCatLabel');
+      lbl.textContent = '🏷️ ' + chosenName;
+      lbl.style.color = 'var(--text)';
+      closeMo('moProposalCatPicker');
+    }
+
+    async function submitProposal() {
+      if (!_proposalRecipientId) return;
+      const title = document.getElementById('ppTitle').value.trim();
+      const category = document.getElementById('ppCat').value;
+      if (!title)    { toast('⚠️ სათაური შეიყვანე', '', 'err'); return; }
+      if (!category) { toast('⚠️ კატეგორია აირჩიე', '', 'err'); return; }
+      const days  = parseInt(document.getElementById('ppDays').value)  || 0;
+      const hours = parseInt(document.getElementById('ppHours').value) || 0;
+      const durationMinutes = days * 24 * 60 + hours * 60;
+      let durationStr = '';
+      if (days > 0)  durationStr += days + ' დღე';
+      if (hours > 0) durationStr += (durationStr ? ' ' : '') + hours + ' საათი';
+      try {
+        await api('/proposals', {
+          method: 'POST',
+          body: {
+            recipientId: _proposalRecipientId,
+            title,
+            category,
+            description: document.getElementById('ppDesc').value,
+            city:    document.getElementById('ppCity').value || null,
+            budget:  parseInt(document.getElementById('ppBudget').value) || null,
+            duration: durationStr || null,
+            durationMinutes: durationMinutes || null,
+          },
+        });
+        closeMo('moProposal');
+        toast('✅ შემოთავაზება გაიგზავნა!', 'ხელოსანი მიიღებს შეტყობინებას', 'ok');
+      } catch (e) {
+        toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err');
+      }
+    }
+
+    // View a proposal (opened from notification tap or dashboard)
+    async function openProposalView(proposalId) {
+      openMo('moProposalView');
+      const body = document.getElementById('proposalViewBody');
+      body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t2)">⏳ იტვირთება...</div>';
+      try {
+        const p = await api('/proposals/' + proposalId);
+        const cu = currentUser;
+        const isRecipient = cu && cu.id === p.recipientId;
+        const other = isRecipient ? p.sender : p.recipient;
+        const color = getCatColor(p.category);
+        const otherAvatar = other?.avatar
+          ? `<img src="${sanitize(other.avatar)}" style="width:48px;height:48px;border-radius:50%;object-fit:cover">`
+          : `<div class="av" style="width:48px;height:48px;font-size:18px;background:${sanitize(other?.color || '#3b3b4f')};color:var(--accent)">${sanitize(other?.emoji || '👤')}</div>`;
+        const statusLabel = p.status === 'accepted' ? 'მიღებული' : p.status === 'rejected' ? 'უარყოფილი' : 'მოლოდინში';
+        const statusCls = p.status === 'accepted' ? 'sa' : p.status === 'rejected' ? 'sd' : 'sn';
+        body.innerHTML = `
+          <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+            ${otherAvatar}
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:700;font-size:15px">${sanitize(other?.name || '')} ${sanitize(other?.surname || '')}</div>
+              <div style="color:var(--t2);font-size:12px">${isRecipient ? 'გამომგზავნი' : 'ადრესატი'}</div>
+            </div>
+            <span class="status ${statusCls}">${statusLabel}</span>
+          </div>
+          <h3 style="font-size:18px;margin-bottom:8px">${sanitize(p.title)}</h3>
+          <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+            <span class="rcard-cat" style="background:${color.bg};color:${color.fg}">🏷️ ${sanitize(p.category)}</span>
+            ${p.city ? `<span class="rcard-meta">📍 ${sanitize(p.city)}</span>` : ''}
+            ${p.budget ? `<span class="rcard-meta rcard-meta-price">💰 ${p.budget}₾</span>` : ''}
+            ${p.duration ? `<span class="rcard-meta">⏱ ${sanitize(p.duration)}</span>` : ''}
+          </div>
+          ${p.description ? `<div style="background:var(--s2);border-radius:10px;padding:12px;font-size:13px;line-height:1.55;white-space:pre-wrap;margin-bottom:14px">${sanitize(p.description)}</div>` : ''}
+          ${isRecipient && p.status === 'pending' ? `
+            <div style="display:flex;gap:8px">
+              <button class="btn bp" style="flex:1;justify-content:center" onclick="acceptProposal('${sanitize(p.id)}')">✓ მიღება</button>
+              <button class="btn berr" style="flex:1;justify-content:center" onclick="rejectProposal('${sanitize(p.id)}')">✕ უარყოფა</button>
+            </div>` : ''}
+          ${!isRecipient && p.status === 'pending' ? `
+            <button class="btn bg" style="width:100%;justify-content:center" onclick="cancelProposal('${sanitize(p.id)}')">🗑️ გაუქმება</button>` : ''}
+        `;
+      } catch (e) {
+        body.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>';
+      }
+    }
+    async function acceptProposal(id) {
+      try {
+        await api(`/proposals/${id}/accept`, { method: 'POST' });
+        closeMo('moProposalView');
+        toast('✅ მიღებულია', '', 'ok');
+        renderProposals?.();
+      } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
+    }
+    async function rejectProposal(id) {
+      try {
+        await api(`/proposals/${id}/reject`, { method: 'POST' });
+        closeMo('moProposalView');
+        toast('❌ უარყოფილია', '', 'ok');
+        renderProposals?.();
+      } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
+    }
+    async function cancelProposal(id) {
+      if (!confirm('ნამდვილად გაუქმო?')) return;
+      try {
+        await api(`/proposals/${id}`, { method: 'DELETE' });
+        closeMo('moProposalView');
+        toast('🗑️ გაუქმდა', '', 'ok');
+        renderProposals?.();
+      } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
     }
 
     // Generic form-field city picker — opens picker and writes back to input + label
@@ -6992,6 +7401,7 @@
         <!-- TABS -->
         <div class="dash-tabs" style="margin-top:22px">
           <div class="dash-tab ${currentUserDashTab === 'requests' ? 'active' : ''}" onclick="switchUserDashTab('requests')">📋 ჩემი მოთხოვნები</div>
+          <div class="dash-tab ${currentUserDashTab === 'proposals' ? 'active' : ''}" onclick="switchUserDashTab('proposals')">💬 ჩემი შემოთავაზებები</div>
           <div class="dash-tab ${currentUserDashTab === 'chats' ? 'active' : ''}" onclick="switchUserDashTab('chats')">💬 ჩათები</div>
         </div>
         <div id="userDashTabContent"></div>
@@ -7058,7 +7468,7 @@
 
         <!-- TABBED: offers / chats / favorites -->
         <div class="dash-tabs">
-          <div class="dash-tab ${currentDashTab === 'offers' ? 'active' : ''}" onclick="switchDashTab('offers')">💬 ჩემი შეთავაზებები</div>
+          <div class="dash-tab ${currentDashTab === 'offers' ? 'active' : ''}" onclick="switchDashTab('offers')">💬 შეთავაზებები</div>
           <div class="dash-tab ${currentDashTab === 'chats' ? 'active' : ''}" onclick="switchDashTab('chats')">💬 ჩათები</div>
           <div class="dash-tab ${currentDashTab === 'favorites' ? 'active' : ''}" onclick="switchDashTab('favorites')">🔖 შენახული</div>
         </div>
@@ -7085,6 +7495,43 @@
         el.innerHTML = myReqs.length
           ? '<div class="requests-grid">' + myReqs.map(r => requestCard(r)).join('') + '</div>'
           : '<div class="empty"><div class="ei">📋</div><h3>მოთხოვნა არ გაქვს</h3></div>';
+      } else if (currentUserDashTab === 'proposals') {
+        el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t2)">⏳ იტვირთება...</div>';
+        api('/proposals/sent').then(proposals => {
+          if (!proposals?.length) {
+            el.innerHTML = '<div class="empty"><div class="ei">💬</div><h3>შემოთავაზება ჯერ არ გაქვს</h3><p>ხელოსნის პროფილიდან გაუგზავნე პირდაპირი შეთავაზება</p></div>';
+            return;
+          }
+          el.innerHTML = proposals.map(p => {
+            const r = p.recipient;
+            const color = getCatColor(p.category);
+            const stLabel = p.status === 'accepted' ? 'მიღებული' : p.status === 'rejected' ? 'უარყოფილი' : p.status === 'canceled' ? 'გაუქმებული' : 'მოლოდინში';
+            const stCls = p.status === 'accepted' ? 'sa' : p.status === 'rejected' ? 'sd' : p.status === 'canceled' ? 'sd' : 'sn';
+            const avatarHtml = r?.avatar
+              ? `<img src="${sanitize(r.avatar)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+              : `<div class="av" style="width:40px;height:40px;font-size:16px;background:${sanitize(r?.color || '#22222f')};color:var(--accent)">${sanitize(r?.emoji || '🔧')}</div>`;
+            return `<div class="oi" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="openProposalView('${sanitize(p.id)}')">
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                ${avatarHtml}
+                <div style="flex:1;min-width:0">
+                  <div style="font-weight:700">${sanitize(r?.name || '')} ${sanitize(r?.surname || '')}</div>
+                  <div style="color:var(--accent);font-size:12px">${sanitize(r?.specialty || '')}</div>
+                  <div style="font-size:14px;margin-top:3px">${sanitize(p.title)}</div>
+                  <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+                    <span class="rcard-cat" style="background:${color.bg};color:${color.fg};font-size:10px">${sanitize(p.category)}</span>
+                    ${p.city ? `<span class="rcard-meta" style="font-size:10px">📍 ${sanitize(p.city)}</span>` : ''}
+                  </div>
+                </div>
+                <div style="text-align:right;flex-shrink:0">
+                  ${p.budget ? `<div class="oprice">₾${p.budget}</div>` : ''}
+                  <span class="status ${stCls}">${stLabel}</span>
+                </div>
+              </div>
+            </div>`;
+          }).join('');
+        }).catch(() => {
+          el.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>';
+        });
       } else {
         el.innerHTML = myChats.length
           ? myChats.map(c => chatItem(c)).join('')
@@ -7106,11 +7553,30 @@
       }
     }
 
+    // Inner sub-tab state for "💬 შეთავაზებები"
+    let _offersSubTab = 'mine'; // 'mine' = my own offers, 'received' = proposals received
+    function switchOffersSubTab(tab) {
+      _offersSubTab = tab;
+      // Re-render parent dash tab
+      renderDashboard?.();
+    }
+
     function renderDashTabContent(myOffers, myChats, cu2) {
       const el = document.getElementById('dashTabContent');
       if (!el) return;
       if (currentDashTab === 'offers') {
-        el.innerHTML = myOffers.length ? myOffers.map(o => `<div class="oi">
+        // ─── Sub-tabs: "ჩემი შეთავაზებები" | "შემოთავაზებები" (received proposals) ───
+        const subTabsHtml = `
+          <div class="dash-tabs" style="margin-bottom:12px">
+            <div class="dash-tab ${_offersSubTab === 'mine' ? 'active' : ''}" onclick="switchOffersSubTab('mine')">💬 ჩემი შეთავაზებები</div>
+            <div class="dash-tab ${_offersSubTab === 'received' ? 'active' : ''}" onclick="switchOffersSubTab('received')">📥 შემოთავაზებები</div>
+          </div>
+          <div id="offersSubContent"></div>
+        `;
+        el.innerHTML = subTabsHtml;
+        const inner = document.getElementById('offersSubContent');
+        if (_offersSubTab === 'mine') {
+          inner.innerHTML = myOffers.length ? myOffers.map(o => `<div class="oi">
       <div style="flex:1;min-width:0">
         <div style="font-weight:600">${sanitize(o.request?.title || 'მოთხოვნა')}</div>
         <div style="font-size:12px;color:var(--t2)">${sanitize(o.request?.category || '')} · ${sanitize(o.request?.city || '')}</div>
@@ -7128,6 +7594,44 @@
         <span class="status ${o.status === 'pending' ? 'sn' : o.status === 'accepted' ? 'sa' : o.status === 'agreed' ? 'sa' : o.status === 'completed' ? 'sa' : 'sd'}">${o.status === 'pending' ? 'მოლოდინში' : o.status === 'accepted' ? 'მიღებული' : o.status === 'agreed' ? '🤝 შევთანხმდით' : o.status === 'completed' ? '✓ დასრულებული' : 'უარყოფილი'}</span>
       </div>
     </div>`).join('') : '<div class="empty"><div class="ei">💬</div><h3>შეთავაზება ჯერ არ გაქვს</h3></div>';
+        } else {
+          // Received proposals (user → me)
+          inner.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t2)">⏳ იტვირთება...</div>';
+          api('/proposals/received').then(proposals => {
+            if (!proposals?.length) {
+              inner.innerHTML = '<div class="empty"><div class="ei">📥</div><h3>შემოთავაზება ჯერ არ გაქვს</h3><p>მომხმარებლებს შეუძლიათ პირდაპირ შემოგთავაზონ სამუშაო შენი პროფილიდან</p></div>';
+              return;
+            }
+            inner.innerHTML = proposals.map(p => {
+              const s = p.sender;
+              const color = getCatColor(p.category);
+              const stLabel = p.status === 'accepted' ? 'მიღებული' : p.status === 'rejected' ? 'უარყოფილი' : p.status === 'canceled' ? 'გაუქმებული' : 'მოლოდინში';
+              const stCls = p.status === 'accepted' ? 'sa' : p.status === 'rejected' ? 'sd' : p.status === 'canceled' ? 'sd' : 'sn';
+              const avatarHtml = s?.avatar
+                ? `<img src="${sanitize(s.avatar)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+                : `<div class="av" style="width:40px;height:40px;font-size:16px;background:${sanitize(s?.color || '#22222f')};color:var(--accent)">${sanitize(s?.emoji || '👤')}</div>`;
+              return `<div class="oi" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="openProposalView('${sanitize(p.id)}')">
+                <div style="display:flex;gap:10px;align-items:flex-start">
+                  ${avatarHtml}
+                  <div style="flex:1;min-width:0">
+                    <div style="font-weight:700">${sanitize(s?.name || '')} ${sanitize(s?.surname || '')}</div>
+                    <div style="font-size:14px;margin-top:3px">${sanitize(p.title)}</div>
+                    <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+                      <span class="rcard-cat" style="background:${color.bg};color:${color.fg};font-size:10px">${sanitize(p.category)}</span>
+                      ${p.city ? `<span class="rcard-meta" style="font-size:10px">📍 ${sanitize(p.city)}</span>` : ''}
+                    </div>
+                  </div>
+                  <div style="text-align:right;flex-shrink:0">
+                    ${p.budget ? `<div class="oprice">₾${p.budget}</div>` : ''}
+                    <span class="status ${stCls}">${stLabel}</span>
+                  </div>
+                </div>
+              </div>`;
+            }).join('');
+          }).catch(() => {
+            inner.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>';
+          });
+        }
       } else if (currentDashTab === 'chats') {
         el.innerHTML = myChats.length ? myChats.map(c => chatItem(c)).join('') : '<div class="empty"><div class="ei">💬</div><h3>ჩათი ჯერ არ გაქვს</h3></div>';
       } else if (currentDashTab === 'favorites') {
