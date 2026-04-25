@@ -376,13 +376,42 @@ router.post('/:id/disagree', requireAuth, async (req, res) => {
 
     await prisma.proposal.update({ where: { id: p.id }, data: { status: 'accepted', senderAgreed: false, recipientAgreed: false } });
 
+    // Notify the OTHER party
+    const recipientId = p.senderId === req.user.id ? p.recipientId : p.senderId;
+    const senderName  = `${req.user.name || ''} ${req.user.surname || ''}`.trim();
+    const notifTitle  = '❌ ვერ შევთანხმდით';
+    const notifBody   = `${senderName || 'მხარე'} — შეთავაზება გაუქმდა`;
+    const io = req.app.get('io');
+
     if (p.chat) {
       await prisma.message.create({
         data: { chatId: p.chat.id, fromId: null, type: 'system', content: '"ვერ შევთანხმდით". თანამშრომლობა შეჩერდა.' },
       }).catch(() => {});
       const thirteenDaysAgo = new Date(Date.now() - 13 * 86400000);
       await prisma.chat.update({ where: { id: p.chat.id }, data: { updatedAt: thirteenDaysAgo } }).catch(() => {});
+
+      if (io) io.to(`chat:${p.chat.id}`).emit('proposalDisagreed', { chatId: p.chat.id });
     }
+
+    sendPushToUser(prisma, recipientId, {
+      title: notifTitle,
+      body:  notifBody,
+      tag:   'proposal-disagree-' + p.id,
+      url:   p.chat ? `/?chat=${p.chat.id}` : '/',
+    }).catch(() => {});
+    sendExpoPushToUser(prisma, recipientId, {
+      title: notifTitle,
+      body:  notifBody,
+      data:  { chatId: p.chat?.id, type: 'proposal_disagree' },
+      channelId: 'default',
+    }).catch(() => {});
+    createNotification({
+      prisma, io, userId: recipientId,
+      type:  'proposal_disagree',
+      title: notifTitle,
+      body:  notifBody,
+      link:  p.chat ? `?chat=${p.chat.id}` : null,
+    }).catch(() => {});
 
     res.json({ ok: true });
   } catch (err) {
