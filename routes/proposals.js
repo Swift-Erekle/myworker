@@ -185,12 +185,11 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
     const p = await prisma.proposal.findUnique({ where: { id: req.params.id } });
     if (!p) return res.status(404).json({ error: 'ვერ მოიძებნა' });
     if (p.recipientId !== req.user.id) return res.status(403).json({ error: 'წვდომა აკრძალული' });
-    if (p.status !== 'pending') return res.status(400).json({ error: 'სტატუსი აღარ არის pending' });
 
-    // ✅ FIX 3: idempotent — if already accepted, return success silently
-    if (p.status === 'accepted') {
-      return res.json(p);
-    }
+    // Idempotent: if already accepted, return success silently (prevents ⚠️ on re-tap)
+    if (p.status === 'accepted') return res.json(p);
+
+    if (p.status !== 'pending') return res.status(400).json({ error: 'სტატუსი აღარ არის pending' });
 
     const updated = await prisma.proposal.update({
       where: { id: p.id },

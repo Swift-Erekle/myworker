@@ -2880,24 +2880,12 @@
       margin-top: 12px;
       width: 100%;
       box-sizing: border-box;
-      overflow-x: hidden;
     }
     @media (max-width: 600px) {
       .port-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
       }
-    }
-    @media (max-width: 400px) {
-      .port-grid {
-        grid-template-columns: 1fr;
-        gap: 8px;
-      }
-    }
-    #pDesc {
-      word-break: break-word;
-      overflow-wrap: break-word;
-      white-space: normal;
     }
 
     .port-item {
@@ -4552,6 +4540,10 @@
         <div class="fg">
           <label>ბიუჯეტი (₾)</label>
           <input id="ppBudget" type="number" placeholder="200">
+          <label class="negotiable-label">
+            <input type="checkbox" id="ppBudgetNegotiable" onchange="toggleNegotiableBudgetProposal()">
+            <span>ფასი შეთანხმებით</span>
+          </label>
         </div>
       </div>
       <div class="fr">
@@ -5596,14 +5588,6 @@
         const moReqDetail = document.getElementById('moReqDetail');
         if (moReqDetail && moReqDetail.classList.contains('open') && offer.requestId) {
           openRequestDetail(offer.requestId);
-        }
-      });
-
-      // Live update when one party agrees — reload chat so the other sees the button
-      socket.on('offerAgreedSingle', (data) => {
-        const activeChatId = window._activeChatId;
-        if (activeChatId && (data.chatId === activeChatId)) {
-          loadChatMessages();
         }
       });
 
@@ -6687,7 +6671,7 @@
         ${(h.type === 'handyman' || h.type === 'company') ? `<button class="btn bg bs" onclick="openChangePlanModal()">📦 ტარიფი</button>` : ''}
         <button class="btn bg bs" onclick="nav('my-card')">💳 ბარათი</button>` : ''}
       ${!isOwner && (h.type === 'handyman' || h.type === 'company') && cu && cu.type === 'user'
-            ? `<button class="btn bp" onclick="openProposalModal('${sanitize(h.id)}','${sanitize(h.name || '')} ${sanitize(h.surname || '')}')">💬 შეთავაზება</button>` : ''}
+            ? `<button class="btn bp" onclick="openProposalModal('${sanitize(h.id)}','${sanitize(h.name || '')} ${sanitize(h.surname || '')}')">💬 შემოთავაზება</button>` : ''}
       ${canReview ? `<button class="btn bo bs" onclick="openReviewModal('${hid}')">⭐ შეფასება</button>` : ''}
       ${h.phone && cu ? `<button class="btn bo bs" onclick="contactPhone('${sanitize(h.phone)}','${sanitize(h.name)}')">📞</button>` : ''}
     `;
@@ -6906,6 +6890,9 @@
       ['ppTitle', 'ppCat', 'ppDesc', 'ppCity', 'ppBudget', 'ppDays', 'ppHours'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
+      // Reset negotiable checkbox
+      const ppNeg = document.getElementById('ppBudgetNegotiable');
+      if (ppNeg) { ppNeg.checked = false; toggleNegotiableBudgetProposal(); }
       document.getElementById('ppCatLabel').textContent = '🏷️ აირჩიე კატეგორია';
       document.getElementById('ppCatLabel').style.color = 'var(--t2)';
       document.getElementById('ppCityLabel').textContent = '📍 აირჩიე ქალაქი';
@@ -6964,7 +6951,7 @@
             category,
             description: document.getElementById('ppDesc').value,
             city:    document.getElementById('ppCity').value || null,
-            budget:  parseInt(document.getElementById('ppBudget').value) || null,
+            budget:  document.getElementById('ppBudgetNegotiable')?.checked ? null : (parseInt(document.getElementById('ppBudget').value) || null),
             duration: durationStr || null,
             durationMinutes: durationMinutes || null,
           },
@@ -7277,6 +7264,22 @@
     function toggleNegotiableBudget() {
       const cb = document.getElementById('qBudgetNegotiable');
       const inp = document.getElementById('qBudget');
+      if (!cb || !inp) return;
+      if (cb.checked) {
+        inp.value = '';
+        inp.disabled = true;
+        inp.style.opacity = '.4';
+        inp.placeholder = 'შეთანხმებით';
+      } else {
+        inp.disabled = false;
+        inp.style.opacity = '';
+        inp.placeholder = '200';
+      }
+    }
+
+    function toggleNegotiableBudgetProposal() {
+      const cb  = document.getElementById('ppBudgetNegotiable');
+      const inp = document.getElementById('ppBudget');
       if (!cb || !inp) return;
       if (cb.checked) {
         inp.value = '';
@@ -7995,6 +7998,41 @@
       renderDashboard();
     }
 
+    let _userChatsSubTab = 'requests'; // 'requests' = offer-based, 'proposals' = proposal-based
+
+    function switchUserChatsSubTab(tab) {
+      _userChatsSubTab = tab;
+      const cached = window._userDashChatsCache;
+      if (cached) renderUserChatsTabContent(cached);
+    }
+
+    function renderUserChatsTabContent(myChats) {
+      window._userDashChatsCache = myChats;
+      const el = document.getElementById('userDashTabContent');
+      if (!el) return;
+
+      const offerChats    = myChats.filter(c => c.offerId    && !c.proposalId);
+      const proposalChats = myChats.filter(c => c.proposalId && !c.offerId);
+
+      el.innerHTML = `
+        <div class="dash-tabs" style="margin-bottom:12px">
+          <div class="dash-tab ${_userChatsSubTab === 'requests' ? 'active' : ''}" onclick="switchUserChatsSubTab('requests')">📋 ჩემი მოთხოვნები (${offerChats.length})</div>
+          <div class="dash-tab ${_userChatsSubTab === 'proposals' ? 'active' : ''}" onclick="switchUserChatsSubTab('proposals')">💬 ჩემი შეთავაზებული (${proposalChats.length})</div>
+        </div>
+        <div id="userChatsSubContent"></div>
+      `;
+
+      const inner = document.getElementById('userChatsSubContent');
+      const list  = _userChatsSubTab === 'requests' ? offerChats : proposalChats;
+      const emptyMsg = _userChatsSubTab === 'requests'
+        ? '<div class="empty"><div class="ei">📋</div><h3>ჩათი ჯერ არ გაქვს</h3><p>ხელოსნის შეთავაზების მიღების შემდეგ ჩათი გამოჩნდება</p></div>'
+        : '<div class="empty"><div class="ei">💬</div><h3>შეთავაზება ჯერ არ გაქვს</h3><p>ხელოსნის პროფილიდან შეგიძლია გაუგზავნო შეთავაზება</p></div>';
+
+      inner.innerHTML = list.length
+        ? '<div class="chats-grid">' + list.map(c => chatItem(c)).join('') + '</div>'
+        : emptyMsg;
+    }
+
     function renderUserDashTabContent(myReqs, myChats) {
       const el = document.getElementById('userDashTabContent');
       if (!el) return;
@@ -8003,9 +8041,7 @@
           ? '<div class="requests-grid">' + myReqs.map(r => requestCard(r)).join('') + '</div>'
           : '<div class="empty"><div class="ei">📋</div><h3>მოთხოვნა არ გაქვს</h3></div>';
       } else {
-        el.innerHTML = myChats.length
-          ? '<div class="chats-grid">' + myChats.map(c => chatItem(c)).join('') + '</div>'
-          : '<div class="empty"><div class="ei">💬</div><h3>ჩათი ჯერ არ გაქვს</h3></div>';
+        renderUserChatsTabContent(myChats);
       }
     }
 
@@ -8267,6 +8303,25 @@
         // Countdown banner for 'agreed' offers
         setupChatCountdown(chat.offer);
 
+        // ── Block chat input after full agreement ─────────────
+        const chatFooter = document.querySelector('.chat-footer');
+        const chatInput  = document.getElementById('chatInput');
+        const isAgreed   = (chat.offer?.status === 'agreed') || (chat.proposal?.status === 'agreed');
+        const isDisagreed = (chat.offer?.status === 'disagreed') || (chat.proposal?.status === 'disagreed');
+        if (chatFooter && chatInput) {
+          if (isAgreed) {
+            chatInput.disabled = true;
+            chatInput.placeholder = '🤝 შეთანხმება დასრულებულია — ჩათი დაბლოკილია';
+            chatInput.style.opacity = '0.4';
+            chatFooter.querySelectorAll('.cib').forEach(b => { b.style.opacity = '0.3'; b.style.pointerEvents = 'none'; });
+          } else {
+            chatInput.disabled = false;
+            chatInput.placeholder = 'შეტყობინება...';
+            chatInput.style.opacity = '';
+            chatFooter.querySelectorAll('.cib').forEach(b => { b.style.opacity = ''; b.style.pointerEvents = ''; });
+          }
+        }
+
         if (!socket || !socket.connected) {
           clearInterval(chatPollTimer);
           let known = (chat.messages || []).length;
@@ -8329,14 +8384,8 @@
         document.getElementById('chatDecisionMenu')?.classList.remove('open');
         await loadChatMessages();
       } catch (e) {
-        // round-order messages ან „უკვე დაეთანხმდი" – ინფო, არა error
-        if (e.error && (
-            e.error.includes('ჯერ მომხმარებელმა') ||
-            e.error.includes('ჯერ ხელოსანმა') ||
-            e.error.includes('უკვე დაეთანხმდი')
-        )) {
-          toast('👀 ' + e.error, '', 'ok');
-        } else if (e.error?.includes('ელოდება')) {
+        // ✅ FIX 3: if "awaiting other party" — show info, not error
+        if (e.error?.includes('ელოდება')) {
           toast('👀 ' + e.error, '', 'ok');
         } else {
           toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err');
