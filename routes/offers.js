@@ -379,66 +379,115 @@ router.post('/:id/disagree', requireAuth, async (req, res) => {
 });
 
 // ── POST /api/offers/:id/agree ─────────────────────────────────
-// User presses "შევთანხმდით" — finalizes agreement, starts countdown.
+// Two-party agreement: handyman (sender) presses first, then user (recipient).
+// Countdown only starts when BOTH have pressed.
 router.post('/:id/agree', requireAuth, async (req, res) => {
   try {
-    if (req.user.type !== 'user') {
-      return res.status(403).json({ error: 'მხოლოდ მომხმარებელს შეუძლია' });
-    }
     const offer = await prisma.offer.findUnique({
       where:   { id: req.params.id },
       include: { request: true, chat: true },
     });
     if (!offer) return res.status(404).json({ error: 'შეთავაზება ვერ მოიძებნა' });
-    if (offer.request.userId !== req.user.id) return res.status(403).json({ error: 'წვდომა აკრძალულია' });
     if (offer.status !== 'accepted') {
       return res.status(400).json({ error: 'მხოლოდ მიღებული შეთავაზებისთვის მოქმედებს' });
     }
+    // Determine role: handyman is sender (made the offer), user is recipient (request owner)
+    const isHandyman = offer.handymanId === req.user.id;
+    const isUser     = offer.request.userId === req.user.id;
+    if (!isHandyman && !isUser) return res.status(403).json({ error: 'წვდომა აკრძალულია' });
 
-    const now = new Date();
-    const mins = offer.durationMinutes || (24 * 60);     // default: 1 day fallback
-    const completedAt = new Date(now.getTime() + mins * 60 * 1000);
+    // Already agreed by this side?
+    if (isHandyman && offer.senderAgreed)    return res.status(400).json({ error: 'უკვე დაეთანხმდი' });
+    if (isUser     && offer.recipientAgreed) return res.status(400).json({ error: 'უკვე დაეთანხმდი' });
+
+    // Sender (handyman) MUST press first
+    if (isUser && !offer.senderAgreed) {
+      return res.status(400).json({ error: 'ჯერ ხელოსანმა უნდა დაადასტუროს' });
+    }
+
+    const updateData = isHandyman
+      ? { senderAgreed: true }
+      : { recipientAgreed: true };
+
+    // If this is the second agreement, transition to "agreed" status & start countdown
+    const bothAgreed = isHandyman ? offer.recipientAgreed : offer.senderAgreed;
+    let completedAt = null;
+    if (bothAgreed) {
+      const now = new Date();
+      const mins = offer.durationMinutes || (24 * 60);
+      completedAt = new Date(now.getTime() + mins * 60 * 1000);
+      Object.assign(updateData, {
+        status:     'agreed',
+        agreedAt:   now,
+        completedAt,
+      });
+    }
 
     await prisma.offer.update({
       where: { id: offer.id },
-      data:  { status: 'agreed', agreedAt: now, completedAt },
+      data:  updateData,
     });
 
     // System message in chat
     if (offer.chat) {
+      const sysContent = bothAgreed
+        ? `"შევთანხმდით, თანამშრომლობა დაიწყო"`
+        : (isHandyman
+            ? `ხელოსანმა დაადასტურა შეთანხმება — ელოდება მომხმარებელს`
+            : `მომხმარებელმა დაადასტურა შეთანხმება — ელოდება ხელოსანს`);
       await prisma.message.create({
-        data: {
-          chatId:  offer.chat.id,
-          fromId:  null,
-          type:    'system',
-          content: `"შევთანხმდით, თანამშრომლობა დაიწყო"`,
-        },
+        data: { chatId: offer.chat.id, fromId: null, type: 'system', content: sysContent },
       }).catch(() => {});
     }
 
-    res.json({ ok: true, completedAt });
+    res.json({ ok: true, completedAt, bothAgreed, senderAgreed: isHandyman || offer.senderAgreed, recipientAgreed: isUser || offer.recipientAgreed });
 
-    // Notify handyman
-    sendPushToUser(prisma, offer.handymanId, {
-      title: '🤝 შევთანხმდით',
-      body:  `"${offer.request.title}" — თანამშრომლობა დაიწყო`,
-      tag:   'offer-agreed-' + offer.id,
-      url:   `/?chat=${offer.chat?.id || ''}`,
-    }).catch(() => {});
-    sendExpoPushToUser(prisma, offer.handymanId, {
-      title: '🤝 შევთანხმდით',
-      body:  `"${offer.request.title}"`,
-      data:  { type: 'offer_agreed', offerId: offer.id, chatId: offer.chat?.id },
-    }).catch(() => {});
-    createNotification({
-      prisma,
-      io: req.app.get('io'),
-      userId: offer.handymanId,
-      type:   'offer_accepted',
-      title:  '🤝 შევთანხმდით',
-      body:   `"${offer.request.title}" — თანამშრომლობა დაიწყო`,
-      link:   `?chat=${offer.chat?.id || ''}`,
-    }).catch(() => {});
+    // Notify the other party
+    const otherUserId = isHandyman ? offer.request.userId : offer.handymanId;
+    if (bothAgreed) {
+      sendPushToUser(prisma, otherUserId, {
+        title: '🤝 შევთანხმდით',
+        body:  `"${offer.request.title}" — თანამშრომლობა დაიწყო`,
+        tag:   'offer-agreed-' + offer.id,
+        url:   `/?chat=${offer.chat?.id || ''}`,
+      }).catch(() => {});
+      sendExpoPushToUser(prisma, otherUserId, {
+        title: '🤝 შევთანხმდით',
+        body:  `"${offer.request.title}"`,
+        data:  { type: 'offer_agreed', offerId: offer.id, chatId: offer.chat?.id },
+      }).catch(() => {});
+      createNotification({
+        prisma,
+        io: req.app.get('io'),
+        userId: otherUserId,
+        type:   'offer_accepted',
+        title:  '🤝 შევთანხმდით',
+        body:   `"${offer.request.title}" — თანამშრომლობა დაიწყო`,
+        link:   `?chat=${offer.chat?.id || ''}`,
+      }).catch(() => {});
+    } else {
+      // First side agreed — notify the other side that it's their turn
+      sendPushToUser(prisma, otherUserId, {
+        title: '👀 შევთანხმდით?',
+        body:  isHandyman ? 'ხელოსანი ელოდება შენს დადასტურებას' : 'მომხმარებელი ელოდება შენს დადასტურებას',
+        tag:   'offer-agree-await-' + offer.id,
+        url:   `/?chat=${offer.chat?.id || ''}`,
+      }).catch(() => {});
+      sendExpoPushToUser(prisma, otherUserId, {
+        title: '👀 შევთანხმდით?',
+        body:  isHandyman ? 'ხელოსანი ელოდება დადასტურებას' : 'მომხმარებელი ელოდება დადასტურებას',
+        data:  { type: 'offer_agree_await', offerId: offer.id, chatId: offer.chat?.id },
+      }).catch(() => {});
+      createNotification({
+        prisma,
+        io: req.app.get('io'),
+        userId: otherUserId,
+        type:   'offer_agree_await',
+        title:  '👀 შევთანხმდით?',
+        body:   `"${offer.request.title}" — ${isHandyman ? 'ხელოსანი' : 'მომხმარებელი'} ელოდება დადასტურებას`,
+        link:   `?chat=${offer.chat?.id || ''}`,
+      }).catch(() => {});
+    }
   } catch (err) {
     console.error('[OFFERS] agree error:', err.message);
     res.status(500).json({ error: 'სერვერის შეცდომა' });

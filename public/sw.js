@@ -5,8 +5,8 @@
 //   2. notificationclick — opens the right page on tap
 //   3. Basic offline cache (optional, non-blocking)
 
-const CACHE_NAME = 'xelosani-v1';
-const OFFLINE_ASSETS = ['/', '/icon-192.png'];
+const CACHE_NAME = 'xelosani-v2';
+const OFFLINE_ASSETS = ['/', '/assets/icon.png'];
 
 // ── Install: pre-cache key assets ─────────────────────────────
 self.addEventListener('install', (e) => {
@@ -35,8 +35,9 @@ self.addEventListener('push', (e) => {
 
   const title   = data.title  || 'ხელოსანი.ge';
   const body    = data.body   || '';
-  const icon    = data.icon   || '/icon-192.png';
-  const badge   = data.badge  || '/badge-72.png';
+  // ✅ Always use the brand logo so notifications carry our identity
+  const icon    = data.icon   || '/assets/icon.png';
+  const badge   = data.badge  || '/assets/icon.png';
   const tag     = data.tag    || 'default';
   const url     = data.url    || '/';
 

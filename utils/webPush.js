@@ -41,8 +41,8 @@ async function sendPush(subscription, payload) {
       JSON.stringify({
         title: payload.title || 'ხელოსანი.ge',
         body:  payload.body  || '',
-        icon:  payload.icon  || '/icon-192.png',
-        badge: payload.badge || '/badge-72.png',
+        icon:  payload.icon  || '/assets/icon.png',
+        badge: payload.badge || '/assets/icon.png',
         url:   payload.url   || '/',
         tag:   payload.tag   || 'default',
       })

@@ -977,6 +977,43 @@
       margin-bottom: 2px;
     }
 
+    /* "New profile" stats — used while user has 0 reviews and < 2 jobs */
+    .hcard-stats-new {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 6px;
+      padding: 10px 8px;
+      background: linear-gradient(135deg, rgba(255,193,7,.07), rgba(168,85,247,.07));
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .hcard-stat-new {
+      text-align: center;
+      flex: 1;
+      min-width: 0;
+    }
+    .hcard-stat-new-emoji {
+      font-size: 18px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .hcard-stat-new-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .hcard-stat-new.r .hcard-stat-new-label { color: #fbbf24 }
+    .hcard-stat-new.s .hcard-stat-new-label { color: #a855f7 }
+    .hcard-stat-new.j .hcard-stat-new-label { color: var(--ok) }
+    @media (max-width: 600px) {
+      .hcard-stats-new { padding: 8px 6px }
+      .hcard-stat-new-emoji { font-size: 16px }
+      .hcard-stat-new-label { font-size: 9px }
+    }
+
     .hcard-skills {
       display: flex;
       gap: 5px;
@@ -2844,8 +2881,11 @@
       width: 100%;
       box-sizing: border-box;
     }
-    @media (max-width: 480px) {
-      .port-grid { gap: 6px }
+    @media (max-width: 600px) {
+      .port-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
     }
 
     .port-item {
@@ -6486,15 +6526,24 @@
         ? `<div class="hcard-verified">✅ ვერიფიცირებული</div>`
         : '';
 
-      // Stats — for new accounts (< 2 jobs), show motivational badges instead of zeros
+      // Stats — for new accounts (< 2 jobs AND no reviews), show motivational badges instead of zeros
       const reviewsCount = (h.reviewsReceived || []).length;
       const jobsCount = h.jobs || 0;
-      const isNewAccount = jobsCount < 2;
+      const isNewAccount = jobsCount < 2 && reviewsCount === 0;
       const statsHtml = isNewAccount ? `
-        <div class="hcard-stats hcard-stats-new">
-          <div class="hcard-stat-new"><strong>⭐ ახალი</strong></div>
-          <div class="hcard-stat-new"><strong>📝 მალე</strong></div>
-          <div class="hcard-stat-new"><strong>🚀 მოლოდინში</strong></div>
+        <div class="hcard-stats-new">
+          <div class="hcard-stat-new r">
+            <div class="hcard-stat-new-emoji">⭐</div>
+            <div class="hcard-stat-new-label">ახალი</div>
+          </div>
+          <div class="hcard-stat-new s">
+            <div class="hcard-stat-new-emoji">📝</div>
+            <div class="hcard-stat-new-label">მალე</div>
+          </div>
+          <div class="hcard-stat-new j">
+            <div class="hcard-stat-new-emoji">🚀</div>
+            <div class="hcard-stat-new-label">მოლოდინში</div>
+          </div>
         </div>` : `
         <div class="hcard-stats">
           <div class="hcard-stat"><strong>${rating > 0 ? rating.toFixed(1) : '—'}</strong> <span>რეიტინგი</span></div>
@@ -6562,7 +6611,8 @@
         document.getElementById('pRevCount').textContent = reviews.length;
         document.getElementById('pJobs').textContent = h.jobs || 0;
         // ✅ Show "new profile" placeholder when no reviews & no jobs (welcoming feel for new accounts)
-        const isNewProfile = (reviews.length === 0) && ((h.jobs || 0) === 0);
+        // Show "new profile" placeholder until user has 2+ completed jobs (after that, they have meaningful stats to show)
+        const isNewProfile = (reviews.length === 0) && ((h.jobs || 0) < 2);
         const statsRow = document.getElementById('pStatsRow');
         const statsNew = document.getElementById('pStatsNew');
         if (statsRow && statsNew) {
@@ -6580,7 +6630,8 @@
 
         // Portfolio — max 9 visible, "+N" overlay on 9th if more, click opens lightbox gallery
         const port = h.portfolio || [];
-        const PORT_MAX = 9;
+        // Mobile shows 4 items (2x2), desktop 9 (3x3)
+        const PORT_MAX = window.matchMedia('(max-width: 600px)').matches ? 4 : 9;
         const portVisible = port.slice(0, PORT_MAX);
         const portHidden  = Math.max(0, port.length - PORT_MAX);
         const portItems = port.map(p => ({ type: p.type || 'image', url: p.url || '' }));
@@ -6937,7 +6988,8 @@
             ${p.budget ? `<span class="rcard-meta rcard-meta-price">💰 ${p.budget}₾</span>` : ''}
             ${p.duration ? `<span class="rcard-meta">⏱ ${sanitize(p.duration)}</span>` : ''}
           </div>
-          ${p.description ? `<div style="background:var(--s2);border-radius:10px;padding:12px;font-size:13px;line-height:1.55;white-space:pre-wrap;margin-bottom:14px">${sanitize(p.description)}</div>` : ''}
+          ${p.description ? `<div style="background:var(--s2);border-radius:10px;padding:12px;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;margin-bottom:14px;max-width:100%;box-sizing:border-box">${sanitize(p.description)}</div>` : ''}
+          ${p.chat ? `<button class="btn bp" style="width:100%;justify-content:center;margin-bottom:8px" onclick="closeMo('moProposalView');openChat('${sanitize(p.chat.id)}')">💬 ჩათის გახსნა</button>` : ''}
           ${isRecipient && p.status === 'pending' ? `
             <div style="display:flex;gap:8px">
               <button class="btn bp" style="flex:1;justify-content:center" onclick="acceptProposal('${sanitize(p.id)}')">✓ მიღება</button>
@@ -8137,12 +8189,31 @@
         document.getElementById('chatTitle').textContent = `${other?.name || ''} ${other?.surname || ''}`;
         document.getElementById('chatSub').textContent = chat.offer?.request?.title || '';
 
-        // Show "შევთანხმდით? ▾" dropdown only to request owner while offer is 'accepted'
+        // Two-party agreement workflow:
+        // For Offer (handyman→request): handyman (sender) presses first, then user (recipient).
+        // Show dropdown to whichever side hasn't yet agreed and whose turn it is.
         const decisionWrap = document.getElementById('chatDecisionWrap');
         if (decisionWrap) {
-          const canDecide = cu.id === chat.userId && chat.offer?.status === 'accepted';
+          const offer = chat.offer;
+          const isHandymanSide = offer && cu.id === chat.handymanId;
+          const isUserSide     = offer && cu.id === chat.userId;
+          const isAccepted     = offer?.status === 'accepted';
+          let canDecide = false;
+          if (isAccepted) {
+            if (isHandymanSide && !offer.senderAgreed) canDecide = true;
+            // User can only press if handyman has already agreed
+            if (isUserSide && offer.senderAgreed && !offer.recipientAgreed) canDecide = true;
+          }
           decisionWrap.style.display = canDecide ? '' : 'none';
-          // Hide menu if open
+          // Update button label based on state
+          const btn = document.getElementById('chatDecisionBtn');
+          if (btn) {
+            if (isHandymanSide && !offer?.senderAgreed) {
+              btn.textContent = 'შევთანხმდით? ▾';
+            } else if (isUserSide && offer?.senderAgreed && !offer?.recipientAgreed) {
+              btn.textContent = 'ხელოსანი დაეთანხმდა — შენ? ▾';
+            }
+          }
           const menu = document.getElementById('chatDecisionMenu');
           if (menu) menu.classList.remove('open');
         }

@@ -35,6 +35,13 @@ router.get('/mine', requireAuth, async (req, res) => {
             request: { select: { id: true, title: true } },
           },
         },
+        proposal: {
+          select: {
+            id: true, title: true, category: true, status: true,
+            senderAgreed: true, recipientAgreed: true,
+            agreedAt: true, completedAt: true, durationMinutes: true,
+          },
+        },
       },
       orderBy: { updatedAt: 'desc' },
     });
@@ -55,6 +62,13 @@ router.get('/:id', requireAuth, async (req, res) => {
         handyman: { select: PARTICIPANT_SELECT },
         offer: {
           include: { request: { select: { id: true, title: true } } },
+        },
+        proposal: {
+          select: {
+            id: true, title: true, category: true, status: true,
+            senderAgreed: true, recipientAgreed: true,
+            agreedAt: true, completedAt: true, durationMinutes: true,
+          },
         },
         messages: {
           orderBy: { createdAt: 'asc' },

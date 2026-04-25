@@ -181,7 +181,12 @@ model Offer {
   durationMinutes Int?          // precise minutes for server-side countdown
   comment    String?
   status     String   @default("pending")  // pending, accepted, agreed, completed, rejected, disagreed
-  agreedAt   DateTime?                     // when user pressed "შევთანხმდით"
+  // Two-party agreement: both sides must press "შევთანხმდით" before countdown begins.
+  // For regular offers (handyman→user request), the SENDER is the handyman. After they
+  // press "შევთანხმდით" first, the user (request owner = recipient) sees the same button.
+  senderAgreed    Boolean   @default(false)
+  recipientAgreed Boolean   @default(false)
+  agreedAt   DateTime?                     // when both parties have agreed (countdown start)
   completedAt DateTime?                    // deadline when work is due
   reviewReminderSent Boolean @default(false)
   createdAt  DateTime @default(now())
@@ -216,8 +221,17 @@ model Proposal {
   durationMinutes Int?      // precise
 
   status     String   @default("pending")  // pending, accepted, rejected, canceled
+  // Two-party agreement (mirror of Offer):
+  // For proposals (user→handyman), the handyman is "sender of agreement" — they press first.
+  senderAgreed    Boolean   @default(false)
+  recipientAgreed Boolean   @default(false)
+  agreedAt        DateTime?
+  completedAt     DateTime?
+  reviewReminderSent Boolean @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  chat Chat?
 
   @@index([senderId])
   @@index([recipientId])
@@ -229,10 +243,13 @@ model Proposal {
 // ─────────────────────────────────────────────────────────────
 model Chat {
   id         String   @id @default(cuid())
-  offerId    String   @unique
-  offer      Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
-  requestId  String
-  request    Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  // Either offerId (handyman→user request flow) OR proposalId (user→handyman direct flow)
+  offerId    String?  @unique
+  offer      Offer?   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  proposalId String?  @unique
+  proposal   Proposal? @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  requestId  String?
+  request    Request? @relation(fields: [requestId], references: [id], onDelete: Cascade)
   userId     String
   user       User     @relation("user",     fields: [userId],     references: [id])
   handymanId String
@@ -245,6 +262,7 @@ model Chat {
   @@index([userId])
   @@index([handymanId])
   @@index([requestId])
+  @@index([proposalId])
 }
 
 // ─────────────────────────────────────────────────────────────

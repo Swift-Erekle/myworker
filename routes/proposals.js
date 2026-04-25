@@ -55,6 +55,31 @@ router.post('/', requireAuth, async (req, res) => {
       },
     });
 
+    // ✅ Auto-create chat between sender (user) and recipient (handyman/company)
+    // so they can immediately discuss the proposal.
+    let chat = null;
+    try {
+      chat = await prisma.chat.create({
+        data: {
+          proposalId: proposal.id,
+          userId:     proposal.senderId,    // proposal sender = user
+          handymanId: proposal.recipientId, // proposal recipient = handyman/company
+        },
+      });
+      // Initial system message
+      await prisma.message.create({
+        data: {
+          chatId:  chat.id,
+          fromId:  null,
+          type:    'system',
+          content: `💬 შემოთავაზება გაიგზავნა: "${proposal.title.substring(0, 80)}"`,
+        },
+      });
+    } catch (e) {
+      console.error('[PROPOSALS] chat create failed:', e.message);
+    }
+    proposal.chat = chat;
+
     // In-app notification for recipient
     try {
       await prisma.notification.create({
@@ -97,6 +122,7 @@ router.get('/sent', requireAuth, async (req, res) => {
       where: { senderId: req.user.id },
       include: {
         recipient: { select: { id: true, name: true, surname: true, emoji: true, color: true, avatar: true, type: true, specialty: true } },
+        chat:      { select: { id: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -118,6 +144,7 @@ router.get('/received', requireAuth, async (req, res) => {
       where: { recipientId: req.user.id },
       include: {
         sender: { select: { id: true, name: true, surname: true, emoji: true, color: true, avatar: true } },
+        chat:   { select: { id: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -137,6 +164,7 @@ router.get('/:id', requireAuth, async (req, res) => {
       include: {
         sender:    { select: { id: true, name: true, surname: true, emoji: true, color: true, avatar: true } },
         recipient: { select: { id: true, name: true, surname: true, emoji: true, color: true, avatar: true, type: true, specialty: true } },
+        chat:      { select: { id: true } },
       },
     });
     if (!p) return res.status(404).json({ error: 'ვერ მოიძებნა' });
