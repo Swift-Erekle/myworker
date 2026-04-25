@@ -523,6 +523,184 @@
     }
 
     /* ══════ HANDYMAN CARD v2 (reference match) ══════════ */
+    /* Premium CHAT CARD — same family of cards as request/handyman v2 */
+    .chats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 800px) {
+      .chats-grid { grid-template-columns: 1fr }
+    }
+    .chat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      cursor: pointer;
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+      position: relative;
+    }
+    .chat-card:hover {
+      border-color: rgba(255, 107, 43, .4);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0,0,0,.25);
+    }
+    .chat-card.unread {
+      background: linear-gradient(135deg, var(--surface), rgba(255,107,43,.04));
+      border-color: rgba(255,107,43,.3);
+    }
+    .chat-card-avatar {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--s2);
+    }
+    .chat-card-avatar img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .chat-card-emoji {
+      width: 100%; height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: #fff;
+    }
+    .chat-card-body {
+      flex: 1;
+      min-width: 0;
+    }
+    .chat-card-row1 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .chat-card-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+    .chat-card-time {
+      font-size: 11px;
+      color: var(--t2);
+      flex-shrink: 0;
+    }
+    .chat-card-req {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .chat-card-last {
+      font-size: 12px;
+      color: var(--t2);
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .chat-card-unread {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 6px;
+      border-radius: 11px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Premium PROPOSAL CARD (received & sent) */
+    .proposal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      cursor: pointer;
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .proposal-card:hover {
+      border-color: rgba(155,89,182,.5);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(155,89,182,.18);
+    }
+    .proposal-card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .proposal-card-avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--s2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: #fff;
+    }
+    .proposal-card-avatar img { width: 100%; height: 100%; object-fit: cover }
+    .proposal-card-info { flex: 1; min-width: 0 }
+    .proposal-card-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .proposal-card-title {
+      font-size: 14px;
+      color: var(--text);
+      margin-top: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .proposal-card-meta {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .proposal-card-right {
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .proposal-card-price {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    /* ══════ HANDYMAN CARD v2 ══════════ */
     /* VIP+ COMPANIES showcase — purple gradient frame, reference-match */
     .vipp-showcase {
       background: linear-gradient(135deg, rgba(139,92,246,.16), rgba(155,89,182,.10) 50%, rgba(59,130,246,.08));
@@ -2660,9 +2838,14 @@
 
     .port-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-top: 12px
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    @media (max-width: 480px) {
+      .port-grid { gap: 6px }
     }
 
     .port-item {
@@ -2674,7 +2857,23 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px
+      font-size: 20px;
+      cursor: pointer;
+      transition: transform .15s ease;
+    }
+    .port-item:hover { transform: scale(1.03) }
+
+    .port-vid-ind {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(0,0,0,.65);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-size: 12px;
+      pointer-events: none;
     }
 
     .port-item img,
@@ -3635,7 +3834,7 @@
             <div style="color:var(--t2);font-size:13px;margin-top:4px">იპოვე საჭირო და გამოცდილი ხელოსანი შენი პროექტისთვის</div>
           </div>
         </div>
-        <button class="btn bp" onclick="nav('vip-info')">⭐ VIP გაახლება</button>
+        <button class="btn bp" id="hnyVipUpgradeBtn" onclick="nav('vip-info')" style="display:none">⭐ VIP გაახლება</button>
       </div>
     </div>
     <div class="sec" style="padding-top:20px">
@@ -3771,7 +3970,7 @@
         </div>
         <div class="ic" id="pPortfolioCard">
           <h3>🖼️ პორტფოლიო</h3>
-          <div class="wgrid" id="pPortfolio"></div>
+          <div class="port-grid" id="pPortfolio"></div>
         </div>
         <div class="ic">
           <h3>⭐ შეფასებები (<span id="pRevCount">0</span>)</h3>
@@ -3781,7 +3980,7 @@
       <div>
         <div class="ic">
           <h3>📊 სტატისტიკა</h3>
-          <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;flex-direction:column;gap:14px" id="pStatsRow">
             <div>
               <div style="font-size:28px;font-weight:800;color:var(--accent)" id="pRating">-</div>
               <div style="color:var(--t2);font-size:12px">საშუალო რეიტინგი</div>
@@ -3793,6 +3992,32 @@
             <div>
               <div style="font-size:28px;font-weight:800;color:var(--accent)" id="pJobs">0</div>
               <div style="color:var(--t2);font-size:12px">სამუშაო</div>
+            </div>
+          </div>
+          <!-- "New profile" placeholder (shown when no reviews + no jobs) -->
+          <div id="pStatsNew" style="display:none">
+            <div style="background:linear-gradient(135deg,rgba(255,107,43,.08),rgba(155,89,182,.08));border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="font-size:22px">⭐</div>
+                <div>
+                  <div style="font-weight:800;color:#fbbf24">ახალი</div>
+                  <div style="color:var(--t2);font-size:11px">ახლად შემოერთებული პროფილი</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="font-size:22px">📝</div>
+                <div>
+                  <div style="font-weight:800;color:#a855f7">მალე</div>
+                  <div style="color:var(--t2);font-size:11px">პირველი შეფასება</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="font-size:22px">🚀</div>
+                <div>
+                  <div style="font-weight:800;color:var(--ok)">მოლოდინში</div>
+                  <div style="color:var(--t2);font-size:11px">პირველი სამუშაო</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -3964,9 +4189,10 @@
       </div>
       <!-- Pricing info callout — shown per account type -->
       <div id="regPricingInfo" style="margin-bottom:16px"></div>
-      <div class="fr">
-        <div class="fg"><label>სახელი</label><input id="rName" placeholder="გიორგი"></div>
-        <div class="fg"><label>გვარი / კომპანია</label><input id="rSurname" placeholder="ბერიძე"></div>
+      <!-- Name fields: 2 fields (name+surname) for user/handyman, 1 field (company name) for company -->
+      <div class="fr" id="rNameRow">
+        <div class="fg"><label>სახელი</label><input id="rName" placeholder=""></div>
+        <div class="fg" id="rSurnameField"><label>გვარი</label><input id="rSurname" placeholder=""></div>
       </div>
       <div class="fg" id="rSpecGroup" style="display:none">
         <label>პროფესია(ები) <span style="color:var(--t2);font-weight:400">— აირჩიე ერთი ან მეტი</span></label>
@@ -4525,9 +4751,14 @@
           </div>
         </div>
       </div>
-      <div class="fg"><label>სერვისები (მძიმით გამოყოფილი)</label><input id="editServices"
-          placeholder="მაგ: გაყვანილობა, ავარიული სამუშაო, განათება"></div>
-      <div class="fg"><label>ქალაქი / უბანი</label><input id="editCity" placeholder="ვაკე, თბილისი"></div>
+      <div class="fg">
+        <label>ქალაქი</label>
+        <button type="button" class="filter-btn" style="min-width:unset;width:100%;padding:10px 12px" onclick="openCityPickerForForm('editCity', 'editCityLabel', 'moEditDesc')">
+          <span id="editCityLabel" style="color:var(--t2)">📍 აირჩიე ქალაქი</span>
+          <span class="arrow">▾</span>
+        </button>
+        <input type="hidden" id="editCity" value="">
+      </div>
       <button class="btn bp" style="width:100%;justify-content:center" onclick="saveDesc()">შენახვა</button>
     </div>
   </div>
@@ -5346,7 +5577,13 @@
         }
       }
       if (page === 'home') renderHomeGrid();
-      else if (page === 'handymen') { updateHnyFilterLabels?.(); renderHandymen(); }
+      else if (page === 'handymen') {
+        updateHnyFilterLabels?.();
+        // Show VIP upgrade button only for handyman/company (not regular users)
+        const vipBtn = document.getElementById('hnyVipUpgradeBtn');
+        if (vipBtn) vipBtn.style.display = (currentUser?.type === 'handyman' || currentUser?.type === 'company') ? '' : 'none';
+        renderHandymen();
+      }
       else if (page === 'requests') renderRequestsPage();
       else if (page === 'dashboard') renderDashboard();
       else if (page === 'admin') renderAdmin();
@@ -5675,7 +5912,8 @@
     // ========================================================
     async function doRegister() {
       const name = document.getElementById('rName').value.trim();
-      const surname = document.getElementById('rSurname').value.trim();
+      // Company has no surname field — for company, send empty surname
+      const surname = regType === 'company' ? '' : document.getElementById('rSurname').value.trim();
       const email = document.getElementById('rEmail').value.trim();
       const phone = document.getElementById('rPhone').value.trim();
       const password = document.getElementById('rPass').value;
@@ -5683,6 +5921,7 @@
       const desc = document.getElementById('rDesc')?.value || '';
 
       if (!name || !email || !password) { toast('⚠️ შეავსე სავალდებულო ველები', '', 'err'); return; }
+      if (regType !== 'company' && !surname) { toast('⚠️ გვარი შეიყვანე', '', 'err'); return; }
       if (password.length < 8) { toast('⚠️ პაროლი მინიმუმ 8 სიმბოლო', '', 'err'); return; }
       if (password !== pass2) { toast('⚠️ პაროლები არ ემთხვევა', '', 'err'); return; }
       if ((regType === 'handyman' || regType === 'company') && selectedRegSpecialties.length === 0) {
@@ -5825,6 +6064,22 @@
         selectedRegSpecialties = [];
         selectedRegSubSpecs = [];
         buildProfPanels('rProfChips', 'rSubCats', selectedRegSpecialties, selectedRegSubSpecs, 'toggleRegProf', 'toggleRegSub');
+      }
+
+      // ✅ Company gets ONE field "კომპანიის სახელი" (full name in single field, surname hidden)
+      const surnameField = document.getElementById('rSurnameField');
+      const nameInput = document.getElementById('rName');
+      const nameLabel = document.querySelector('#rNameRow > .fg:first-child label');
+      if (type === 'company') {
+        if (surnameField) surnameField.style.display = 'none';
+        if (nameLabel)    nameLabel.textContent = 'კომპანიის სახელი';
+        if (nameInput)    nameInput.placeholder = '';
+        // Clear surname so it doesn't carry stale data from previous selection
+        const sn = document.getElementById('rSurname');
+        if (sn) sn.value = '';
+      } else {
+        if (surnameField) surnameField.style.display = '';
+        if (nameLabel)    nameLabel.textContent = 'სახელი';
       }
 
       const pi = document.getElementById('regPricingInfo');
@@ -6231,12 +6486,20 @@
         ? `<div class="hcard-verified">✅ ვერიფიცირებული</div>`
         : '';
 
-      // Stats (rating + reviews + jobs)
-      const statsHtml = `
+      // Stats — for new accounts (< 2 jobs), show motivational badges instead of zeros
+      const reviewsCount = (h.reviewsReceived || []).length;
+      const jobsCount = h.jobs || 0;
+      const isNewAccount = jobsCount < 2;
+      const statsHtml = isNewAccount ? `
+        <div class="hcard-stats hcard-stats-new">
+          <div class="hcard-stat-new"><strong>⭐ ახალი</strong></div>
+          <div class="hcard-stat-new"><strong>📝 მალე</strong></div>
+          <div class="hcard-stat-new"><strong>🚀 მოლოდინში</strong></div>
+        </div>` : `
         <div class="hcard-stats">
           <div class="hcard-stat"><strong>${rating > 0 ? rating.toFixed(1) : '—'}</strong> <span>რეიტინგი</span></div>
-          <div class="hcard-stat"><strong>${(h.reviewsReceived || []).length}</strong> <span>შეფასება</span></div>
-          <div class="hcard-stat"><strong>${h.jobs || 0}</strong> <span>სამუშაო</span></div>
+          <div class="hcard-stat"><strong>${reviewsCount}</strong> <span>შეფასება</span></div>
+          <div class="hcard-stat"><strong>${jobsCount}</strong> <span>სამუშაო</span></div>
         </div>`;
 
       // Skills (services) tags
@@ -6298,6 +6561,14 @@
         document.getElementById('pRevN').textContent = reviews.length;
         document.getElementById('pRevCount').textContent = reviews.length;
         document.getElementById('pJobs').textContent = h.jobs || 0;
+        // ✅ Show "new profile" placeholder when no reviews & no jobs (welcoming feel for new accounts)
+        const isNewProfile = (reviews.length === 0) && ((h.jobs || 0) === 0);
+        const statsRow = document.getElementById('pStatsRow');
+        const statsNew = document.getElementById('pStatsNew');
+        if (statsRow && statsNew) {
+          statsRow.style.display = isNewProfile ? 'none' : 'flex';
+          statsNew.style.display = isNewProfile ? 'block' : 'none';
+        }
         document.getElementById('pServices').innerHTML = (h.services || []).map(s =>
           `<div style="display:flex;align-items:center;gap:6px"><span style="color:var(--ok)">✓</span><span>${sanitize(s)}</span></div>`
         ).join('') || '<span style="color:var(--t2)">სერვისები არ არის</span>';
@@ -6307,15 +6578,24 @@
       ${h.phone ? `<div>📞 ${sanitize(h.phone)}</div>` : ''}
     `;
 
-        // Portfolio
+        // Portfolio — max 9 visible, "+N" overlay on 9th if more, click opens lightbox gallery
         const port = h.portfolio || [];
+        const PORT_MAX = 9;
+        const portVisible = port.slice(0, PORT_MAX);
+        const portHidden  = Math.max(0, port.length - PORT_MAX);
+        const portItems = port.map(p => ({ type: p.type || 'image', url: p.url || '' }));
+        const portItemsAttr = JSON.stringify(portItems).replace(/'/g, "&apos;");
         document.getElementById('pPortfolio').innerHTML = port.length
-          ? port.map((p, i) => `<div class="port-item" onclick="openLightbox('${p.type || 'image'}','${sanitize(p.url)}')">
-          ${(p.type || 'image') === 'video'
-              ? `<video src="${sanitize(p.url)}" style="width:100%;height:100%;object-fit:cover"></video>`
-              : `<img src="${sanitize(p.url)}">`}
-          ${isOwner ? `<button class="port-del" onclick="event.stopPropagation();deletePortfolioItem(${i})">✕</button>` : ''}
-        </div>`).join('')
+          ? portVisible.map((p, i) => {
+              const isLast = (i === portVisible.length - 1) && portHidden > 0;
+              return `<div class="port-item" onclick='openLightboxGallery(${portItemsAttr}, ${i})'>
+                ${(p.type || 'image') === 'video'
+                  ? `<video src="${sanitize(p.url)}" style="width:100%;height:100%;object-fit:cover"></video><div class="port-vid-ind">▶</div>`
+                  : `<img src="${sanitize(p.url)}">`}
+                ${isLast ? `<div class="rd-more-overlay">+${portHidden}</div>` : ''}
+                ${isOwner ? `<button class="port-del" onclick="event.stopPropagation();deletePortfolioItem(${i})">✕</button>` : ''}
+              </div>`;
+            }).join('')
           : '<div style="color:var(--t2);font-size:13px">პორტფოლიო ცარიელია</div>';
 
         // Reviews
@@ -6502,9 +6782,9 @@
     function openCityPicker(forWhat, callback) {
       _cityPickerFor = forWhat;
       _cityPickerCallback = callback || null;
-      // Close both mobile-filters parents first (nested modal z-index issue)
-      closeMo('moMobileFilters');
-      closeMo('moMobileFiltersHny');
+      // Close all possible parent modals first (nested modal z-index issue)
+      ['moMobileFilters', 'moMobileFiltersHny', 'moProposal', 'moProposalCatPicker', 'moRequest']
+        .forEach(id => closeMo(id));
       document.getElementById('citySearchInput').value = '';
       renderCityList();
       setTimeout(() => openMo('moCityPicker'), 50);
@@ -6697,8 +6977,15 @@
     }
 
     // Generic form-field city picker — opens picker and writes back to input + label
-    function openCityPickerForForm(inputId, labelId) {
+    // Tracks which parent modal opened it so we can re-open it after selection.
+    let _cityPickerParent = null;
+    function openCityPickerForForm(inputId, labelId, parentModalId) {
       labelId = labelId || (inputId + 'Label');
+      // Auto-detect parent: which form field is this?
+      _cityPickerParent = parentModalId
+        || (inputId === 'qCity'  ? 'moRequest'
+        :   inputId === 'ppCity' ? 'moProposal'
+        :   null);
       openCityPicker('form', (cityName) => {
         const inp = document.getElementById(inputId);
         const lbl = document.getElementById(labelId);
@@ -6706,6 +6993,12 @@
         if (lbl) {
           lbl.textContent = cityName ? ('📍 ' + cityName) : '📍 აირჩიე ქალაქი';
           lbl.style.color = cityName ? 'var(--text)' : 'var(--t2)';
+        }
+        // Re-open parent modal so user can continue filling form
+        if (_cityPickerParent) {
+          const parent = _cityPickerParent;
+          _cityPickerParent = null;
+          setTimeout(() => openMo(parent), 100);
         }
       });
     }
@@ -7535,7 +7828,6 @@
         <!-- TABS -->
         <div class="dash-tabs" style="margin-top:22px">
           <div class="dash-tab ${currentUserDashTab === 'requests' ? 'active' : ''}" onclick="switchUserDashTab('requests')">📋 ჩემი მოთხოვნები</div>
-          <div class="dash-tab ${currentUserDashTab === 'proposals' ? 'active' : ''}" onclick="switchUserDashTab('proposals')">💬 ჩემი შემოთავაზებები</div>
           <div class="dash-tab ${currentUserDashTab === 'chats' ? 'active' : ''}" onclick="switchUserDashTab('chats')">💬 ჩათები</div>
         </div>
         <div id="userDashTabContent"></div>
@@ -7629,46 +7921,9 @@
         el.innerHTML = myReqs.length
           ? '<div class="requests-grid">' + myReqs.map(r => requestCard(r)).join('') + '</div>'
           : '<div class="empty"><div class="ei">📋</div><h3>მოთხოვნა არ გაქვს</h3></div>';
-      } else if (currentUserDashTab === 'proposals') {
-        el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t2)">⏳ იტვირთება...</div>';
-        api('/proposals/sent').then(proposals => {
-          if (!proposals?.length) {
-            el.innerHTML = '<div class="empty"><div class="ei">💬</div><h3>შემოთავაზება ჯერ არ გაქვს</h3><p>ხელოსნის პროფილიდან გაუგზავნე პირდაპირი შეთავაზება</p></div>';
-            return;
-          }
-          el.innerHTML = proposals.map(p => {
-            const r = p.recipient;
-            const color = getCatColor(p.category);
-            const stLabel = p.status === 'accepted' ? 'მიღებული' : p.status === 'rejected' ? 'უარყოფილი' : p.status === 'canceled' ? 'გაუქმებული' : 'მოლოდინში';
-            const stCls = p.status === 'accepted' ? 'sa' : p.status === 'rejected' ? 'sd' : p.status === 'canceled' ? 'sd' : 'sn';
-            const avatarHtml = r?.avatar
-              ? `<img src="${sanitize(r.avatar)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0">`
-              : `<div class="av" style="width:40px;height:40px;font-size:16px;background:${sanitize(r?.color || '#22222f')};color:var(--accent)">${sanitize(r?.emoji || '🔧')}</div>`;
-            return `<div class="oi" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="openProposalView('${sanitize(p.id)}')">
-              <div style="display:flex;gap:10px;align-items:flex-start">
-                ${avatarHtml}
-                <div style="flex:1;min-width:0">
-                  <div style="font-weight:700">${sanitize(r?.name || '')} ${sanitize(r?.surname || '')}</div>
-                  <div style="color:var(--accent);font-size:12px">${sanitize(r?.specialty || '')}</div>
-                  <div style="font-size:14px;margin-top:3px">${sanitize(p.title)}</div>
-                  <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-                    <span class="rcard-cat" style="background:${color.bg};color:${color.fg};font-size:10px">${sanitize(p.category)}</span>
-                    ${p.city ? `<span class="rcard-meta" style="font-size:10px">📍 ${sanitize(p.city)}</span>` : ''}
-                  </div>
-                </div>
-                <div style="text-align:right;flex-shrink:0">
-                  ${p.budget ? `<div class="oprice">₾${p.budget}</div>` : ''}
-                  <span class="status ${stCls}">${stLabel}</span>
-                </div>
-              </div>
-            </div>`;
-          }).join('');
-        }).catch(() => {
-          el.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>';
-        });
       } else {
         el.innerHTML = myChats.length
-          ? myChats.map(c => chatItem(c)).join('')
+          ? '<div class="chats-grid">' + myChats.map(c => chatItem(c)).join('') + '</div>'
           : '<div class="empty"><div class="ei">💬</div><h3>ჩათი ჯერ არ გაქვს</h3></div>';
       }
     }
@@ -7710,16 +7965,16 @@
         el.innerHTML = subTabsHtml;
         const inner = document.getElementById('offersSubContent');
         if (_offersSubTab === 'mine') {
-          inner.innerHTML = myOffers.length ? myOffers.map(o => `<div class="oi">
+          inner.innerHTML = myOffers.length ? myOffers.map(o => `<div class="oi" style="cursor:pointer" onclick="openRequestDetail('${sanitize(o.request?.id || '')}')">
       <div style="flex:1;min-width:0">
         <div style="font-weight:600">${sanitize(o.request?.title || 'მოთხოვნა')}</div>
         <div style="font-size:12px;color:var(--t2)">${sanitize(o.request?.category || '')} · ${sanitize(o.request?.city || '')}</div>
         ${o.duration ? `<div style="font-size:12px;color:var(--t2)">⏱ ${sanitize(o.duration)}</div>` : ''}
         ${o.comment ? `<div style="font-size:12px;color:var(--t2);margin-top:4px">${sanitize(o.comment)}</div>` : ''}
         <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-          ${o.chat ? `<button class="btn bg bs" onclick="openChat('${sanitize(o.chat.id)}')">💬 ჩათი</button>` : ''}
+          ${o.chat ? `<button class="btn bg bs" onclick="event.stopPropagation();openChat('${sanitize(o.chat.id)}')">💬 ჩათი</button>` : ''}
           ${o.status === 'pending' && ['open', 'pending'].includes(o.request?.status) ? `
-            <button class="btn bg bs" onclick='openEditOffer(${JSON.stringify({ id: o.id, price: o.price, duration: o.duration || "", comment: o.comment || "" }).replace(/'/g, "&apos;")})'>✏️ რედაქტირება</button>
+            <button class="btn bg bs" onclick='event.stopPropagation();openEditOffer(${JSON.stringify({ id: o.id, price: o.price, duration: o.duration || "", comment: o.comment || "" }).replace(/'/g, "&apos;")})'>✏️ რედაქტირება</button>
           ` : ''}
         </div>
       </div>
@@ -7736,38 +7991,41 @@
               inner.innerHTML = '<div class="empty"><div class="ei">📥</div><h3>შემოთავაზება ჯერ არ გაქვს</h3><p>მომხმარებლებს შეუძლიათ პირდაპირ შემოგთავაზონ სამუშაო შენი პროფილიდან</p></div>';
               return;
             }
-            inner.innerHTML = proposals.map(p => {
+            inner.innerHTML = '<div class="chats-grid">' + proposals.map(p => {
               const s = p.sender;
               const color = getCatColor(p.category);
               const stLabel = p.status === 'accepted' ? 'მიღებული' : p.status === 'rejected' ? 'უარყოფილი' : p.status === 'canceled' ? 'გაუქმებული' : 'მოლოდინში';
               const stCls = p.status === 'accepted' ? 'sa' : p.status === 'rejected' ? 'sd' : p.status === 'canceled' ? 'sd' : 'sn';
               const avatarHtml = s?.avatar
-                ? `<img src="${sanitize(s.avatar)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0">`
-                : `<div class="av" style="width:40px;height:40px;font-size:16px;background:${sanitize(s?.color || '#22222f')};color:var(--accent)">${sanitize(s?.emoji || '👤')}</div>`;
-              return `<div class="oi" style="cursor:pointer;flex-direction:column;align-items:stretch" onclick="openProposalView('${sanitize(p.id)}')">
-                <div style="display:flex;gap:10px;align-items:flex-start">
-                  ${avatarHtml}
-                  <div style="flex:1;min-width:0">
-                    <div style="font-weight:700">${sanitize(s?.name || '')} ${sanitize(s?.surname || '')}</div>
-                    <div style="font-size:14px;margin-top:3px">${sanitize(p.title)}</div>
-                    <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-                      <span class="rcard-cat" style="background:${color.bg};color:${color.fg};font-size:10px">${sanitize(p.category)}</span>
-                      ${p.city ? `<span class="rcard-meta" style="font-size:10px">📍 ${sanitize(p.city)}</span>` : ''}
-                    </div>
+                ? `<img src="${sanitize(s.avatar)}" alt="">`
+                : `<span style="background:${sanitize(s?.color || '#22222f')};width:100%;height:100%;display:flex;align-items:center;justify-content:center">${sanitize(s?.emoji || '👤')}</span>`;
+              return `<div class="proposal-card" onclick="openProposalView('${sanitize(p.id)}')">
+                <div class="proposal-card-top">
+                  <div class="proposal-card-avatar">${avatarHtml}</div>
+                  <div class="proposal-card-info">
+                    <div class="proposal-card-name">${sanitize(s?.name || '')} ${sanitize(s?.surname || '')}</div>
+                    <div class="proposal-card-title">${sanitize(p.title)}</div>
                   </div>
-                  <div style="text-align:right;flex-shrink:0">
-                    ${p.budget ? `<div class="oprice">₾${p.budget}</div>` : ''}
+                  <div class="proposal-card-right">
+                    ${p.budget ? `<div class="proposal-card-price">₾${p.budget}</div>` : ''}
                     <span class="status ${stCls}">${stLabel}</span>
                   </div>
                 </div>
+                <div class="proposal-card-meta">
+                  <span class="rcard-cat" style="background:${color.bg};color:${color.fg};font-size:10px">${sanitize(p.category)}</span>
+                  ${p.city ? `<span class="rcard-meta" style="font-size:10px">📍 ${sanitize(p.city)}</span>` : ''}
+                  ${p.duration ? `<span class="rcard-meta" style="font-size:10px">⏱ ${sanitize(p.duration)}</span>` : ''}
+                </div>
               </div>`;
-            }).join('');
+            }).join('') + '</div>';
           }).catch(() => {
             inner.innerHTML = '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>';
           });
         }
       } else if (currentDashTab === 'chats') {
-        el.innerHTML = myChats.length ? myChats.map(c => chatItem(c)).join('') : '<div class="empty"><div class="ei">💬</div><h3>ჩათი ჯერ არ გაქვს</h3></div>';
+        el.innerHTML = myChats.length
+          ? '<div class="chats-grid">' + myChats.map(c => chatItem(c)).join('') + '</div>'
+          : '<div class="empty"><div class="ei">💬</div><h3>ჩათი ჯერ არ გაქვს</h3></div>';
       } else if (currentDashTab === 'favorites') {
         renderFavoritesTab();
       }
@@ -7816,19 +8074,28 @@
       const cu = currentUser;
       const other = cu.type === 'user' ? c.handyman : c.user;
       const lastMsg = c.messages?.[0];
+      const lastTime = lastMsg?.createdAt
+        ? new Date(lastMsg.createdAt).toLocaleString('ka-GE', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })
+        : '';
       const avatarHtml = other?.avatar
-        ? `<img src="${sanitize(other.avatar)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">`
-        : `<div class="av" style="width:40px;height:40px;font-size:16px;background:var(--s2);color:var(--accent)">${sanitize(other?.emoji || '👤')}</div>`;
-      return `<div class="oi" style="cursor:pointer" onclick="openChat('${c.id}')">
-    <div style="display:flex;gap:10px;align-items:center">
-      ${avatarHtml}
-      <div>
-        <div style="font-weight:600">${sanitize(other?.name || '')} ${sanitize(other?.surname || '')}</div>
-        ${c.offer?.request ? `<div style="font-size:11px;color:var(--t2)">${sanitize(c.offer.request.title || '')}</div>` : ''}
-        ${lastMsg ? `<div style="font-size:12px;color:var(--t2);margin-top:2px">${sanitize(String(lastMsg.content || '').substring(0, 40))}</div>` : ''}
-      </div>
-    </div>
-  </div>`;
+        ? `<img src="${sanitize(other.avatar)}" alt="">`
+        : `<div class="chat-card-emoji" style="background:${sanitize(other?.color || '#22222f')}">${sanitize(other?.emoji || '👤')}</div>`;
+      const reqTitle = c.offer?.request?.title || c.request?.title || '';
+      const reqCat   = c.offer?.request?.category || c.request?.category || '';
+      const color = reqCat ? getCatColor(reqCat) : null;
+      const unread = c.unreadCount > 0;
+      return `<div class="chat-card ${unread ? 'unread' : ''}" onclick="openChat('${sanitize(c.id)}')">
+        <div class="chat-card-avatar">${avatarHtml}</div>
+        <div class="chat-card-body">
+          <div class="chat-card-row1">
+            <div class="chat-card-name">${sanitize(other?.name || '')} ${sanitize(other?.surname || '')}</div>
+            ${lastTime ? `<div class="chat-card-time">${lastTime}</div>` : ''}
+          </div>
+          ${reqTitle ? `<div class="chat-card-req" ${color ? `style="color:${color.fg}"` : ''}>${sanitize(reqTitle)}</div>` : ''}
+          ${lastMsg ? `<div class="chat-card-last">${sanitize(String(lastMsg.content || '').substring(0, 80))}</div>` : '<div class="chat-card-last" style="opacity:.5">ჯერ მესიჯი არ გაქვთ გაცვლილი</div>'}
+        </div>
+        ${unread ? `<div class="chat-card-unread">${c.unreadCount}</div>` : ''}
+      </div>`;
     }
 
     async function openChatForOffer(offerId) {
@@ -8272,13 +8539,19 @@
           : (cu.emoji || '🔧');
       }
       document.getElementById('editDescText').value = cu.desc || '';
-      document.getElementById('editServices').value = (cu.services || []).join(', ');
-      document.getElementById('editCity').value = cu.city || '';
+      // City — set both hidden input + label
+      const cityVal = cu.city || '';
+      document.getElementById('editCity').value = cityVal;
+      const cityLbl = document.getElementById('editCityLabel');
+      if (cityLbl) {
+        cityLbl.textContent = cityVal ? '📍 ' + cityVal : '📍 აირჩიე ქალაქი';
+        cityLbl.style.color = cityVal ? 'var(--text)' : 'var(--t2)';
+      }
       // Multi-specialty two-panel
       if (cu.type !== 'user') {
         selectedEditSpecialties = cu.specialties?.length ? [...cu.specialties] : (cu.specialty ? [cu.specialty] : []);
-        // Detect sub-specs from services
-        selectedEditSubSpecs = [];
+        // ✅ Sub-categories now act as services — pre-fill from existing services array
+        selectedEditSubSpecs = Array.isArray(cu.services) ? [...cu.services] : [];
         buildProfPanels('editProfChips', 'editSubCats', selectedEditSpecialties, selectedEditSubSpecs, 'toggleEditProf', 'toggleEditSub');
         document.getElementById('editSpecGroup').style.display = 'block';
       } else {
@@ -8299,8 +8572,8 @@
       }
       // 2. Update profile data
       const desc = document.getElementById('editDescText').value.trim();
-      const svcs = document.getElementById('editServices').value.trim();
-      const services = svcs ? svcs.split(',').map(s => s.trim()).filter(Boolean) : [];
+      // ✅ Services are now derived from selected sub-categories (single source of truth)
+      const services = (cu.type !== 'user') ? [...selectedEditSubSpecs] : [];
       const city = document.getElementById('editCity').value.trim();
       const body = { desc, services, city: city || undefined };
       if (cu.type !== 'user' && selectedEditSpecialties.length > 0) {
