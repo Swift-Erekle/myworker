@@ -8505,7 +8505,7 @@
         const dataId = m.id ? ` data-msg-id="${sanitize(m.id)}"` : '';
         const isMe = m.fromId === cu?.id;
         const isSystem = m.fromId === 'system' || m.type === 'system';
-        const isChatOpenedMsg = isSystem && typeof m.content === 'string' && m.content.includes('ჩათი გაიხსნა');
+        const isChatOpenedMsg = isSystem && typeof m.content === 'string' && (m.content.includes('ჩათი გაიხსნა') || m.content.includes('შემოთავაზება გაიგზავნა'));
 
         let injected = '';
         if (isChatOpenedMsg) {

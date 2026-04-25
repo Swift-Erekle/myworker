@@ -572,24 +572,6 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
       }),
     ]);
 
-    // ✅ Fix #3 — add per-side guidance messages so both parties know what to do
-    await prisma.message.createMany({
-      data: [
-        {
-          chatId:  chat.id,
-          fromId:  null,
-          type:    'system',
-          content: `🔧 ხელოსანი: თუ საბოლოოდ შეთანხმდით მომხმარებელთან — აირჩიე "შევთანხმდით" და დაელოდე მის პასუხს. წინააღმდეგ შემთხვევაში — აირჩიე "ვერ შევთანხმდით".`,
-        },
-        {
-          chatId:  chat.id,
-          fromId:  null,
-          type:    'system',
-          content: `👤 მომხმარებელი: თუ საბოლოოდ შეთანხმდით ხელოსანთან — აირჩიე "შევთანხმდით". თუ გინდა სხვა შეთავაზებების გადახედვა — აირჩიე "ვერ შევთანხმდით".`,
-        },
-      ],
-    }).catch(() => {});
-
     res.json({ offer: updatedOffer, chatId: chat.id });
 
     // ── Push: notify handyman their offer was accepted ────────
