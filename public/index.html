@@ -2358,16 +2358,23 @@
 
     /* Instruction banner shown ONLY to the request owner, above "ჩათი გაიხსნა:" */
     .chat-instruction {
-      background: rgba(255,107,43,.08);
+      background: #1a1a24;
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 14px;
-      margin: 8px auto;
-      max-width: 92%;
-      font-size: 12px;
-      color: var(--t2);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin: 12px auto;
+      max-width: 96%;
+      font-size: 15px;
+      color: #d8d7ea;
       text-align: center;
-      line-height: 1.5;
+      line-height: 1.65;
+      box-shadow: 0 4px 18px rgba(0,0,0,.35);
+    }
+    /* proposal-specific instruction — slightly more prominent */
+    .chat-instruction.proposal {
+      background: #1e1e2c;
+      border-color: rgba(255,107,43,.25);
+      font-size: 15px;
     }
 
     /* "ვერ შევთანხმდით" button — inline on desktop, stacked 2-liner on mobile */
@@ -8474,9 +8481,9 @@
           } else if (proposalStatus === 'accepted') {
             // Proposal flow: user sent proposal directly to handyman → handyman accepted
             if (isHandyman) {
-              injected += `<div class="chat-instruction">თუ საბოლოოდ შეთანხმდით მომხმარებელთან — აირჩიე <strong style="color:var(--ok)">"შევთანხმდით"</strong> და დაელოდე მის პასუხს. წინააღმდეგ შემთხვევაში — აირჩიე <strong style="color:var(--err,#e74c3c)">"ვერ შევთანხმდით"</strong>.</div>`;
+              injected += `<div class="chat-instruction proposal">თუ საბოლოოდ შეთანხმდებით მომხმარებელთან — აირჩიე <strong style="color:var(--ok,#2ecc71)">"შევთანხმდით"</strong> და დაელოდე მის პასუხს. წინააღმდეგ შემთხვევაში — აირჩიე <strong style="color:var(--err,#e74c3c)">"ვერ შევთანხმდით"</strong>.</div>`;
             } else if (isOwner) {
-              injected += `<div class="chat-instruction">დაელოდეთ სანამ ხელოსანი/კომპანია არ დათანხმდება და შემდეგ გამოგიჩნდებათ ღილაკი და თქვენ უნდა დაეთანხმოთ თუ ეთანხმებით!</div>`;
+              injected += `<div class="chat-instruction proposal">დაელოდეთ სანამ ხელოსანი/კომპანია არ დათანხმდება და შემდეგ გამოგიჩნდებათ ღილაკი, შემდეგ თუ თქვენ ეთანხმებით, მაშინ დააჭირეთ <strong style="color:var(--ok,#2ecc71)">დათანხმებას</strong>!</div>`;
             }
           }
         }
