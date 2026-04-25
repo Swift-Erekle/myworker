@@ -1,13 +1,13 @@
 // routes/proposals.js
 // Proposals: regular users send direct offers to handymen/companies (reverse of Offer flow)
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
+const prisma   = require('../utils/prisma');   // ✅ FIX: singleton — no connection leaks
 const { requireAuth } = require('../middleware/auth');
 const { sendPushToUser } = require('../utils/webPush');
 const { sendExpoPushToUser } = require('../utils/expoPush');
+const { createNotification } = require('./notifications');
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // ─────────────────────────────────────────────────────────────
 // POST /api/proposals — create a proposal (user → handyman/company)
@@ -187,6 +187,11 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
     if (p.recipientId !== req.user.id) return res.status(403).json({ error: 'წვდომა აკრძალული' });
     if (p.status !== 'pending') return res.status(400).json({ error: 'სტატუსი აღარ არის pending' });
 
+    // ✅ FIX 3: idempotent — if already accepted, return success silently
+    if (p.status === 'accepted') {
+      return res.json(p);
+    }
+
     const updated = await prisma.proposal.update({
       where: { id: p.id },
       data:  { status: 'accepted' },
@@ -250,6 +255,122 @@ router.post('/:id/reject', requireAuth, async (req, res) => {
 
     res.json(updated);
   } catch (err) {
+    res.status(500).json({ error: 'სერვერის შეცდომა' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// POST /api/proposals/:id/agree — two-party agreement in chat
+// For proposals (user→handyman): recipient (handyman) initiates,
+// sender (user) confirms. Countdown starts when BOTH have agreed.
+// ─────────────────────────────────────────────────────────────
+router.post('/:id/agree', requireAuth, async (req, res) => {
+  try {
+    const p = await prisma.proposal.findUnique({
+      where:   { id: req.params.id },
+      include: { chat: true },
+    });
+    if (!p) return res.status(404).json({ error: 'ვერ მოიძებნა' });
+    if (!['accepted'].includes(p.status)) {
+      return res.status(400).json({ error: 'მხოლოდ მიღებული შეთავაზებისთვის მოქმედებს' });
+    }
+
+    // In proposals: handyman = recipient who accepted = "sender of agreement" (presses first)
+    //               user     = original sender of proposal = "recipient of agreement" (confirms)
+    const isHandyman = p.recipientId === req.user.id;  // handyman (accepted proposal)
+    const isUser     = p.senderId    === req.user.id;  // user (original proposer)
+    if (!isHandyman && !isUser) return res.status(403).json({ error: 'წვდომა აკრძალული' });
+
+    if (isHandyman && p.senderAgreed)    return res.status(400).json({ error: 'უკვე დაეთანხმდი' });
+    if (isUser     && p.recipientAgreed) return res.status(400).json({ error: 'უკვე დაეთანხმდი' });
+
+    // Handyman must go first for proposals
+    if (isUser && !p.senderAgreed) {
+      return res.status(400).json({ error: 'ჯერ ხელოსანმა უნდა დაადასტუროს' });
+    }
+
+    const updateData = isHandyman ? { senderAgreed: true } : { recipientAgreed: true };
+    const bothAgreed = isHandyman ? p.recipientAgreed : p.senderAgreed;
+    let completedAt = null;
+
+    if (bothAgreed) {
+      const now = new Date();
+      const mins = p.durationMinutes || (24 * 60);
+      completedAt = new Date(now.getTime() + mins * 60 * 1000);
+      Object.assign(updateData, { status: 'agreed', agreedAt: now, completedAt });
+    }
+
+    await prisma.proposal.update({ where: { id: p.id }, data: updateData });
+
+    if (p.chat) {
+      const sysContent = bothAgreed
+        ? '"შევთანხმდით, თანამშრომლობა დაიწყო"'
+        : isHandyman
+          ? 'ხელოსანი ეთანხმება — ელოდება მომხმარებლის დადასტურებას'
+          : 'მომხმარებელი ეთანხმება — ელოდება ხელოსნის დადასტურებას';
+      await prisma.message.create({
+        data: { chatId: p.chat.id, fromId: null, type: 'system', content: sysContent },
+      }).catch(() => {});
+    }
+
+    const io = req.app.get('io');
+    const otherUserId = isHandyman ? p.senderId : p.recipientId;
+
+    if (bothAgreed) {
+      createNotification({ prisma, io, userId: otherUserId, type: 'offer_accepted',
+        title: '🤝 შევთანხმდით', body: `"${p.title}" — თანამშრომლობა დაიწყო`,
+        link: `?chat=${p.chat?.id || ''}` }).catch(() => {});
+    } else {
+      createNotification({ prisma, io, userId: otherUserId, type: 'offer_agree_await',
+        title: '👀 შევთანხმდით?',
+        body: isHandyman ? 'ხელოსანი ელოდება შენს დადასტურებას' : 'მომხმარებელი ელოდება შენს დადასტურებას',
+        link: `?chat=${p.chat?.id || ''}` }).catch(() => {});
+      sendPushToUser(prisma, otherUserId, {
+        title: '👀 შევთანხმდით?',
+        body: isHandyman ? 'ხელოსანი ელოდება დადასტურებას' : 'მომხმარებელი ელოდება დადასტურებას',
+        tag: 'proposal-agree-' + p.id, url: `/?chat=${p.chat?.id || ''}`,
+      }).catch(() => {});
+    }
+
+    res.json({ ok: true, completedAt, bothAgreed,
+      senderAgreed: isHandyman || p.senderAgreed,
+      recipientAgreed: isUser || p.recipientAgreed });
+  } catch (err) {
+    console.error('[PROPOSALS] agree error:', err.message);
+    res.status(500).json({ error: 'სერვერის შეცდომა' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// POST /api/proposals/:id/disagree — cancel agreement in chat
+// ─────────────────────────────────────────────────────────────
+router.post('/:id/disagree', requireAuth, async (req, res) => {
+  try {
+    const p = await prisma.proposal.findUnique({
+      where:   { id: req.params.id },
+      include: { chat: true },
+    });
+    if (!p) return res.status(404).json({ error: 'ვერ მოიძებნა' });
+    if (p.senderId !== req.user.id && p.recipientId !== req.user.id) {
+      return res.status(403).json({ error: 'წვდომა აკრძალული' });
+    }
+    if (!['accepted', 'agreed'].includes(p.status)) {
+      return res.status(400).json({ error: 'მხოლოდ მიღებული/შეთანხმებული შეთავაზება შეიძლება გაუქმდეს' });
+    }
+
+    await prisma.proposal.update({ where: { id: p.id }, data: { status: 'accepted', senderAgreed: false, recipientAgreed: false } });
+
+    if (p.chat) {
+      await prisma.message.create({
+        data: { chatId: p.chat.id, fromId: null, type: 'system', content: '"ვერ შევთანხმდით". თანამშრომლობა შეჩერდა.' },
+      }).catch(() => {});
+      const thirteenDaysAgo = new Date(Date.now() - 13 * 86400000);
+      await prisma.chat.update({ where: { id: p.chat.id }, data: { updatedAt: thirteenDaysAgo } }).catch(() => {});
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[PROPOSALS] disagree error:', err.message);
     res.status(500).json({ error: 'სერვერის შეცდომა' });
   }
 });

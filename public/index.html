@@ -3978,7 +3978,7 @@
             <div class="cta-banner-title">შენი მოთხოვნა არ არის ნახვენი?</div>
             <div class="cta-banner-sub">დაამატე ახალი მოთხოვნა და მიიღე სწრაფად სასურველი შემოთავაზებები!</div>
           </div>
-          <button class="cta-banner-btn" onclick="openMo('moAddReq')">+ ახალი მოთხოვნა</button>
+          <button class="cta-banner-btn" onclick="openMo('moRequest')">+ ახალი მოთხოვნა</button>
         </div>
       </div>
     </div>
@@ -7271,6 +7271,7 @@
     }
 
     async function submitRequest() {
+      if (window._reqSubmitting) return;   // ✅ FIX 6: block double-tap
       const cu = currentUser;
       if (!cu) { openMo('moLogin'); return; }
       if (cu.type !== 'user') { toast('⚠️ მხოლოდ მომხმარებელს შეუძლია', '', 'err'); return; }
@@ -7280,6 +7281,9 @@
       if (!title) { toast('⚠️ სათაური შეიყვანე', '', 'err'); return; }
       if (!cat)   { toast('⚠️ კატეგორია აირჩიე', '', 'err'); return; }
       if (!city)  { toast('⚠️ ქალაქი აირჩიე', '', 'err'); return; }
+      window._reqSubmitting = true;
+      const submitBtn = document.querySelector('#moRequest .btn.bp');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'ქვეყნდება...'; }
       const fd = new FormData();
       fd.append('title', title); fd.append('category', cat);
       fd.append('desc', document.getElementById('qDesc').value || '');
@@ -7303,6 +7307,11 @@
         toast('📋 მოთხოვნა გამოქვეყნდა!', 'ხელოსნები მალე შემოგთავაზებენ პირობებს', 'ok');
         renderRequests();
       } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
+      finally {
+        window._reqSubmitting = false;
+        const submitBtn = document.querySelector('#moRequest .btn.bp');
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'გამოქვეყნება'; }
+      }
     }
 
     // ========================================================
@@ -8183,35 +8192,50 @@
         const cu = currentUser;
         const other = cu.id === chat.userId ? chat.handyman : chat.user;
         window._chatOtherUserId = other?.id || null;
-        window._chatOfferId     = chat.offerId || null;
-        _chatContext = { chat, offer: chat.offer, role: cu.id === chat.userId ? 'user' : 'handyman' };
+        window._chatOfferId     = chat.offerId    || null;
+        window._chatProposalId  = chat.proposalId || null;  // ✅ FIX: proposal-based chats
+        _chatContext = { chat, offer: chat.offer, proposal: chat.proposal, role: cu.id === chat.userId ? 'user' : 'handyman' };
 
         document.getElementById('chatTitle').textContent = `${other?.name || ''} ${other?.surname || ''}`;
-        document.getElementById('chatSub').textContent = chat.offer?.request?.title || '';
+        document.getElementById('chatSub').textContent = chat.offer?.request?.title || chat.proposal?.title || '';
 
         // Two-party agreement workflow:
-        // For Offer (handyman→request): handyman (sender) presses first, then user (recipient).
-        // Show dropdown to whichever side hasn't yet agreed and whose turn it is.
+        // For Offer (handyman→request): USER (recipient) presses first, HANDYMAN (sender) confirms.
+        // For Proposal (user→handyman): HANDYMAN (recipient) presses first, USER (sender) confirms.
         const decisionWrap = document.getElementById('chatDecisionWrap');
         if (decisionWrap) {
-          const offer = chat.offer;
-          const isHandymanSide = offer && cu.id === chat.handymanId;
-          const isUserSide     = offer && cu.id === chat.userId;
-          const isAccepted     = offer?.status === 'accepted';
+          const offer    = chat.offer;
+          const proposal = chat.proposal;
+          const isHandymanSide = cu.id === chat.handymanId;
+          const isUserSide     = cu.id === chat.userId;
           let canDecide = false;
-          if (isAccepted) {
-            if (isHandymanSide && !offer.senderAgreed) canDecide = true;
-            // User can only press if handyman has already agreed
-            if (isUserSide && offer.senderAgreed && !offer.recipientAgreed) canDecide = true;
+
+          if (offer && offer.status === 'accepted') {
+            // Offer flow: USER goes first (recipientAgreed), HANDYMAN confirms (senderAgreed)
+            if (isUserSide     && !offer.recipientAgreed) canDecide = true;
+            if (isHandymanSide && offer.recipientAgreed && !offer.senderAgreed) canDecide = true;
+          } else if (proposal && proposal.status === 'accepted') {
+            // Proposal flow: HANDYMAN goes first (senderAgreed), USER confirms (recipientAgreed)
+            if (isHandymanSide && !proposal.senderAgreed) canDecide = true;
+            if (isUserSide     && proposal.senderAgreed && !proposal.recipientAgreed) canDecide = true;
           }
           decisionWrap.style.display = canDecide ? '' : 'none';
+
           // Update button label based on state
           const btn = document.getElementById('chatDecisionBtn');
           if (btn) {
-            if (isHandymanSide && !offer?.senderAgreed) {
-              btn.textContent = 'შევთანხმდით? ▾';
-            } else if (isUserSide && offer?.senderAgreed && !offer?.recipientAgreed) {
-              btn.textContent = 'ხელოსანი დაეთანხმდა — შენ? ▾';
+            if (offer) {
+              if (isUserSide && !offer.recipientAgreed) {
+                btn.textContent = 'შევთანხმდით? ▾';
+              } else if (isHandymanSide && offer.recipientAgreed && !offer.senderAgreed) {
+                btn.textContent = 'მომხმარებელი ეთანხმება — შენ? ▾';
+              }
+            } else if (proposal) {
+              if (isHandymanSide && !proposal.senderAgreed) {
+                btn.textContent = 'შევთანხმდით? ▾';
+              } else if (isUserSide && proposal.senderAgreed && !proposal.recipientAgreed) {
+                btn.textContent = 'ხელოსანი ეთანხმება — შენ? ▾';
+              }
             }
           }
           const menu = document.getElementById('chatDecisionMenu');
@@ -8254,10 +8278,13 @@
     }
 
     async function disagreeFromChat() {
-      if (!window._chatOfferId) return;
-      if (!confirm('ნამდვილად გინდა უარი თქვა ამ ხელოსანზე? შეძლებ სხვების შეთავაზებების გადახედვას.')) return;
+      const offerId    = window._chatOfferId;
+      const proposalId = window._chatProposalId;
+      if (!offerId && !proposalId) return;
+      if (!confirm('ნამდვილად გინდა უარი თქვა? შეძლებ სხვების შეთავაზებების გადახედვას.')) return;
       try {
-        await api('/offers/' + window._chatOfferId + '/disagree', { method: 'POST' });
+        if (offerId)    await api('/offers/'    + offerId    + '/disagree', { method: 'POST' });
+        if (proposalId) await api('/proposals/' + proposalId + '/disagree', { method: 'POST' });
         toast('✅ უარი თქვი — სხვა შეთავაზებები ისევ ხელმისაწვდომია', '', 'ok');
         const wrap = document.getElementById('chatDecisionWrap');
         if (wrap) wrap.style.display = 'none';
@@ -8269,17 +8296,26 @@
     }
 
     async function agreeFromChat() {
-      if (!window._chatOfferId) return;
+      const offerId    = window._chatOfferId;
+      const proposalId = window._chatProposalId;
+      if (!offerId && !proposalId) return;
       if (!confirm('ნამდვილად გინდა საბოლოო შეთანხმება? საქმე დაიწყება და ათვლა ჩაირთვება.')) return;
       try {
-        await api('/offers/' + window._chatOfferId + '/agree', { method: 'POST' });
+        if (offerId)    await api('/offers/'    + offerId    + '/agree', { method: 'POST' });
+        if (proposalId) await api('/proposals/' + proposalId + '/agree', { method: 'POST' });
         toast('🤝 შევთანხმდით! თანამშრომლობა დაიწყო', '', 'ok');
         const wrap = document.getElementById('chatDecisionWrap');
         if (wrap) wrap.style.display = 'none';
         document.getElementById('chatDecisionMenu')?.classList.remove('open');
         await loadChatMessages();
       } catch (e) {
-        toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err');
+        // ✅ FIX 3: if "awaiting other party" — show info, not error
+        if (e.error?.includes('ელოდება')) {
+          toast('👀 ' + e.error, '', 'ok');
+        } else {
+          toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err');
+        }
+        await loadChatMessages();
       }
     }
 

@@ -400,9 +400,10 @@ router.post('/:id/agree', requireAuth, async (req, res) => {
     if (isHandyman && offer.senderAgreed)    return res.status(400).json({ error: 'უკვე დაეთანხმდი' });
     if (isUser     && offer.recipientAgreed) return res.status(400).json({ error: 'უკვე დაეთანხმდი' });
 
-    // Sender (handyman) MUST press first
-    if (isUser && !offer.senderAgreed) {
-      return res.status(400).json({ error: 'ჯერ ხელოსანმა უნდა დაადასტუროს' });
+    // ✅ FIX: User (recipient) presses FIRST, then handyman (sender) confirms.
+    // Handyman cannot confirm before the user has agreed.
+    if (isHandyman && !offer.recipientAgreed) {
+      return res.status(400).json({ error: 'ჯერ მომხმარებელმა უნდა დაადასტუროს' });
     }
 
     const updateData = isHandyman
@@ -410,7 +411,8 @@ router.post('/:id/agree', requireAuth, async (req, res) => {
       : { recipientAgreed: true };
 
     // If this is the second agreement, transition to "agreed" status & start countdown
-    const bothAgreed = isHandyman ? offer.recipientAgreed : offer.senderAgreed;
+    // ✅ FIX: user goes first (recipientAgreed), handyman goes second (senderAgreed)
+    const bothAgreed = isUser ? offer.senderAgreed : offer.recipientAgreed;
     let completedAt = null;
     if (bothAgreed) {
       const now = new Date();
@@ -432,9 +434,9 @@ router.post('/:id/agree', requireAuth, async (req, res) => {
     if (offer.chat) {
       const sysContent = bothAgreed
         ? `"შევთანხმდით, თანამშრომლობა დაიწყო"`
-        : (isHandyman
-            ? `ხელოსანმა დაადასტურა შეთანხმება — ელოდება მომხმარებელს`
-            : `მომხმარებელმა დაადასტურა შეთანხმება — ელოდება ხელოსანს`);
+        : (isUser
+            ? `მომხმარებელი ეთანხმება — ელოდება ხელოსნის დადასტურებას`
+            : `ხელოსანი ეთანხმება — ელოდება მომხმარებლის დადასტურებას`);
       await prisma.message.create({
         data: { chatId: offer.chat.id, fromId: null, type: 'system', content: sysContent },
       }).catch(() => {});
@@ -469,13 +471,13 @@ router.post('/:id/agree', requireAuth, async (req, res) => {
       // First side agreed — notify the other side that it's their turn
       sendPushToUser(prisma, otherUserId, {
         title: '👀 შევთანხმდით?',
-        body:  isHandyman ? 'ხელოსანი ელოდება შენს დადასტურებას' : 'მომხმარებელი ელოდება შენს დადასტურებას',
+        body:  isUser ? 'მომხმარებელი ელოდება შენს დადასტურებას' : 'ხელოსანი ელოდება შენს დადასტურებას',
         tag:   'offer-agree-await-' + offer.id,
         url:   `/?chat=${offer.chat?.id || ''}`,
       }).catch(() => {});
       sendExpoPushToUser(prisma, otherUserId, {
         title: '👀 შევთანხმდით?',
-        body:  isHandyman ? 'ხელოსანი ელოდება დადასტურებას' : 'მომხმარებელი ელოდება დადასტურებას',
+        body:  isUser ? 'მომხმარებელი ელოდება დადასტურებას' : 'ხელოსანი ელოდება დადასტურებას',
         data:  { type: 'offer_agree_await', offerId: offer.id, chatId: offer.chat?.id },
       }).catch(() => {});
       createNotification({
@@ -484,7 +486,7 @@ router.post('/:id/agree', requireAuth, async (req, res) => {
         userId: otherUserId,
         type:   'offer_agree_await',
         title:  '👀 შევთანხმდით?',
-        body:   `"${offer.request.title}" — ${isHandyman ? 'ხელოსანი' : 'მომხმარებელი'} ელოდება დადასტურებას`,
+        body:   `"${offer.request.title}" — ${isUser ? 'მომხმარებელი' : 'ხელოსანი'} ელოდება დადასტურებას`,
         link:   `?chat=${offer.chat?.id || ''}`,
       }).catch(() => {});
     }
