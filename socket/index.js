@@ -61,6 +61,9 @@ function setupSocket(io) {
         if (chat.userId !== userId && chat.handymanId !== userId) {
           return socket.emit('error', { message: 'Access denied' });
         }
+        if (chat.blocked) {
+          return socket.emit('error', { message: 'ჩათი დაიბლოკილია' });
+        }
 
         // Persist message
         const msg = await prisma.message.create({

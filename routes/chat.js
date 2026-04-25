@@ -120,6 +120,7 @@ router.post('/:id/messages', requireAuth, async (req, res) => {
     if (chat.userId !== req.user.id && chat.handymanId !== req.user.id) {
       return res.status(403).json({ error: 'წვდომა აკრძალულია' });
     }
+    if (chat.blocked) return res.status(403).json({ error: 'ჩათი დაიბლოკილია' });
 
     const { content, type = 'text' } = req.body;
     if (!content) return res.status(400).json({ error: 'შეტყობინება ცარიელია' });

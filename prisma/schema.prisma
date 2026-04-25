@@ -254,6 +254,10 @@ model Chat {
   user       User     @relation("user",     fields: [userId],     references: [id])
   handymanId String
   handyman   User     @relation("handyman", fields: [handymanId], references: [id])
+  // ✅ Chat lock: set to true after handyman uses "შევთანხმდი" 2 times
+  blocked            Boolean  @default(false)
+  // ✅ Counts how many times the handyman side has pressed "შევთანხმდი" in this chat
+  handymanAgreeCount Int      @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
