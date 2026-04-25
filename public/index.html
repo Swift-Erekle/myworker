@@ -2358,23 +2358,16 @@
 
     /* Instruction banner shown ONLY to the request owner, above "ჩათი გაიხსნა:" */
     .chat-instruction {
-      background: #1a1a24;
+      background: rgba(255,107,43,.08);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px 20px;
-      margin: 12px auto;
-      max-width: 96%;
-      font-size: 15px;
-      color: #d8d7ea;
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin: 8px auto;
+      max-width: 92%;
+      font-size: 12px;
+      color: var(--t2);
       text-align: center;
-      line-height: 1.65;
-      box-shadow: 0 4px 18px rgba(0,0,0,.35);
-    }
-    /* proposal-specific instruction — slightly more prominent */
-    .chat-instruction.proposal {
-      background: #1e1e2c;
-      border-color: rgba(255,107,43,.25);
-      font-size: 15px;
+      line-height: 1.5;
     }
 
     /* "ვერ შევთანხმდით" button — inline on desktop, stacked 2-liner on mobile */
@@ -8226,15 +8219,7 @@
             ${lastTime ? `<div class="chat-card-time">${lastTime}</div>` : ''}
           </div>
           ${reqTitle ? `<div class="chat-card-req" ${color ? `style="color:${color.fg}"` : ''}>${sanitize(reqTitle)}</div>` : ''}
-          ${(() => {
-            const lc = lastMsg?.content || '';
-            const isFiltered = lc.includes('🔧 ხელოსანი:') || lc.includes('👤 მომხმარებელი:');
-            return lastMsg && !isFiltered
-              ? `<div class="chat-card-last">${sanitize(String(lc).substring(0, 80))}</div>`
-              : lastMsg && isFiltered
-              ? '<div class="chat-card-last" style="opacity:.5">ჩატი</div>'
-              : '<div class="chat-card-last" style="opacity:.5">ჯერ მესიჯი არ გაქვთ გაცვლილი</div>';
-          })()}
+          ${lastMsg ? `<div class="chat-card-last">${sanitize(String(lastMsg.content || '').substring(0, 80))}</div>` : '<div class="chat-card-last" style="opacity:.5">ჯერ მესიჯი არ გაქვთ გაცვლილი</div>'}
         </div>
         ${unread ? `<div class="chat-card-unread">${c.unreadCount}</div>` : ''}
       </div>`;
@@ -8325,8 +8310,8 @@
 
         renderMessages(chat.messages || [], _chatContext);
 
-        // Countdown banner for 'agreed' offers
-        setupChatCountdown(chat.offer);
+        // Countdown banner for 'agreed' offers/proposals
+        setupChatCountdown(chat.offer, chat.proposal, chat);
 
         // ── Block chat input after full agreement ─────────────
         const chatFooter = document.querySelector('.chat-footer');
@@ -8425,11 +8410,16 @@
       else toast('⚠️ მოთხოვნა ვერ მოიძებნა', '', 'err');
     }
 
-    function setupChatCountdown(offer) {
+    function setupChatCountdown(offer, proposal, chat) {
       clearInterval(_chatCountdownTimer); _chatCountdownTimer = null;
       const host = document.getElementById('chatCountdownHost');
       if (host) host.remove();
-      if (!offer || offer.status !== 'agreed' || !offer.completedAt) return;
+
+      // Determine which flow is active and agreed
+      const agreedOffer    = offer    && offer.status    === 'agreed' && offer.completedAt    ? offer    : null;
+      const agreedProposal = proposal && proposal.status === 'agreed' && proposal.completedAt ? proposal : null;
+      const active = agreedOffer || agreedProposal;
+      if (!active) return;
 
       const body = document.getElementById('chatBody'); if (!body) return;
       const div = document.createElement('div');
@@ -8437,15 +8427,43 @@
       div.className = 'chat-countdown';
       body.insertBefore(div, body.firstChild);
 
+      // Identify the handyman and whether current user is the client (user side)
+      const cu = currentUser;
+      const isUserSide = chat && cu && cu.id === chat.userId;
+      const handymanId = chat?.handymanId || null;
+
+      let _reviewPrompted = false;
+
       const render = () => {
-        const end = new Date(offer.completedAt).getTime();
-        const now = Date.now();
+        const end  = new Date(active.completedAt).getTime();
+        const now  = Date.now();
         const diff = end - now;
+
         if (diff <= 0) {
-          div.innerHTML = '⏱️ ვადა ამოიწურა';
           clearInterval(_chatCountdownTimer); _chatCountdownTimer = null;
+          div.innerHTML = '⏱️ სამუშაო ვადა ამოიწურა';
+
+          // Show review prompt once to the user (client side) only
+          if (isUserSide && handymanId && !_reviewPrompted) {
+            _reviewPrompted = true;
+            // Small delay so user sees the "ვადა ამოიწურა" message first
+            setTimeout(() => {
+              // Add inline review nudge below countdown
+              const nudge = document.getElementById('chatReviewNudge');
+              if (!nudge) {
+                const n = document.createElement('div');
+                n.id = 'chatReviewNudge';
+                n.className = 'chat-instruction proposal';
+                n.style.cursor = 'pointer';
+                n.innerHTML = '⭐ სამუშაო დასრულდა? <strong style="color:var(--accent)">შეაფასე ხელოსანი!</strong>';
+                n.onclick = () => openReviewModal(handymanId);
+                div.insertAdjacentElement('afterend', n);
+              }
+            }, 800);
+          }
           return;
         }
+
         const days  = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const mins  = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -8457,6 +8475,21 @@
       };
       render();
       _chatCountdownTimer = setInterval(render, 60 * 1000); // refresh every minute
+
+      // If already expired when opening the chat, show review nudge immediately
+      if (new Date(active.completedAt).getTime() <= Date.now() && isUserSide && handymanId) {
+        setTimeout(() => {
+          if (!document.getElementById('chatReviewNudge')) {
+            const n = document.createElement('div');
+            n.id = 'chatReviewNudge';
+            n.className = 'chat-instruction proposal';
+            n.style.cursor = 'pointer';
+            n.innerHTML = '⭐ სამუშაო დასრულდა? <strong style="color:var(--accent)">შეაფასე ხელოსანი!</strong>';
+            n.onclick = () => openReviewModal(handymanId);
+            div.insertAdjacentElement('afterend', n);
+          }
+        }, 500);
+      }
     }
     function renderMessages(msgs, ctx) {
       const body = document.getElementById('chatBody'); if (!body) return;
@@ -8472,14 +8505,14 @@
         const dataId = m.id ? ` data-msg-id="${sanitize(m.id)}"` : '';
         const isMe = m.fromId === cu?.id;
         const isSystem = m.fromId === 'system' || m.type === 'system';
-        const isChatOpenedMsg = isSystem && typeof m.content === 'string' && (m.content.includes('ჩათი გაიხსნა') || m.content.includes('შემოთავაზება გაიგზავნა'));
+        const isChatOpenedMsg = isSystem && typeof m.content === 'string' && m.content.includes('ჩათი გაიხსნა');
 
         let injected = '';
         if (isChatOpenedMsg) {
+          // "მოთხოვნა" button — visible to BOTH parties
+          injected += `<div class="chat-req-btn-wrap"><button class="chat-req-btn" onclick="openRequestFromChat()">📋 მოთხოვნა</button></div>`;
           // Role-specific instruction banners
           if (offerStatus === 'accepted') {
-            // "მოთხოვნა" button — only in offer flow (not proposal flow)
-            injected += `<div class="chat-req-btn-wrap"><button class="chat-req-btn" onclick="openRequestFromChat()">📋 მოთხოვნა</button></div>`;
             // Offer flow: handyman made offer on request → user accepted
             if (isOwner) {
               injected += `<div class="chat-instruction">თუ საბოლოოდ შეთანხმდით ხელოსანთან — აირჩიე <strong style="color:var(--ok)">"შევთანხმდით"</strong>. თუ გინდა სხვა შეთავაზებების გადახედვა — აირჩიე <strong style="color:var(--err,#e74c3c)">"ვერ შევთანხმდით"</strong>.</div>`;
@@ -8489,9 +8522,9 @@
           } else if (proposalStatus === 'accepted') {
             // Proposal flow: user sent proposal directly to handyman → handyman accepted
             if (isHandyman) {
-              injected += `<div class="chat-instruction proposal">თუ საბოლოოდ შეთანხმდებით მომხმარებელთან — აირჩიე <strong style="color:var(--ok,#2ecc71)">"შევთანხმდით"</strong> და დაელოდე მის პასუხს. წინააღმდეგ შემთხვევაში — აირჩიე <strong style="color:var(--err,#e74c3c)">"ვერ შევთანხმდით"</strong>.</div>`;
+              injected += `<div class="chat-instruction">თუ საბოლოოდ შეთანხმდით მომხმარებელთან — აირჩიე <strong style="color:var(--ok)">"შევთანხმდით"</strong> და დაელოდე მის პასუხს. წინააღმდეგ შემთხვევაში — აირჩიე <strong style="color:var(--err,#e74c3c)">"ვერ შევთანხმდით"</strong>.</div>`;
             } else if (isOwner) {
-              injected += `<div class="chat-instruction proposal">დაელოდეთ სანამ ხელოსანი/კომპანია არ დათანხმდება და შემდეგ გამოგიჩნდებათ ღილაკი, შემდეგ თუ თქვენ ეთანხმებით, მაშინ დააჭირეთ <strong style="color:var(--ok,#2ecc71)">დათანხმებას</strong>!</div>`;
+              injected += `<div class="chat-instruction">დაელოდეთ სანამ ხელოსანი/კომპანია არ დათანხმდება და შემდეგ გამოგიჩნდებათ ღილაკი და თქვენ უნდა დაეთანხმოთ თუ ეთანხმებით!</div>`;
             }
           }
         }
