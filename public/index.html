@@ -4510,7 +4510,7 @@
   <div class="mo" id="moProposal">
     <div class="modal" style="max-height:90vh;overflow-y:auto">
       <button class="mc" onclick="closeMo('moProposal')">✕</button>
-      <h2 style="margin-bottom:4px">💬 შემოთავაზება</h2>
+      <h2 style="margin-bottom:4px">💬 შეთავაზება</h2>
       <div class="sub" id="proposalRecipient" style="margin-bottom:14px">ადრესატი</div>
       <div class="fg">
         <label>სათაური *</label>
@@ -6671,7 +6671,7 @@
         ${(h.type === 'handyman' || h.type === 'company') ? `<button class="btn bg bs" onclick="openChangePlanModal()">📦 ტარიფი</button>` : ''}
         <button class="btn bg bs" onclick="nav('my-card')">💳 ბარათი</button>` : ''}
       ${!isOwner && (h.type === 'handyman' || h.type === 'company') && cu && cu.type === 'user'
-            ? `<button class="btn bp" onclick="openProposalModal('${sanitize(h.id)}','${sanitize(h.name || '')} ${sanitize(h.surname || '')}')">💬 შემოთავაზება</button>` : ''}
+            ? `<button class="btn bp" onclick="openProposalModal('${sanitize(h.id)}','${sanitize(h.name || '')} ${sanitize(h.surname || '')}')">💬 შეთავაზება</button>` : ''}
       ${canReview ? `<button class="btn bo bs" onclick="openReviewModal('${hid}')">⭐ შეფასება</button>` : ''}
       ${h.phone && cu ? `<button class="btn bo bs" onclick="contactPhone('${sanitize(h.phone)}','${sanitize(h.name)}')">📞</button>` : ''}
     `;
@@ -7010,12 +7010,22 @@
       }
     }
     async function acceptProposal(id) {
-      try {
-        await api(`/proposals/${id}/accept`, { method: 'POST' });
-        closeMo('moProposalView');
-        toast('✅ მიღებულია', '', 'ok');
-        renderProposals?.();
-      } catch (e) { toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err'); }
+      let apiData = null;
+      // Try API — even if it errors the chat may have been created
+      try { apiData = await api(`/proposals/${id}/accept`, { method: 'POST' }); } catch(_) {}
+      // Find the chat for this proposal
+      let chatId = apiData?.chatId;
+      if (!chatId) {
+        try {
+          const myChats = await api('/chat/mine');
+          const related = myChats.find(c => c.proposalId === id || c.proposal?.id === id);
+          if (related) chatId = related.id;
+        } catch(_) {}
+      }
+      closeMo('moProposalView');
+      toast('✅ მიღებულია!', chatId ? 'ჩათი იხსნება...' : '', 'ok');
+      renderProposals?.();
+      if (chatId) setTimeout(() => openChat(chatId), 300);
     }
     async function rejectProposal(id) {
       try {
@@ -8437,8 +8447,10 @@
       const body = document.getElementById('chatBody'); if (!body) return;
       const cu = currentUser;
       ctx = ctx || _chatContext || {};
-      const isOwner = cu && ctx.chat && cu.id === ctx.chat.userId;
-      const offerStatus = ctx.offer?.status;
+      const isOwner    = cu && ctx.chat && cu.id === ctx.chat.userId;
+      const isHandyman = cu && ctx.chat && cu.id === ctx.chat.handymanId;
+      const offerStatus    = ctx.offer?.status;
+      const proposalStatus = ctx.proposal?.status;
 
       // Find first system "ჩათი გაიხსნა:" message — we inject helpers above it
       const rows = msgs.map(m => {
@@ -8451,13 +8463,30 @@
         if (isChatOpenedMsg) {
           // "მოთხოვნა" button — visible to BOTH parties
           injected += `<div class="chat-req-btn-wrap"><button class="chat-req-btn" onclick="openRequestFromChat()">📋 მოთხოვნა</button></div>`;
-          // Instruction banner — only to request owner while offer still 'accepted'
-          if (isOwner && offerStatus === 'accepted') {
-            injected += `<div class="chat-instruction">თუ საბოლოოდ შეთანხმდით ხელოსანთან — აირჩიე <strong style="color:var(--ok)">"შევთანხმდით"</strong>. თუ გინდა სხვა შეთავაზებების გადახედვა — აირჩიე <strong style="color:var(--err,#e74c3c)">"ვერ შევთანხმდით"</strong>.</div>`;
+          // Role-specific instruction banners
+          if (offerStatus === 'accepted') {
+            // Offer flow: handyman made offer on request → user accepted
+            if (isOwner) {
+              injected += `<div class="chat-instruction">თუ საბოლოოდ შეთანხმდით ხელოსანთან — აირჩიე <strong style="color:var(--ok)">"შევთანხმდით"</strong>. თუ გინდა სხვა შეთავაზებების გადახედვა — აირჩიე <strong style="color:var(--err,#e74c3c)">"ვერ შევთანხმდით"</strong>.</div>`;
+            } else if (isHandyman) {
+              injected += `<div class="chat-instruction">დაელოდეთ სანამ მომხმარებელი არ გამოგიგზავნით დათანხმებას!</div>`;
+            }
+          } else if (proposalStatus === 'accepted') {
+            // Proposal flow: user sent proposal directly to handyman → handyman accepted
+            if (isHandyman) {
+              injected += `<div class="chat-instruction">თუ საბოლოოდ შეთანხმდით მომხმარებელთან — აირჩიე <strong style="color:var(--ok)">"შევთანხმდით"</strong> და დაელოდე მის პასუხს. წინააღმდეგ შემთხვევაში — აირჩიე <strong style="color:var(--err,#e74c3c)">"ვერ შევთანხმდით"</strong>.</div>`;
+            } else if (isOwner) {
+              injected += `<div class="chat-instruction">დაელოდეთ სანამ ხელოსანი/კომპანია არ დათანხმდება და შემდეგ გამოგიჩნდებათ ღილაკი და თქვენ უნდა დაეთანხმოთ თუ ეთანხმებით!</div>`;
+            }
           }
         }
 
-        if (isSystem)          return injected + `<div${dataId} style="text-align:center;color:var(--t2);font-size:12px;padding:8px">${sanitize(m.content)}</div>`;
+        if (isSystem) {
+          const sc = m.content || '';
+          // Filter out old-style dual-labeled instruction messages stored in DB
+          if (sc.includes('🔧 ხელოსანი:') || sc.includes('👤 მომხმარებელი:')) return '';
+          return injected + `<div${dataId} style="text-align:center;color:var(--t2);font-size:12px;padding:8px">${sanitize(sc)}</div>`;
+        }
         if (m.type === 'image') return `<div${dataId} class="msg ${isMe ? 'me' : 'them'}"><img src="${sanitize(m.content)}" style="max-width:200px;border-radius:8px;cursor:pointer" onclick="openLightbox('image','${sanitize(m.content)}')"></div>`;
         if (m.type === 'video') return `<div${dataId} class="msg ${isMe ? 'me' : 'them'}"><video src="${sanitize(m.content)}" controls style="max-width:200px;border-radius:8px"></video></div>`;
         if (m.type === 'voice') return `<div${dataId} class="msg ${isMe ? 'me' : 'them'}"><audio src="${sanitize(m.content)}" controls style="max-width:200px"></audio></div>`;
