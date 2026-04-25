@@ -8509,11 +8509,10 @@
 
         let injected = '';
         if (isChatOpenedMsg) {
-          // "მოთხოვნა" button — visible to BOTH parties
-          injected += `<div class="chat-req-btn-wrap"><button class="chat-req-btn" onclick="openRequestFromChat()">📋 მოთხოვნა</button></div>`;
-          // Role-specific instruction banners
           if (offerStatus === 'accepted') {
             // Offer flow: handyman made offer on request → user accepted
+            // "📋 მოთხოვნა" button only in offer flow
+            injected += `<div class="chat-req-btn-wrap"><button class="chat-req-btn" onclick="openRequestFromChat()">📋 მოთხოვნა</button></div>`;
             if (isOwner) {
               injected += `<div class="chat-instruction">თუ საბოლოოდ შეთანხმდით ხელოსანთან — აირჩიე <strong style="color:var(--ok)">"შევთანხმდით"</strong>. თუ გინდა სხვა შეთავაზებების გადახედვა — აირჩიე <strong style="color:var(--err,#e74c3c)">"ვერ შევთანხმდით"</strong>.</div>`;
             } else if (isHandyman) {
@@ -8521,10 +8520,11 @@
             }
           } else if (proposalStatus === 'accepted') {
             // Proposal flow: user sent proposal directly to handyman → handyman accepted
+            // No "📋 მოთხოვნა" button here
             if (isHandyman) {
               injected += `<div class="chat-instruction">თუ საბოლოოდ შეთანხმდით მომხმარებელთან — აირჩიე <strong style="color:var(--ok)">"შევთანხმდით"</strong> და დაელოდე მის პასუხს. წინააღმდეგ შემთხვევაში — აირჩიე <strong style="color:var(--err,#e74c3c)">"ვერ შევთანხმდით"</strong>.</div>`;
             } else if (isOwner) {
-              injected += `<div class="chat-instruction">დაელოდეთ სანამ ხელოსანი/კომპანია არ დათანხმდება და შემდეგ გამოგიჩნდებათ ღილაკი და თქვენ უნდა დაეთანხმოთ თუ ეთანხმებით!</div>`;
+              injected += `<div class="chat-instruction">დაელოდეთ სანამ ხელოსანი/კომპანია არ დათანხმდება და შემდეგ გამოგიჩნდებათ ღილაკი, შემდეგ თუ თქვენ ეთანხმებით, მაშინ დააჭირეთ <strong style="color:var(--ok,#2ecc71)">დათანხმებას</strong>!</div>`;
             }
           }
         }
