@@ -8471,8 +8471,9 @@
             } else if (isHandyman) {
               injected += `<div class="chat-instruction">დაელოდეთ სანამ მომხმარებელი არ გამოგიგზავნით დათანხმებას!</div>`;
             }
-          } else if (proposalStatus === 'accepted') {
-            // Proposal flow: user sent proposal directly to handyman → handyman accepted
+          } else if (ctx.proposal && !['agreed','disagreed','completed'].includes(proposalStatus)) {
+            // Proposal flow: user sent proposal directly to handyman
+            // Show regardless of exact status (pending/accepted) — hides only after final agreement
             if (isHandyman) {
               injected += `<div class="chat-instruction">თუ საბოლოოდ შეთანხმდით მომხმარებელთან — აირჩიე <strong style="color:var(--ok)">"შევთანხმდით"</strong> და დაელოდე მის პასუხს. წინააღმდეგ შემთხვევაში — აირჩიე <strong style="color:var(--err,#e74c3c)">"ვერ შევთანხმდით"</strong>.</div>`;
             } else if (isOwner) {
