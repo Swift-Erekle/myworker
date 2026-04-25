@@ -3,7 +3,8 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { requireAuth } = require('../middleware/auth');
-const { sendPushToUser } = require('../utils/push');
+const { sendPushToUser } = require('../utils/webPush');
+const { sendExpoPushToUser } = require('../utils/expoPush');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -67,11 +68,17 @@ router.post('/', requireAuth, async (req, res) => {
       });
     } catch (_) {}
 
-    // Push notification
+    // Push notification (web + mobile)
+    const pushData = { type: 'new_proposal', proposalId: proposal.id };
     sendPushToUser(prisma, recipient.id, {
       title: `💬 ახალი შემოთავაზება`,
       body:  `${req.user.name || 'მომხმარებელი'} — ${proposal.title.substring(0, 60)}`,
-      data:  { type: 'new_proposal', proposalId: proposal.id },
+      data:  pushData,
+    }).catch(() => {});
+    sendExpoPushToUser(prisma, recipient.id, {
+      title: `💬 ახალი შემოთავაზება`,
+      body:  `${req.user.name || 'მომხმარებელი'} — ${proposal.title.substring(0, 60)}`,
+      data:  pushData,
     }).catch(() => {});
 
     res.status(201).json(proposal);
@@ -170,6 +177,11 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
       });
     } catch (_) {}
     sendPushToUser(prisma, p.senderId, {
+      title: '✅ შეთავაზება მიღებულია',
+      body:  `${req.user.name || 'ხელოსანი'} დაეთანხმა შენს შეთავაზებას`,
+      data:  { type: 'proposal_accepted', proposalId: p.id },
+    }).catch(() => {});
+    sendExpoPushToUser(prisma, p.senderId, {
       title: '✅ შეთავაზება მიღებულია',
       body:  `${req.user.name || 'ხელოსანი'} დაეთანხმა შენს შეთავაზებას`,
       data:  { type: 'proposal_accepted', proposalId: p.id },

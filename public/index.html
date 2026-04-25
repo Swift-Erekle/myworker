@@ -4233,6 +4233,13 @@
     </div>
   </div>
 
+  <!-- PUSH PERMISSION PROMPT -->
+  <div class="mo" id="moPushPrompt">
+    <div class="modal" style="max-width:420px">
+      <div id="pushPromptBody"></div>
+    </div>
+  </div>
+
   <!-- PROPOSAL (user → handyman/company) -->
   <div class="mo" id="moProposal">
     <div class="modal" style="max-height:90vh;overflow-y:auto">
@@ -5127,6 +5134,130 @@
     };
 
     // ========================================================
+    // WEB PUSH NOTIFICATIONS
+    // ========================================================
+    // Helper: convert base64 VAPID key to Uint8Array
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = atob(base64);
+      const output = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) output[i] = rawData.charCodeAt(i);
+      return output;
+    }
+
+    async function setupWebPush() {
+      // Guard: browser must support service workers + push
+      if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+        console.log('[PUSH] Browser does not support web push');
+        return;
+      }
+      // iOS Safari only supports push in PWA-installed mode (standalone)
+      const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                          window.navigator.standalone === true;
+      if (isIos && !isStandalone) {
+        console.log('[PUSH] iOS requires PWA install for push');
+        return;
+      }
+
+      try {
+        // 1. Register service worker
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        await navigator.serviceWorker.ready;
+
+        // 2. Check current permission state
+        if (Notification.permission === 'denied') {
+          console.log('[PUSH] Permission denied previously');
+          return;
+        }
+
+        // 3. Check if already subscribed — if yes, just ensure backend knows
+        const existing = await registration.pushManager.getSubscription();
+        if (existing) {
+          // Re-send to backend in case DB was reset
+          try {
+            await api('/push/subscribe', { method: 'POST', body: existing.toJSON() });
+          } catch (_) {}
+          return;
+        }
+
+        // 4. If permission is 'default', show a soft prompt first (to avoid blocking)
+        if (Notification.permission === 'default') {
+          const shouldAsk = await showPushPrePrompt();
+          if (!shouldAsk) return;
+        }
+
+        // 5. Request native permission
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          console.log('[PUSH] User declined');
+          return;
+        }
+
+        // 6. Fetch VAPID public key from server
+        const { publicKey } = await api('/push/vapid-public-key');
+        if (!publicKey) {
+          console.warn('[PUSH] VAPID key not configured on server');
+          return;
+        }
+
+        // 7. Subscribe
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+
+        // 8. Send subscription to backend
+        await api('/push/subscribe', { method: 'POST', body: subscription.toJSON() });
+        console.log('[PUSH] Subscribed ✓');
+        toast('🔔 შეტყობინებები ჩართულია!', 'მიიღებ მნიშვნელოვან განახლებებს', 'ok');
+      } catch (e) {
+        console.warn('[PUSH] Setup failed:', e?.message || e);
+      }
+    }
+
+    // Soft pre-prompt — shown once per session via localStorage flag
+    function showPushPrePrompt() {
+      return new Promise(resolve => {
+        // Don't re-ask if user dismissed within the last 7 days
+        try {
+          const lastAsk = parseInt(localStorage.getItem('pushAskedAt') || '0');
+          if (lastAsk && Date.now() - lastAsk < 7 * 24 * 60 * 60 * 1000) {
+            resolve(false);
+            return;
+          }
+        } catch (_) {}
+
+        // Set modal body
+        const html = `
+          <div style="text-align:center;padding:10px 4px">
+            <div style="font-size:56px;margin-bottom:12px">🔔</div>
+            <h2 style="font-size:20px;margin-bottom:8px">ჩართე შეტყობინებები</h2>
+            <p style="color:var(--t2);font-size:14px;line-height:1.55;margin-bottom:20px">
+              მიიღე მყისიერი შეტყობინება ახალი შეთავაზების, ჩათის შეტყობინების და მიღება/უარყოფის შესახებ — ბრაუზერი გათიშულიც რომ იყოს.
+            </p>
+            <div style="display:flex;gap:8px">
+              <button id="pushPromptNo"  class="btn bg" style="flex:1;justify-content:center">არა, მადლობა</button>
+              <button id="pushPromptYes" class="btn bp" style="flex:1;justify-content:center">🔔 ჩართვა</button>
+            </div>
+          </div>`;
+        const body = document.getElementById('pushPromptBody');
+        if (!body) { resolve(true); return; }  // fallback: just ask native
+        body.innerHTML = html;
+        openMo('moPushPrompt');
+
+        const cleanup = (answer) => {
+          closeMo('moPushPrompt');
+          try { localStorage.setItem('pushAskedAt', String(Date.now())); } catch (_) {}
+          resolve(answer);
+        };
+        document.getElementById('pushPromptNo').onclick  = () => cleanup(false);
+        document.getElementById('pushPromptYes').onclick = () => cleanup(true);
+      });
+    }
+
+    // ========================================================
     // SOCKET.IO — REAL-TIME
     // ========================================================
     function initSocket() {
@@ -5521,6 +5652,8 @@
         else nav('dashboard');
         initSocket();
         maybeShowAppBanner();
+        // ✅ Setup web push permission (1s delay to not interrupt UX)
+        setTimeout(() => setupWebPush(), 1200);
       } catch (e) {
         // Unverified email: backend re-sent a code, open verify modal
         if (e.emailNotVerified) {
@@ -5594,6 +5727,7 @@
         selectedRegSpecialties = [];
         initSocket();
         maybeShowAppBanner();
+        setTimeout(() => setupWebPush(), 2500); // after plan select modal
         // Show plan selection for handymen/companies
         const isWorker = data.user.type === 'handyman' || data.user.type === 'company';
         if (isWorker) {
@@ -9550,6 +9684,8 @@
           currentUser = await api('/auth/me');
           initSocket();
           maybeShowAppBanner();
+          // ✅ Setup web push after login
+          setupWebPush();
           if (currentUser.type === 'admin' || currentUser.type === 'staff') nav('admin');
           else {
             // Check if trial expired for handyman/company
