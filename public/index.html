@@ -8476,10 +8476,10 @@
 
         let injected = '';
         if (isChatOpenedMsg) {
-          // "მოთხოვნა" button — visible to BOTH parties
-          injected += `<div class="chat-req-btn-wrap"><button class="chat-req-btn" onclick="openRequestFromChat()">📋 მოთხოვნა</button></div>`;
           // Role-specific instruction banners
           if (offerStatus === 'accepted') {
+            // "მოთხოვნა" button — only in offer flow (not proposal flow)
+            injected += `<div class="chat-req-btn-wrap"><button class="chat-req-btn" onclick="openRequestFromChat()">📋 მოთხოვნა</button></div>`;
             // Offer flow: handyman made offer on request → user accepted
             if (isOwner) {
               injected += `<div class="chat-instruction">თუ საბოლოოდ შეთანხმდით ხელოსანთან — აირჩიე <strong style="color:var(--ok)">"შევთანხმდით"</strong>. თუ გინდა სხვა შეთავაზებების გადახედვა — აირჩიე <strong style="color:var(--err,#e74c3c)">"ვერ შევთანხმდით"</strong>.</div>`;
