@@ -400,13 +400,13 @@ router.post('/:id/agree', requireAuth, async (req, res) => {
     if (isHandyman && offer.senderAgreed)    return res.status(400).json({ error: 'უკვე დაეთანხმდი' });
     if (isUser     && offer.recipientAgreed) return res.status(400).json({ error: 'უკვე დაეთანხმდი' });
 
-    // ✅ Fix #1 — handyman (sender) presses FIRST, then user (recipient) confirms.
-    // Block user from confirming before handyman has agreed (matches proposals flow).
-    if (isUser && !offer.senderAgreed) {
-      return res.status(400).json({ error: 'ჯერ ხელოსანმა უნდა დაადასტუროს' });
+    // Offer flow: USER (recipient) presses FIRST, then HANDYMAN (sender) confirms.
+    // Block handyman from confirming before user has agreed.
+    if (isHandyman && !offer.recipientAgreed) {
+      return res.status(400).json({ error: 'ჯერ მომხმარებელმა უნდა დაადასტუროს' });
     }
 
-    // ✅ Fix #2 — max 2 "შევთანხმდი" presses by the handyman side per chat.
+    // Max 2 "შევთანხმდი" presses by the handyman side per chat.
     if (isHandyman && offer.chat) {
       const chat = await prisma.chat.findUnique({ where: { id: offer.chat.id } });
       if (chat?.blocked) {
@@ -432,7 +432,7 @@ router.post('/:id/agree', requireAuth, async (req, res) => {
       ? { senderAgreed: true }
       : { recipientAgreed: true };
 
-    // ✅ Fix #1 — handyman goes first (senderAgreed), user confirms second (recipientAgreed)
+    // Offer flow: user goes first (recipientAgreed), handyman confirms (senderAgreed)
     const bothAgreed = isHandyman ? offer.recipientAgreed : offer.senderAgreed;
     let completedAt = null;
     if (bothAgreed) {
@@ -463,9 +463,9 @@ router.post('/:id/agree', requireAuth, async (req, res) => {
     if (offer.chat) {
       const sysContent = bothAgreed
         ? `"შევთანხმდით, თანამშრომლობა დაიწყო"`
-        : (isHandyman
-            ? `ხელოსანი ეთანხმება — ელოდება მომხმარებლის დადასტურებას`
-            : `მომხმარებელი ეთანხმება — ელოდება ხელოსნის დადასტურებას`);
+        : (isUser
+            ? `მომხმარებელი ეთანხმება — ელოდება ხელოსნის დადასტურებას`
+            : `ხელოსანი ეთანხმება — ელოდება მომხმარებლის დადასტურებას`);
       await prisma.message.create({
         data: { chatId: offer.chat.id, fromId: null, type: 'system', content: sysContent },
       }).catch(() => {});
@@ -571,6 +571,24 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
         include: { messages: true },
       }),
     ]);
+
+    // ✅ Fix #3 — add per-side guidance messages so both parties know what to do
+    await prisma.message.createMany({
+      data: [
+        {
+          chatId:  chat.id,
+          fromId:  null,
+          type:    'system',
+          content: `🔧 ხელოსანი: თუ საბოლოოდ შეთანხმდით მომხმარებელთან — აირჩიე "შევთანხმდით" და დაელოდე მის პასუხს. წინააღმდეგ შემთხვევაში — აირჩიე "ვერ შევთანხმდით".`,
+        },
+        {
+          chatId:  chat.id,
+          fromId:  null,
+          type:    'system',
+          content: `👤 მომხმარებელი: თუ საბოლოოდ შეთანხმდით ხელოსანთან — აირჩიე "შევთანხმდით". თუ გინდა სხვა შეთავაზებების გადახედვა — აირჩიე "ვერ შევთანხმდით".`,
+        },
+      ],
+    }).catch(() => {});
 
     res.json({ offer: updatedOffer, chatId: chat.id });
 
