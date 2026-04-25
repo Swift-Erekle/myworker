@@ -8226,7 +8226,15 @@
             ${lastTime ? `<div class="chat-card-time">${lastTime}</div>` : ''}
           </div>
           ${reqTitle ? `<div class="chat-card-req" ${color ? `style="color:${color.fg}"` : ''}>${sanitize(reqTitle)}</div>` : ''}
-          ${lastMsg ? `<div class="chat-card-last">${sanitize(String(lastMsg.content || '').substring(0, 80))}</div>` : '<div class="chat-card-last" style="opacity:.5">ჯერ მესიჯი არ გაქვთ გაცვლილი</div>'}
+          ${(() => {
+            const lc = lastMsg?.content || '';
+            const isFiltered = lc.includes('🔧 ხელოსანი:') || lc.includes('👤 მომხმარებელი:');
+            return lastMsg && !isFiltered
+              ? `<div class="chat-card-last">${sanitize(String(lc).substring(0, 80))}</div>`
+              : lastMsg && isFiltered
+              ? '<div class="chat-card-last" style="opacity:.5">ჩატი</div>'
+              : '<div class="chat-card-last" style="opacity:.5">ჯერ მესიჯი არ გაქვთ გაცვლილი</div>';
+          })()}
         </div>
         ${unread ? `<div class="chat-card-unread">${c.unreadCount}</div>` : ''}
       </div>`;
@@ -8464,7 +8472,7 @@
         const dataId = m.id ? ` data-msg-id="${sanitize(m.id)}"` : '';
         const isMe = m.fromId === cu?.id;
         const isSystem = m.fromId === 'system' || m.type === 'system';
-        const isChatOpenedMsg = isSystem && typeof m.content === 'string' && m.content.includes('ჩათი გაიხსნა');
+        const isChatOpenedMsg = isSystem && typeof m.content === 'string' && (m.content.includes('ჩათი გაიხსნა') || m.content.includes('შემოთავაზება გაიგზავნა'));
 
         let injected = '';
         if (isChatOpenedMsg) {

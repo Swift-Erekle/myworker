@@ -202,26 +202,9 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
       include: { chat: { select: { id: true } } },
     });
 
-    // ── Add guidance messages to chat (same as offer accept flow) ──
+    // ── Emit socket so chat updates live for both parties ──────────
+    // NOTE: Role-specific instructions are injected client-side per user role.
     if (updated.chat?.id) {
-      await prisma.message.createMany({
-        data: [
-          {
-            chatId:  updated.chat.id,
-            fromId:  null,
-            type:    'system',
-            content: `🔧 ხელოსანი: თუ საბოლოოდ შეთანხმდით მომხმარებელთან — აირჩიე "შევთანხმდით" და დაელოდე მის პასუხს. წინააღმდეგ შემთხვევაში — აირჩიე "ვერ შევთანხმდით".`,
-          },
-          {
-            chatId:  updated.chat.id,
-            fromId:  null,
-            type:    'system',
-            content: `👤 მომხმარებელი: თუ საბოლოოდ შეთანხმდით ხელოსანთან — აირჩიე "შევთანხმდით". თუ გინდა სხვა შეთავაზებების გადახედვა — აირჩიე "ვერ შევთანხმდით".`,
-          },
-        ],
-      }).catch(() => {});
-
-      // Emit socket so chat updates live for both parties
       const io = req.app.get('io');
       if (io) io.to(`chat:${updated.chat.id}`).emit('proposalAccepted', { chatId: updated.chat.id });
     }
