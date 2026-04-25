@@ -182,21 +182,52 @@ router.get('/:id', requireAuth, async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 router.post('/:id/accept', requireAuth, async (req, res) => {
   try {
-    const p = await prisma.proposal.findUnique({ where: { id: req.params.id } });
+    const p = await prisma.proposal.findUnique({
+      where:   { id: req.params.id },
+      include: { chat: { select: { id: true } } },
+    });
     if (!p) return res.status(404).json({ error: 'ვერ მოიძებნა' });
     if (p.recipientId !== req.user.id) return res.status(403).json({ error: 'წვდომა აკრძალული' });
 
-    // Idempotent: if already accepted, return success silently (prevents ⚠️ on re-tap)
-    if (p.status === 'accepted') return res.json(p);
+    // Idempotent: already accepted — just return chatId so frontend can open chat
+    if (p.status === 'accepted') {
+      return res.json({ ...p, chatId: p.chat?.id || null });
+    }
 
     if (p.status !== 'pending') return res.status(400).json({ error: 'სტატუსი აღარ არის pending' });
 
     const updated = await prisma.proposal.update({
-      where: { id: p.id },
-      data:  { status: 'accepted' },
+      where:   { id: p.id },
+      data:    { status: 'accepted' },
+      include: { chat: { select: { id: true } } },
     });
 
+    // ── Add guidance messages to chat (same as offer accept flow) ──
+    if (updated.chat?.id) {
+      await prisma.message.createMany({
+        data: [
+          {
+            chatId:  updated.chat.id,
+            fromId:  null,
+            type:    'system',
+            content: `🔧 ხელოსანი: თუ საბოლოოდ შეთანხმდით მომხმარებელთან — აირჩიე "შევთანხმდით" და დაელოდე მის პასუხს. წინააღმდეგ შემთხვევაში — აირჩიე "ვერ შევთანხმდით".`,
+          },
+          {
+            chatId:  updated.chat.id,
+            fromId:  null,
+            type:    'system',
+            content: `👤 მომხმარებელი: თუ საბოლოოდ შეთანხმდით ხელოსანთან — აირჩიე "შევთანხმდით". თუ გინდა სხვა შეთავაზებების გადახედვა — აირჩიე "ვერ შევთანხმდით".`,
+          },
+        ],
+      }).catch(() => {});
+
+      // Emit socket so chat updates live for both parties
+      const io = req.app.get('io');
+      if (io) io.to(`chat:${updated.chat.id}`).emit('proposalAccepted', { chatId: updated.chat.id });
+    }
+
     // Notify sender
+    const chatId = updated.chat?.id || null;
     try {
       await prisma.notification.create({
         data: {
@@ -204,23 +235,26 @@ router.post('/:id/accept', requireAuth, async (req, res) => {
           type:   'proposal_accepted',
           title:  '✅ შეთავაზება მიღებულია',
           body:   `${req.user.name || 'ხელოსანი'} — ${p.title.substring(0, 60)}`,
-          link:   `?proposal=${p.id}`,
+          link:   chatId ? `?chat=${chatId}` : `?proposal=${p.id}`,
         },
       });
     } catch (_) {}
     sendPushToUser(prisma, p.senderId, {
       title: '✅ შეთავაზება მიღებულია',
       body:  `${req.user.name || 'ხელოსანი'} დაეთანხმა შენს შეთავაზებას`,
-      data:  { type: 'proposal_accepted', proposalId: p.id },
+      tag:   'proposal-accepted-' + p.id,
+      url:   chatId ? `/?chat=${chatId}` : '/',
     }).catch(() => {});
     sendExpoPushToUser(prisma, p.senderId, {
       title: '✅ შეთავაზება მიღებულია',
       body:  `${req.user.name || 'ხელოსანი'} დაეთანხმა შენს შეთავაზებას`,
-      data:  { type: 'proposal_accepted', proposalId: p.id },
+      data:  { type: 'proposal_accepted', proposalId: p.id, chatId },
     }).catch(() => {});
 
-    res.json(updated);
+    // ✅ Return chatId so frontend can immediately open the chat
+    res.json({ ...updated, chatId });
   } catch (err) {
+    console.error('[PROPOSALS] accept error:', err.message);
     res.status(500).json({ error: 'სერვერის შეცდომა' });
   }
 });
