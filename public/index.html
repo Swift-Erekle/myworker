@@ -2880,12 +2880,24 @@
       margin-top: 12px;
       width: 100%;
       box-sizing: border-box;
+      overflow-x: hidden;
     }
     @media (max-width: 600px) {
       .port-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
       }
+    }
+    @media (max-width: 400px) {
+      .port-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+    #pDesc {
+      word-break: break-word;
+      overflow-wrap: break-word;
+      white-space: normal;
     }
 
     .port-item {
@@ -5587,6 +5599,14 @@
         }
       });
 
+      // Live update when one party agrees — reload chat so the other sees the button
+      socket.on('offerAgreedSingle', (data) => {
+        const activeChatId = window._activeChatId;
+        if (activeChatId && (data.chatId === activeChatId)) {
+          loadChatMessages();
+        }
+      });
+
       // Live in-app bell notification
       socket.on('notification', (notif) => {
         notifCache.unshift(notif);
@@ -6667,7 +6687,7 @@
         ${(h.type === 'handyman' || h.type === 'company') ? `<button class="btn bg bs" onclick="openChangePlanModal()">📦 ტარიფი</button>` : ''}
         <button class="btn bg bs" onclick="nav('my-card')">💳 ბარათი</button>` : ''}
       ${!isOwner && (h.type === 'handyman' || h.type === 'company') && cu && cu.type === 'user'
-            ? `<button class="btn bp" onclick="openProposalModal('${sanitize(h.id)}','${sanitize(h.name || '')} ${sanitize(h.surname || '')}')">💬 შემოთავაზება</button>` : ''}
+            ? `<button class="btn bp" onclick="openProposalModal('${sanitize(h.id)}','${sanitize(h.name || '')} ${sanitize(h.surname || '')}')">💬 შეთავაზება</button>` : ''}
       ${canReview ? `<button class="btn bo bs" onclick="openReviewModal('${hid}')">⭐ შეფასება</button>` : ''}
       ${h.phone && cu ? `<button class="btn bo bs" onclick="contactPhone('${sanitize(h.phone)}','${sanitize(h.name)}')">📞</button>` : ''}
     `;
@@ -8309,8 +8329,14 @@
         document.getElementById('chatDecisionMenu')?.classList.remove('open');
         await loadChatMessages();
       } catch (e) {
-        // ✅ FIX 3: if "awaiting other party" — show info, not error
-        if (e.error?.includes('ელოდება')) {
+        // round-order messages ან „უკვე დაეთანხმდი" – ინფო, არა error
+        if (e.error && (
+            e.error.includes('ჯერ მომხმარებელმა') ||
+            e.error.includes('ჯერ ხელოსანმა') ||
+            e.error.includes('უკვე დაეთანხმდი')
+        )) {
+          toast('👀 ' + e.error, '', 'ok');
+        } else if (e.error?.includes('ელოდება')) {
           toast('👀 ' + e.error, '', 'ok');
         } else {
           toast('⚠️ ' + (e.error || 'შეცდომა'), '', 'err');

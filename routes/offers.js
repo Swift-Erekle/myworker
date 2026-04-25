@@ -469,6 +469,14 @@ router.post('/:id/agree', requireAuth, async (req, res) => {
       }).catch(() => {});
     } else {
       // First side agreed — notify the other side that it's their turn
+      // Emit socket event so the other party's chat updates live (no reload needed)
+      const io = req.app.get('io');
+      if (io && offer.chat) {
+        io.to(`chat:${offer.chat.id}`).emit('offerAgreedSingle', {
+          chatId:   offer.chat.id,
+          offerId:  offer.id,
+        });
+      }
       sendPushToUser(prisma, otherUserId, {
         title: '👀 შევთანხმდით?',
         body:  isUser ? 'მომხმარებელი ელოდება შენს დადასტურებას' : 'ხელოსანი ელოდება შენს დადასტურებას',
