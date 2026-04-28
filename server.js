@@ -42,12 +42,29 @@ app.set('trust proxy', 1);
 const server = http.createServer(app);
 
 // ── CORS configuration ────────────────────────────────────────
-// Production allows both Railway URL and fixi.ge (when domain is added).
+// Production allows: Railway URL, fixi.ge, AND mobile apps (no Origin header).
 // Override with CORS_ORIGIN env var if you need something different.
-const corsOrigin = process.env.CORS_ORIGIN
-  || (process.env.NODE_ENV === 'production'
-      ? ['https://myworker-production.up.railway.app', 'https://fixi.ge', 'https://www.fixi.ge']
-      : '*');
+const ALLOWED_ORIGINS = [
+  'https://myworker-production.up.railway.app',
+  'https://fixi.ge',
+  'https://www.fixi.ge',
+  'http://localhost:3000',  // dev
+  'http://localhost:8081',  // expo dev
+];
+
+// Function-based origin allows: (1) explicit allowlist, (2) no-origin (mobile apps),
+// (3) override via CORS_ORIGIN env (single string).
+const corsOrigin = (origin, callback) => {
+  // Mobile apps (React Native, Expo) often send no Origin header — ALLOW them
+  if (!origin) return callback(null, true);
+  // Explicit override via env var
+  if (process.env.CORS_ORIGIN && process.env.CORS_ORIGIN === origin) return callback(null, true);
+  // Dev mode allows all
+  if (process.env.NODE_ENV !== 'production') return callback(null, true);
+  // Production: check allowlist
+  if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+  callback(new Error('CORS: not allowed: ' + origin));
+};
 
 // ── Socket.io ─────────────────────────────────────────────────
 const io = new Server(server, {
@@ -65,6 +82,7 @@ app.use(cors({
   origin:       corsOrigin,
   methods:      ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials:  true,
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
