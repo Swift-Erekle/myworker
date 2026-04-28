@@ -42,9 +42,12 @@ app.set('trust proxy', 1);
 const server = http.createServer(app);
 
 // ── CORS configuration ────────────────────────────────────────
-// In production, default to the primary domain. '*' is only allowed in dev.
+// Production allows both Railway URL and fixi.ge (when domain is added).
+// Override with CORS_ORIGIN env var if you need something different.
 const corsOrigin = process.env.CORS_ORIGIN
-  || (process.env.NODE_ENV === 'production' ? 'https://fixi.ge' : '*');
+  || (process.env.NODE_ENV === 'production'
+      ? ['https://myworker-production.up.railway.app', 'https://fixi.ge', 'https://www.fixi.ge']
+      : '*');
 
 // ── Socket.io ─────────────────────────────────────────────────
 const io = new Server(server, {
@@ -146,7 +149,7 @@ app.get('/payment-cancel', (req, res) => {
 // ── SEO: Sitemap.xml (dynamic) ─────────────────────────────────
 app.get('/sitemap.xml', async (req, res) => {
   try {
-    const SITE = process.env.SITE_URL || 'https://fixi.ge';
+    const SITE = process.env.SITE_URL || 'https://myworker-production.up.railway.app';
     const [handymen, requests] = await Promise.all([
       prisma.user.findMany({
         where:  { type: { in: ['handyman','company'] }, blocked: false },

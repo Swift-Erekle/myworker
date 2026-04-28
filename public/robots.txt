@@ -5,4 +5,4 @@ Disallow: /payment-success
 Disallow: /payment-cancel
 
 # Sitemap
-Sitemap: https://fixi.ge/sitemap.xml
+Sitemap: https://myworker-production.up.railway.app/sitemap.xml

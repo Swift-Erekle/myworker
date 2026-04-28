@@ -26,15 +26,15 @@
   <meta name="keywords" content="ხელოსანი, სანტექნიკი, ელექტრიკოსი, მხატვარი, დურგალი, კონდიციონერი, რემონტი, თბილისი, ბათუმი, ქუთაისი, Fixi.ge">
   <meta name="robots" content="index, follow">
   <meta name="author" content="Fixi.ge">
-  <link rel="canonical" href="https://fixi.ge/">
-  <link rel="alternate" hreflang="ka" href="https://fixi.ge/">
+  <link rel="canonical" href="https://myworker-production.up.railway.app/">
+  <link rel="alternate" hreflang="ka" href="https://myworker-production.up.railway.app/">
 
   <!-- Open Graph (Facebook, Telegram, LinkedIn) -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="Fixi.ge — იპოვე ხელოსანი, სანტექნიკი, ელექტრიკოსი">
   <meta property="og:description" content="საქართველოს #1 ხელოსნების პლატფორმა. გამოცდილი ხელოსანი, სანდო მომსახურება, ლამაზი ფასი.">
-  <meta property="og:image" content="https://fixi.ge/assets/icon.png">
-  <meta property="og:url" content="https://fixi.ge/">
+  <meta property="og:image" content="https://myworker-production.up.railway.app/assets/icon.png">
+  <meta property="og:url" content="https://myworker-production.up.railway.app/">
   <meta property="og:site_name" content="Fixi.ge">
   <meta property="og:locale" content="ka_GE">
 
@@ -42,7 +42,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Fixi.ge — იპოვე ხელოსანი">
   <meta name="twitter:description" content="საქართველოს #1 ხელოსნების პლატფორმა.">
-  <meta name="twitter:image" content="https://fixi.ge/assets/icon.png">
+  <meta name="twitter:image" content="https://myworker-production.up.railway.app/assets/icon.png">
 
   <!-- JSON-LD Organization (homepage) -->
   <script type="application/ld+json">
@@ -50,8 +50,8 @@
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Fixi.ge",
-    "url": "https://fixi.ge",
-    "logo": "https://fixi.ge/assets/icon.png",
+    "url": "https://myworker-production.up.railway.app",
+    "logo": "https://myworker-production.up.railway.app/assets/icon.png",
     "description": "საქართველოს #1 ხელოსნების პლატფორმა",
     "address": { "@type": "PostalAddress", "addressCountry": "GE" }
   }
@@ -5378,7 +5378,33 @@
     // ========================================================
     // APP DOWNLOAD BANNER
     // ── YOUR APK LINK: update this URL after uploading to GitHub Releases ──
-    const APK_URL = 'https://github.com/YOUR_USERNAME/fixi-app/releases/latest/download/fixi.apk';
+    const APK_URL = 'https://github.com/Swift-Erekle/fixi-app/releases/download/v1.0/Fixi.apk';
+
+    // ✅ Direct APK download — bypass browser warnings, force download instead of preview
+    async function downloadApk(event) {
+      if (event) { event.preventDefault(); event.stopPropagation(); }
+      try {
+        localStorage.setItem('xg_app_downloaded', '1');
+        // Use fetch + blob technique for clean download
+        toast('⬇️ ჩამოტვირთვა იწყება...', 'რამდენიმე წამში მზად იქნება', 'ok');
+        const resp = await fetch(APK_URL);
+        if (!resp.ok) throw new Error('Network error');
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Fixi.apk';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+          a.remove();
+        }, 1500);
+      } catch (err) {
+        // Fallback: just open the URL — browser will download it
+        window.location.href = APK_URL;
+      }
+    }
     // ========================================================
 
     function isInPwa() {
@@ -7974,20 +8000,20 @@
       _setMeta('description', desc);
       _setMetaProp('og:title', newTitle);
       _setMetaProp('og:description', desc);
-      _setMetaProp('og:image', h.avatar || 'https://fixi.ge/assets/icon.png');
-      _setMetaProp('og:url', `https://fixi.ge/?user=${h.id}`);
+      _setMetaProp('og:image', h.avatar || 'https://myworker-production.up.railway.app/assets/icon.png');
+      _setMetaProp('og:url', `https://myworker-production.up.railway.app/?user=${h.id}`);
       _setMetaProp('og:type', 'profile');
       _setMeta('twitter:title', newTitle);
       _setMeta('twitter:description', desc);
-      _setMeta('twitter:image', h.avatar || 'https://fixi.ge/assets/icon.png');
+      _setMeta('twitter:image', h.avatar || 'https://myworker-production.up.railway.app/assets/icon.png');
 
       const ld = {
         "@context": "https://schema.org",
         "@type": "ProfessionalService",
         "name": fullName,
         "description": h.desc || '',
-        "image": h.avatar || 'https://fixi.ge/assets/icon.png',
-        "url": `https://fixi.ge/?user=${h.id}`,
+        "image": h.avatar || 'https://myworker-production.up.railway.app/assets/icon.png',
+        "url": `https://myworker-production.up.railway.app/?user=${h.id}`,
       };
       if (h.city) ld.address = { "@type": "PostalAddress", "addressLocality": h.city, "addressCountry": "GE" };
       if (reviews && reviews.length > 0) {
@@ -8009,9 +8035,9 @@
       _setMeta('description', desc);
       _setMetaProp('og:title', newTitle);
       _setMetaProp('og:description', desc);
-      _setMetaProp('og:url', `https://fixi.ge/?req=${r.id}`);
+      _setMetaProp('og:url', `https://myworker-production.up.railway.app/?req=${r.id}`);
       _setMetaProp('og:type', 'article');
-      const img = (r.media && r.media[0] && r.media[0].url) || 'https://fixi.ge/assets/icon.png';
+      const img = (r.media && r.media[0] && r.media[0].url) || 'https://myworker-production.up.railway.app/assets/icon.png';
       _setMetaProp('og:image', img);
       _setMeta('twitter:title', newTitle);
       _setMeta('twitter:description', desc);
@@ -8023,7 +8049,7 @@
         "name": r.title,
         "description": r.desc || '',
         "category": r.category,
-        "url": `https://fixi.ge/?req=${r.id}`,
+        "url": `https://myworker-production.up.railway.app/?req=${r.id}`,
       };
       if (r.city)   ld.areaServed = { "@type": "City", "name": r.city };
       if (r.budget) ld.offers     = { "@type": "Offer", "price": r.budget, "priceCurrency": "GEL" };
@@ -10646,7 +10672,7 @@
     <!-- Android version -->
     <div id="appBannerAndroid" style="display:none;align-items:center;justify-content:space-between;gap:10px">
       <div style="font-size:13px;color:#9998b0;flex:1">Android-ისთვის ჩამოტვირთე APK</div>
-      <a id="appBannerApkLink" href="#" download onclick="localStorage.setItem('xg_app_downloaded','1')" style="display:inline-flex;align-items:center;gap:6px;background:#ff6b2b;color:#fff;
+      <a id="appBannerApkLink" href="#" onclick="downloadApk(event)" style="display:inline-flex;align-items:center;gap:6px;background:#ff6b2b;color:#fff;
         border-radius:10px;padding:9px 16px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap">
         ⬇️ ჩამოტვირთვა
       </a>
@@ -10681,7 +10707,7 @@
         font-weight:800;font-size:14px;color:#fff;flex-shrink:0">1</div>
         <div>
           <div style="font-weight:700;font-size:14px;color:#f0eff5;margin-bottom:4px">
-            Safari-ში გახსენი fixi.ge
+            Safari-ში გახსენი საიტი
           </div>
           <div style="font-size:13px;color:#9998b0;line-height:1.5">
             Chrome-ით ეს ფუნქცია არ მუშაობს — გამოიყენე Safari
