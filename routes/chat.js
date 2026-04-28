@@ -15,7 +15,7 @@ const router = express.Router();
 // Shared select for chat participants
 const PARTICIPANT_SELECT = { id: true, name: true, surname: true, emoji: true, avatar: true };
 
-// GET /api/chat/mine — get all chats for current user
+// GET /api/chat/mine — get all chats for current user (with unreadCount)
 router.get('/mine', requireAuth, async (req, res) => {
   try {
     const isUser = req.user.type === 'user';
@@ -45,9 +45,46 @@ router.get('/mine', requireAuth, async (req, res) => {
       },
       orderBy: { updatedAt: 'desc' },
     });
-    res.json(chats);
+
+    // ✅ NEW: compute unreadCount per chat
+    // unread = messages newer than (lastReadAt) AND not from current user AND not system (fromId !== null)
+    const chatsWithUnread = await Promise.all(
+      chats.map(async (chat) => {
+        const lastRead = isUser ? chat.userLastReadAt : chat.handymanLastReadAt;
+        const unreadCount = await prisma.message.count({
+          where: {
+            chatId: chat.id,
+            fromId: { not: null, notIn: [req.user.id] },
+            ...(lastRead ? { createdAt: { gt: lastRead } } : {}),
+          },
+        });
+        return { ...chat, unreadCount };
+      })
+    );
+
+    res.json(chatsWithUnread);
   } catch (err) {
     console.error('[CHAT] mine error:', err.message);
+    res.status(500).json({ error: 'სერვერის შეცდომა' });
+  }
+});
+
+// ✅ NEW: POST /api/chat/:id/read — mark chat as read (resets unreadCount)
+router.post('/:id/read', requireAuth, async (req, res) => {
+  try {
+    const chat = await prisma.chat.findUnique({ where: { id: req.params.id } });
+    if (!chat) return res.status(404).json({ error: 'ჩათი ვერ მოიძებნა' });
+    if (chat.userId !== req.user.id && chat.handymanId !== req.user.id) {
+      return res.status(403).json({ error: 'წვდომა აკრძალულია' });
+    }
+    const isUser = chat.userId === req.user.id;
+    await prisma.chat.update({
+      where: { id: req.params.id },
+      data:  isUser ? { userLastReadAt: new Date() } : { handymanLastReadAt: new Date() },
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[CHAT] mark-read error:', err.message);
     res.status(500).json({ error: 'სერვერის შეცდომა' });
   }
 });
@@ -80,6 +117,12 @@ router.get('/:id', requireAuth, async (req, res) => {
     if (chat.userId !== req.user.id && chat.handymanId !== req.user.id) {
       return res.status(403).json({ error: 'წვდომა აკრძალულია' });
     }
+    // ✅ NEW: auto-mark as read on open
+    const isUser = chat.userId === req.user.id;
+    prisma.chat.update({
+      where: { id: req.params.id },
+      data:  isUser ? { userLastReadAt: new Date() } : { handymanLastReadAt: new Date() },
+    }).catch(() => {});
     res.json(chat);
   } catch (err) {
     res.status(500).json({ error: 'სერვერის შეცდომა' });

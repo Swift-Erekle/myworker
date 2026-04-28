@@ -5614,7 +5614,18 @@
       socket = io({ auth: { token } });
 
       socket.on('newMessage', msg => {
-        if (msg.chatId === currentChatId) appendChatMsg(msg);
+        if (msg.chatId === currentChatId) {
+          appendChatMsg(msg);
+          // Auto-mark as read since user is viewing this chat
+          if (msg.fromId && msg.fromId !== currentUser?.id) {
+            api('/chat/' + currentChatId + '/read', { method: 'POST' }).catch(() => {});
+          }
+        } else if (msg.fromId && msg.fromId !== currentUser?.id) {
+          // Live unread badge in dashboard chat list (if dashboard is open)
+          if (currentNav === 'dashboard' && currentDashTab === 'chats' && typeof renderDashboard === 'function') {
+            renderDashboard();
+          }
+        }
       });
       socket.on('userTyping', ({ userId, isTyping }) => {
         const el = document.getElementById('typingIndicator');
@@ -5675,7 +5686,9 @@
     // ========================================================
     // NAVIGATION
     // ========================================================
+    let currentNav = 'home';
     function nav(page) {
+      currentNav = page;
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       const el = document.getElementById('page-' + page);
       if (el) el.classList.add('active');

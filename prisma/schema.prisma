@@ -259,6 +259,9 @@ model Chat {
   blocked            Boolean  @default(false)
   // ✅ Counts how many times the handyman side has pressed "შევთანხმდი" in this chat
   handymanAgreeCount Int      @default(0)
+  // ✅ NEW: last-read timestamps for unread count calculation
+  userLastReadAt     DateTime?
+  handymanLastReadAt DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
