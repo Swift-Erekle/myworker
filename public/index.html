@@ -13,7 +13,7 @@
   <link rel="manifest" href="/manifest.json">
 
   <!-- ── iOS PWA (Safari) ────────────────────────────────── -->
-  <meta name="apple-mobile-web-app-title" content="ხელოსანი.ge">
+  <meta name="apple-mobile-web-app-title" content="Fixi.ge">
   <link rel="apple-touch-icon" href="/assets/icon.png">
   <!-- Splash screen — same image for all iPhone sizes -->
   <link rel="apple-touch-startup-image" href="/assets/splash.png">
@@ -21,7 +21,43 @@
   <!-- ── Favicon ───────────────────────────────────────────── -->
   <link rel="icon" type="image/png" href="/assets/icon.png">
 
-  <title>ხელოსანი.ge</title>
+  <title>Fixi.ge — იპოვე ხელოსანი, სანტექნიკი, ელექტრიკოსი თბილისში</title>
+  <meta name="description" content="საქართველოს #1 ხელოსნების პლატფორმა. იპოვე გამოცდილი ხელოსანი, გამოაქვეყნე მოთხოვნა, მიიღე შეთავაზებები. სანტექნიკი, ელექტრიკოსი, მხატვარი, დურგალი თბილისში, ბათუმში, ქუთაისში.">
+  <meta name="keywords" content="ხელოსანი, სანტექნიკი, ელექტრიკოსი, მხატვარი, დურგალი, კონდიციონერი, რემონტი, თბილისი, ბათუმი, ქუთაისი, Fixi.ge">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="Fixi.ge">
+  <link rel="canonical" href="https://fixi.ge/">
+  <link rel="alternate" hreflang="ka" href="https://fixi.ge/">
+
+  <!-- Open Graph (Facebook, Telegram, LinkedIn) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Fixi.ge — იპოვე ხელოსანი, სანტექნიკი, ელექტრიკოსი">
+  <meta property="og:description" content="საქართველოს #1 ხელოსნების პლატფორმა. გამოცდილი ხელოსანი, სანდო მომსახურება, ლამაზი ფასი.">
+  <meta property="og:image" content="https://fixi.ge/assets/icon.png">
+  <meta property="og:url" content="https://fixi.ge/">
+  <meta property="og:site_name" content="Fixi.ge">
+  <meta property="og:locale" content="ka_GE">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Fixi.ge — იპოვე ხელოსანი">
+  <meta name="twitter:description" content="საქართველოს #1 ხელოსნების პლატფორმა.">
+  <meta name="twitter:image" content="https://fixi.ge/assets/icon.png">
+
+  <!-- JSON-LD Organization (homepage) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Fixi.ge",
+    "url": "https://fixi.ge",
+    "logo": "https://fixi.ge/assets/icon.png",
+    "description": "საქართველოს #1 ხელოსნების პლატფორმა",
+    "address": { "@type": "PostalAddress", "addressCountry": "GE" }
+  }
+  </script>
+  <script type="application/ld+json" id="dynamicLd"></script>
+
   <style>
     :root {
       --bg: #0f0f13;
@@ -3778,7 +3814,7 @@
 <body>
 
   <nav>
-    <div class="logo" onclick="nav('home')">ხელოსანი<span>.ge</span></div>
+    <div class="logo" onclick="nav('home')">Fixi<span>.ge</span></div>
     <div class="nav-links" id="navLinks"></div>
   </nav>
 
@@ -3852,14 +3888,14 @@
       <!-- Content rendered dynamically by renderHeroCTA() based on login state -->
     </div>
     <footer>
-      <div style="font-size:20px;font-weight:800;margin-bottom:6px">ხელოსანი<span style="color:var(--accent)">.ge</span>
+      <div style="font-size:20px;font-weight:800;margin-bottom:6px">Fixi<span style="color:var(--accent)">.ge</span>
       </div>
       <div style="margin-bottom:8px;">
         <a href="/terms.html" style="color:var(--t2);text-decoration:none;font-size:12px;margin-right:12px;">📜
           მომსახურების წესები</a>
         <a href="/privacy.html" style="color:var(--t2);text-decoration:none;font-size:12px;">🔒 კონფიდენციალურობა</a>
       </div>
-      <div style="font-size:12px;color:var(--t2);">© 2026 xelosani.ge</div>
+      <div style="font-size:12px;color:var(--t2);">© 2026 fixi.ge</div>
     </footer>
   </div>
 
@@ -4257,6 +4293,13 @@
         <div style="font-size:11px;color:var(--t2);margin-top:4px">პირველი მონიშნული = მთავარი სპეციალობა</div>
       </div>
       <div class="fg"><label>ტელეფონი</label><input id="rPhone" placeholder="+995 5XX XXX XXX"></div>
+      <div class="fg" id="rWhatsappGroup" style="display:none">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);user-select:none">
+          <input type="checkbox" id="rWhatsapp" style="accent-color:#25D366;width:18px;height:18px;cursor:pointer">
+          <span style="color:#25D366;font-weight:700">💬 WhatsApp</span>
+          <span style="color:var(--t2);font-size:12px;font-weight:400">— მსურს მიკავშირდნენ WhatsApp-ით</span>
+        </label>
+      </div>
       <div class="fg"><label>ელ-ფოსტა</label><input id="rEmail" type="email" placeholder="you@email.com"></div>
       <div class="fg">
         <label>პაროლი (მინიმუმ 8 სიმბოლო)</label>
@@ -4776,6 +4819,13 @@
       </div>
       <div class="fg"><label>აღწერა</label><textarea id="editDescText" style="min-height:100px"
           placeholder="გამოცდილება, გარანტია, სამუშაოს სტილი..."></textarea></div>
+      <div class="fg" id="editWhatsappGroup" style="display:none">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);user-select:none">
+          <input type="checkbox" id="editWhatsapp" style="accent-color:#25D366;width:18px;height:18px;cursor:pointer">
+          <span style="color:#25D366;font-weight:700">💬 WhatsApp</span>
+          <span style="color:var(--t2);font-size:12px;font-weight:400">— მსურს მიკავშირდნენ WhatsApp-ით</span>
+        </label>
+      </div>
       <div class="fg" id="editSpecGroup">
         <label>პროფესია(ები) <span style="color:var(--t2);font-weight:400">— აირჩიე ერთი ან მეტი</span></label>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -4804,6 +4854,16 @@
         <input type="hidden" id="editCity" value="">
       </div>
       <button class="btn bp" style="width:100%;justify-content:center" onclick="saveDesc()">შენახვა</button>
+    </div>
+  </div>
+
+  <!-- Call / WhatsApp choice modal -->
+  <div class="mo" id="moCallModal">
+    <div class="modal" style="max-width:420px;text-align:center">
+      <button class="mc" onclick="closeMo('moCallModal')">✕</button>
+      <h2 style="margin-bottom:6px">📞 აირჩიე კავშირის ტიპი</h2>
+      <div class="sub" id="moCallSubText" style="margin-bottom:20px">როგორ გინდა, რომ დაუკავშირდე ხელოსანს?</div>
+      <div id="callModalContent"></div>
     </div>
   </div>
 
@@ -4886,7 +4946,7 @@
       <h2>👨‍💼 სტაფის შექმნა</h2>
       <div class="sub">ახალი სტაფის ანგარიშის შექმნა</div>
       <div class="fg"><label>სახელი</label><input id="newStaffName" placeholder="სახელი"></div>
-      <div class="fg"><label>ელ-ფოსტა</label><input id="newStaffEmail" type="email" placeholder="staff@xelosani.ge">
+      <div class="fg"><label>ელ-ფოსტა</label><input id="newStaffEmail" type="email" placeholder="staff@fixi.ge">
       </div>
       <div class="fg"><label>ტელეფონი</label><input id="newStaffPhone" placeholder="+995 5XX XXX XXX"></div>
       <div class="fg"><label>პაროლი</label><input id="newStaffPass" type="password" placeholder="••••••••"></div>
@@ -5034,7 +5094,7 @@
           🤖</div>
         <div>
           <div style="font-weight:700;color:#fff;font-size:14px">ARIA</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.8)">ხელოსანი.ge ასისტენტი</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.8)">Fixi.ge ასისტენტი</div>
         </div>
       </div>
       <button onclick="toggleAria()"
@@ -5318,7 +5378,7 @@
     // ========================================================
     // APP DOWNLOAD BANNER
     // ── YOUR APK LINK: update this URL after uploading to GitHub Releases ──
-    const APK_URL = 'https://github.com/YOUR_USERNAME/xelosani-app/releases/latest/download/xelosani.apk';
+    const APK_URL = 'https://github.com/YOUR_USERNAME/fixi-app/releases/latest/download/fixi.apk';
     // ========================================================
 
     function isInPwa() {
@@ -5599,6 +5659,17 @@
         renderNotifDropdown();
         toast(notif.title, notif.body || '', 'ok');
       });
+
+      // Live agreement updates — when other party agrees/disagrees,
+      // reload chat so buttons & status update without F5
+      const onAgreeChange = ({ chatId } = {}) => {
+        if (chatId && chatId === currentChatId) loadChatMessages();
+      };
+      socket.on('offerAgreedSingle', onAgreeChange);
+      socket.on('offerDisagreed',    onAgreeChange);
+      socket.on('proposalAgreed',    onAgreeChange);
+      socket.on('proposalDisagreed', onAgreeChange);
+      socket.on('chatBlocked',       onAgreeChange);
     }
 
     // ========================================================
@@ -5973,10 +6044,16 @@
       }
 
       const specialty = selectedRegSpecialties[0] || undefined;
+      const isWorkerReg = regType === 'handyman' || regType === 'company';
+      const whatsappEnabled = isWorkerReg ? (document.getElementById('rWhatsapp')?.checked || false) : false;
+      if (isWorkerReg && whatsappEnabled && !phone) {
+        toast('⚠️ WhatsApp-ის ჩასართველად ტელეფონი სავალდებულოა', '', 'err');
+        return;
+      }
       try {
         await api('/auth/register', {
           method: 'POST',
-          body: { name, surname, email, phone: phone || undefined, password, type: regType, specialty, desc: desc || undefined }
+          body: { name, surname, email, phone: phone || undefined, password, type: regType, specialty, desc: desc || undefined, whatsappEnabled }
         });
         pendingRegEmail = email;
         closeMo('moRegister');
@@ -6104,6 +6181,14 @@
       const isWorker = type !== 'user';
       document.getElementById('rSpecGroup').style.display = isWorker ? 'block' : 'none';
       document.getElementById('rDescGroup').style.display = isWorker ? 'block' : 'none';
+      const rWaGroup = document.getElementById('rWhatsappGroup');
+      if (rWaGroup) {
+        rWaGroup.style.display = isWorker ? 'block' : 'none';
+        if (!isWorker) {
+          const rWa = document.getElementById('rWhatsapp');
+          if (rWa) rWa.checked = false;
+        }
+      }
       if (isWorker) {
         selectedRegSpecialties = [];
         selectedRegSubSpecs = [];
@@ -6673,8 +6758,14 @@
       ${!isOwner && (h.type === 'handyman' || h.type === 'company') && cu && cu.type === 'user'
             ? `<button class="btn bp" onclick="openProposalModal('${sanitize(h.id)}','${sanitize(h.name || '')} ${sanitize(h.surname || '')}')">💬 შეთავაზება</button>` : ''}
       ${canReview ? `<button class="btn bo bs" onclick="openReviewModal('${hid}')">⭐ შეფასება</button>` : ''}
-      ${h.phone && cu ? `<button class="btn bo bs" onclick="contactPhone('${sanitize(h.phone)}','${sanitize(h.name)}')">📞</button>` : ''}
+      ${h.phone && cu ? (h.whatsappEnabled
+          ? `<button class="btn bo bs" style="border-color:#25D366;color:#25D366" onclick="event.stopPropagation();openCallModal('${sanitize(h.phone)}','${sanitize(h.name)}')">📞 დარეკვა / 💬 WhatsApp</button>`
+          : `<button class="btn bo bs" onclick="contactPhone('${sanitize(h.phone)}','${sanitize(h.name)}')">📞</button>`) : ''}
     `;
+
+        // SEO — dynamic title, meta, OG, JSON-LD for handyman profile
+        updateSeoForHandyman(h, reviews, rating);
+
       } catch (e) {
         toast('⚠️ პროფილი ვერ ჩაიტვირთა', '', 'err');
         nav('handymen');
@@ -7465,6 +7556,8 @@
         renderRequestDetail(r);
         // Also load other requests from this user
         loadOwnerOtherRequests(r.userId, r.id);
+        // SEO — dynamic title/meta/OG/JSON-LD for request
+        updateSeoForRequest(r);
       } catch (e) {
         document.getElementById('moReqDetailBody').innerHTML =
           '<div class="empty"><div class="ei">⚠️</div><h3>ვერ ჩაიტვირთა</h3></div>';
@@ -7838,11 +7931,109 @@
       }
     }
 
+    // Call / WhatsApp choice modal
+    function openCallModal(phone, name) {
+      const clean = String(phone || '').replace(/[\s()-]/g, '');
+      if (!clean) return;
+      const tel    = clean.startsWith('+') ? clean : '+' + clean;
+      const digits = tel.replace(/^\+/, '');
+      const sub = document.getElementById('moCallSubText');
+      if (sub) sub.textContent = name ? `${name} — როგორ გინდა, რომ დაუკავშირდე?` : 'როგორ გინდა, რომ დაუკავშირდე ხელოსანს?';
+      document.getElementById('callModalContent').innerHTML = `
+        <button class="btn bp" style="width:100%;margin-bottom:10px;padding:14px;justify-content:center"
+                onclick="closeMo('moCallModal');contactPhone('${tel}','${name || ''}')">
+          📞 ტელეფონით დარეკვა
+        </button>
+        <button class="btn" style="width:100%;background:#25D366;border-color:#25D366;color:#fff;padding:14px;justify-content:center"
+                onclick="closeMo('moCallModal');window.open('https://wa.me/${digits}','_blank')">
+          💬 WhatsApp-ზე მიწერა
+        </button>
+      `;
+      openMo('moCallModal');
+    }
+
+    // SEO — handyman profile
+    function updateSeoForHandyman(h, reviews, avgRating) {
+      const fullName = ((h.name || '') + ' ' + (h.surname || '')).trim();
+      const newTitle = `${fullName} — ${h.specialty || ''} ${h.city || ''} | Fixi.ge`.replace(/\s+/g, ' ').trim();
+      const desc = (h.desc || `${h.specialty || ''} ${h.city || ''} — გამოცდილი ხელოსანი Fixi.ge-ზე`).substring(0, 155);
+      document.title = newTitle;
+      _setMeta('description', desc);
+      _setMetaProp('og:title', newTitle);
+      _setMetaProp('og:description', desc);
+      _setMetaProp('og:image', h.avatar || 'https://fixi.ge/assets/icon.png');
+      _setMetaProp('og:url', `https://fixi.ge/?user=${h.id}`);
+      _setMetaProp('og:type', 'profile');
+      _setMeta('twitter:title', newTitle);
+      _setMeta('twitter:description', desc);
+      _setMeta('twitter:image', h.avatar || 'https://fixi.ge/assets/icon.png');
+
+      const ld = {
+        "@context": "https://schema.org",
+        "@type": "ProfessionalService",
+        "name": fullName,
+        "description": h.desc || '',
+        "image": h.avatar || 'https://fixi.ge/assets/icon.png',
+        "url": `https://fixi.ge/?user=${h.id}`,
+      };
+      if (h.city) ld.address = { "@type": "PostalAddress", "addressLocality": h.city, "addressCountry": "GE" };
+      if (reviews && reviews.length > 0) {
+        ld.aggregateRating = {
+          "@type": "AggregateRating",
+          "ratingValue": (avgRating || 0).toFixed(1),
+          "reviewCount": reviews.length,
+        };
+      }
+      const slot = document.getElementById('dynamicLd');
+      if (slot) slot.textContent = JSON.stringify(ld);
+    }
+
+    // SEO — request detail
+    function updateSeoForRequest(r) {
+      const newTitle = `${r.title} — ${r.category || ''} ${r.city || ''} | Fixi.ge`.replace(/\s+/g, ' ').trim();
+      const desc = (r.desc || `${r.category || ''} ${r.city || ''} — ${r.title}`).substring(0, 155);
+      document.title = newTitle;
+      _setMeta('description', desc);
+      _setMetaProp('og:title', newTitle);
+      _setMetaProp('og:description', desc);
+      _setMetaProp('og:url', `https://fixi.ge/?req=${r.id}`);
+      _setMetaProp('og:type', 'article');
+      const img = (r.media && r.media[0] && r.media[0].url) || 'https://fixi.ge/assets/icon.png';
+      _setMetaProp('og:image', img);
+      _setMeta('twitter:title', newTitle);
+      _setMeta('twitter:description', desc);
+      _setMeta('twitter:image', img);
+
+      const ld = {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "name": r.title,
+        "description": r.desc || '',
+        "category": r.category,
+        "url": `https://fixi.ge/?req=${r.id}`,
+      };
+      if (r.city)   ld.areaServed = { "@type": "City", "name": r.city };
+      if (r.budget) ld.offers     = { "@type": "Offer", "price": r.budget, "priceCurrency": "GEL" };
+      const slot = document.getElementById('dynamicLd');
+      if (slot) slot.textContent = JSON.stringify(ld);
+    }
+
+    function _setMeta(name, content) {
+      let el = document.querySelector(`meta[name="${name}"]`);
+      if (!el) { el = document.createElement('meta'); el.setAttribute('name', name); document.head.appendChild(el); }
+      el.setAttribute('content', content);
+    }
+    function _setMetaProp(prop, content) {
+      let el = document.querySelector(`meta[property="${prop}"]`);
+      if (!el) { el = document.createElement('meta'); el.setAttribute('property', prop); document.head.appendChild(el); }
+      el.setAttribute('content', content);
+    }
+
     async function shareRequest(reqId, title) {
       const url = `${location.origin}/?req=${encodeURIComponent(reqId)}`;
       const shareData = {
-        title: title + ' — ხელოსანი.ge',
-        text: 'ნახე ეს მოთხოვნა ხელოსანი.ge-ზე: ' + title,
+        title: title + ' — Fixi.ge',
+        text: 'ნახე ეს მოთხოვნა Fixi.ge-ზე: ' + title,
         url,
       };
       // Native share API (mobile)
@@ -8813,8 +9004,14 @@
         selectedEditSubSpecs = Array.isArray(cu.services) ? [...cu.services] : [];
         buildProfPanels('editProfChips', 'editSubCats', selectedEditSpecialties, selectedEditSubSpecs, 'toggleEditProf', 'toggleEditSub');
         document.getElementById('editSpecGroup').style.display = 'block';
+        const ewg = document.getElementById('editWhatsappGroup');
+        const ew  = document.getElementById('editWhatsapp');
+        if (ewg) ewg.style.display = 'block';
+        if (ew)  ew.checked = !!cu.whatsappEnabled;
       } else {
         document.getElementById('editSpecGroup').style.display = 'none';
+        const ewg = document.getElementById('editWhatsappGroup');
+        if (ewg) ewg.style.display = 'none';
       }
       openMo('moEditDesc');
     }
@@ -8838,6 +9035,15 @@
       if (cu.type !== 'user' && selectedEditSpecialties.length > 0) {
         body.specialties = selectedEditSpecialties;
         body.specialty = selectedEditSpecialties[0];
+      }
+      if (cu.type === 'handyman' || cu.type === 'company') {
+        const ew = document.getElementById('editWhatsapp');
+        const wa = !!ew?.checked;
+        if (wa && !cu.phone) {
+          toast('⚠️ WhatsApp-ის ჩასართველად ტელეფონი სავალდებულოა', '', 'err');
+          return;
+        }
+        body.whatsappEnabled = wa;
       }
       try {
         const updated = await api('/users/me', { method: 'PATCH', body });
@@ -9542,7 +9748,7 @@
       ariaOpen = !ariaOpen;
       document.getElementById('ariaWidget').style.display = ariaOpen ? 'flex' : 'none';
       document.getElementById('ariaToggleBtn').textContent = ariaOpen ? '✕' : '💬';
-      if (ariaOpen && ariaMessages.length === 0) ariaAddMsg('assistant', 'გამარჯობა! მე ვარ ARIA — ხელოსანი.ge-ის ასისტენტი 🔧\n\nდაგეხმარები ნებისმიერ კითხვაში!');
+      if (ariaOpen && ariaMessages.length === 0) ariaAddMsg('assistant', 'გამარჯობა! მე ვარ ARIA — Fixi.ge-ის ასისტენტი 🔧\n\nდაგეხმარები ნებისმიერ კითხვაში!');
     }
 
     // ────────────────────────────────────────────────────────
@@ -9644,7 +9850,7 @@
       } catch (e) {
         ariaMessages.pop();
         const errMsg = e?.error || (typeof e === 'string' ? e : '');
-        ariaAddMsg('assistant', '⚠️ შეცდომა: ' + (errMsg || 'კავშირი ვერ მოხდა') + '\n\nდახმარება: support@xelosani.ge');
+        ariaAddMsg('assistant', '⚠️ შეცდომა: ' + (errMsg || 'კავშირი ვერ მოხდა') + '\n\nდახმარება: support@fixi.ge');
       }
       ariaLoading = false;
     }
@@ -10288,7 +10494,7 @@
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
       <img src="/assets/icon.png" style="width:44px;height:44px;border-radius:10px">
       <div>
-        <div style="font-weight:700;font-size:14px;color:#f0eff5">ხელოსანი.ge</div>
+        <div style="font-weight:700;font-size:14px;color:#f0eff5">Fixi.ge</div>
         <div style="font-size:12px;color:#9998b0">დაამატე მთავარ ეკრანზე</div>
       </div>
     </div>
@@ -10420,7 +10626,7 @@
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
       <img src="/assets/icon.png" style="width:44px;height:44px;border-radius:10px;flex-shrink:0">
       <div>
-        <div style="font-weight:700;font-size:15px;color:#f0eff5">ხელოსანი.ge</div>
+        <div style="font-weight:700;font-size:15px;color:#f0eff5">Fixi.ge</div>
         <div style="font-size:12px;color:#9998b0;margin-top:2px">ჩამოტვირთე უფასო აპლიკაცია</div>
       </div>
     </div>
@@ -10462,7 +10668,7 @@
         font-weight:800;font-size:14px;color:#fff;flex-shrink:0">1</div>
         <div>
           <div style="font-weight:700;font-size:14px;color:#f0eff5;margin-bottom:4px">
-            Safari-ში გახსენი xelosani.ge
+            Safari-ში გახსენი fixi.ge
           </div>
           <div style="font-size:13px;color:#9998b0;line-height:1.5">
             Chrome-ით ეს ფუნქცია არ მუშაობს — გამოიყენე Safari

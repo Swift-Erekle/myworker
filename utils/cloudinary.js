@@ -16,7 +16,7 @@ cloudinary.config({
 function uploadBuffer(buffer, options = {}) {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
-      { folder: 'xelosani', ...options },
+      { folder: 'fixi', ...options },
       (error, result) => {
         if (error) reject(error);
         else resolve(result);

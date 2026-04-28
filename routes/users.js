@@ -1,9 +1,10 @@
 // routes/users.js
 // ════════════════════════════════════════════════════════════════
-// FIXES vs previous version:
+// Changes:
 // 1. getPlanWeight() — TOP plan users sort ABOVE VIP+ (weight=3)
 // 2. Multi-specialty filtering via specialties[] array
 // 3. /me route registered BEFORE /:id to avoid clash
+// ✅ NEW: whatsappEnabled support (PATCH /me + GET /handymen + GET /:id)
 // ════════════════════════════════════════════════════════════════
 const express = require('express');
 const prisma  = require('../utils/prisma');
@@ -29,13 +30,9 @@ function planActive(user) {
   return new Date(user.planExpiresAt) > new Date();
 }
 
-// ── Weight for sorting (TOP > VIP+ > VIP > default) ──────────
 function getSortWeight(user) {
-  // TOP plan → always top (weight 3), overrides VIP
   if (user.plan === 'top' && planActive(user)) return 3;
-  // VIP+ active
   if (vipActive(user) && user.vipType === 'vipp') return 2;
-  // VIP active
   if (vipActive(user) && user.vipType === 'vip') return 1;
   return 0;
 }
@@ -44,7 +41,6 @@ function buildHandymanWhere(query) {
   const where = { type: { in: ['handyman', 'company'] }, blocked: false };
 
   if (query.specialty) {
-    // Check both primary specialty and specialties array
     where.OR = [
       { specialty:   { contains: query.specialty,   mode: 'insensitive' } },
       { specialties: { has:      query.specialty } },
@@ -61,7 +57,6 @@ function buildHandymanWhere(query) {
   return where;
 }
 
-// ── GET /api/users/handymen ───────────────────────────────────
 router.get('/handymen', async (req, res) => {
   try {
     const where    = buildHandymanWhere(req.query);
@@ -73,6 +68,8 @@ router.get('/handymen', async (req, res) => {
         city: true, desc: true, services: true,
         emoji: true, color: true, avatar: true,
         verified: true, jobs: true,
+        phone: true,
+        whatsappEnabled: true,        // ✅ NEW
         vipType: true, vipExpiresAt: true, vipActivatedAt: true,
         plan: true, planExpiresAt: true,
         portfolio: true, createdAt: true,
@@ -81,7 +78,6 @@ router.get('/handymen', async (req, res) => {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Filter by min rating
     const minRating = parseFloat(req.query.minRating);
     let result = handymen;
     if (minRating > 0) {
@@ -92,13 +88,10 @@ router.get('/handymen', async (req, res) => {
       });
     }
 
-    // Sort: TOP plan > VIP+ > VIP > rating
     result.sort((a, b) => {
       const wa = getSortWeight(a);
       const wb = getSortWeight(b);
       if (wa !== wb) return wb - wa;
-
-      // Same weight tier: most recently activated first
       if (wa > 0 && wb > 0) {
         const ta = a.vipActivatedAt  ? new Date(a.vipActivatedAt).getTime()
                  : a.planExpiresAt   ? new Date(a.planExpiresAt).getTime()  : 0;
@@ -106,8 +99,6 @@ router.get('/handymen', async (req, res) => {
                  : b.planExpiresAt   ? new Date(b.planExpiresAt).getTime()  : 0;
         if (ta !== tb) return tb - ta;
       }
-
-      // Fall back to avg rating
       const ra = a.reviewsReceived.length
         ? a.reviewsReceived.reduce((s, r) => s + r.stars, 0) / a.reviewsReceived.length : 0;
       const rb = b.reviewsReceived.length
@@ -122,10 +113,12 @@ router.get('/handymen', async (req, res) => {
   }
 });
 
-// ── PATCH /api/users/me — MUST be before /:id ─────────────────
 router.patch('/me', requireAuth, async (req, res) => {
   try {
-    const { name, surname, phone, specialty, specialties, desc, services, city, emoji } = req.body;
+    const {
+      name, surname, phone, specialty, specialties, desc, services, city, emoji,
+      whatsappEnabled,
+    } = req.body;
     const data = {};
     if (name      !== undefined) data.name    = String(name).trim();
     if (surname   !== undefined) data.surname  = String(surname).trim();
@@ -133,6 +126,12 @@ router.patch('/me', requireAuth, async (req, res) => {
     if (desc      !== undefined) data.desc     = desc  || null;
     if (city      !== undefined) data.city     = city  || null;
     if (emoji     !== undefined) data.emoji    = emoji || '🔧';
+
+    // ✅ NEW: only handymen/companies can enable WhatsApp
+    if (whatsappEnabled !== undefined) {
+      const isWorker = req.user.type === 'handyman' || req.user.type === 'company';
+      data.whatsappEnabled = isWorker ? !!whatsappEnabled : false;
+    }
 
     if (specialties !== undefined && Array.isArray(specialties)) {
       data.specialties = specialties;
@@ -155,21 +154,19 @@ router.patch('/me', requireAuth, async (req, res) => {
   }
 });
 
-// ── POST /api/users/avatar ────────────────────────────────────
 router.post('/avatar', requireAuth, upload.single('avatar'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'ფოტო ვერ მოიძებნა' });
     const user = await prisma.user.findUnique({ where: { id: req.user.id } });
-    // Delete old avatar
     if (user.avatar?.includes('cloudinary.com')) {
       try {
         const parts    = user.avatar.split('/');
         const filename = parts[parts.length - 1].split('.')[0];
-        await deleteFile('xelosani/avatars/' + filename, 'image');
+        await deleteFile('fixi/avatars/' + filename, 'image');
       } catch (_) {}
     }
     const result = await uploadBuffer(req.file.buffer, {
-      folder: 'xelosani/avatars',
+      folder: 'fixi/avatars',
       resource_type: 'image',
       transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }],
     });
@@ -181,7 +178,6 @@ router.post('/avatar', requireAuth, upload.single('avatar'), async (req, res) =>
   }
 });
 
-// ── POST /api/users/portfolio ─────────────────────────────────
 router.post('/portfolio', requireAuth, upload.array('files', 10), handleCloudinaryUpload, async (req, res) => {
   try {
     const user     = await prisma.user.findUnique({ where: { id: req.user.id } });
@@ -196,7 +192,6 @@ router.post('/portfolio', requireAuth, upload.array('files', 10), handleCloudina
   }
 });
 
-// ── DELETE /api/users/portfolio/:index ───────────────────────
 router.delete('/portfolio/:index', requireAuth, async (req, res) => {
   try {
     const idx  = parseInt(req.params.index);
@@ -212,7 +207,7 @@ router.delete('/portfolio/:index', requireAuth, async (req, res) => {
   }
 });
 
-// ── GET /api/users/:id — MUST be after /me, /handymen, /portfolio ─
+// GET /:id — full user is returned, so whatsappEnabled is included automatically
 router.get('/:id', async (req, res) => {
   try {
     const user = await prisma.user.findUnique({

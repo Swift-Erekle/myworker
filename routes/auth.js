@@ -71,7 +71,7 @@ async function checkCode(email, code, type) {
 
 // Build initial user data based on type & plan
 function buildUserData(body, hashed) {
-  const { name, surname, email, phone, type, specialty, specialties, desc, plan } = body;
+  const { name, surname, email, phone, type, specialty, specialties, desc, plan, whatsappEnabled } = body;
   const userType = ['user', 'handyman', 'company'].includes(type) ? type : 'user';
 
   const data = {
@@ -83,6 +83,7 @@ function buildUserData(body, hashed) {
     type:         userType,
     emailVerified: false,
     verified:     false,
+    whatsappEnabled: (userType === 'handyman' || userType === 'company') ? !!whatsappEnabled : false,
   };
 
   // Handyman / Company specifics
@@ -158,7 +159,7 @@ router.post('/register', authLimiter, async (req, res) => {
     await saveCode(email.toLowerCase(), code, 'verify');
     const sent = await sendEmail(
       email,
-      'ხელოსანი.ge — ვერიფიკაციის კოდი',
+      'Fixi.ge — ვერიფიკაციის კოდი',
       emailVerifyTemplate(name, code)
     );
 
@@ -202,7 +203,7 @@ router.post('/resend', codeLimiter, async (req, res) => {
 
     const code = generateCode();
     await saveCode(email.toLowerCase(), code, 'verify');
-    const sent = await sendEmail(email, 'ხელოსანი.ge — ვერიფიკაციის კოდი', emailVerifyTemplate(user.name, code));
+    const sent = await sendEmail(email, 'Fixi.ge — ვერიფიკაციის კოდი', emailVerifyTemplate(user.name, code));
     const devCode = (!sent && process.env.NODE_ENV !== 'production') ? code : undefined;
     res.json({ message: 'კოდი ხელახლა გაიგზავნა', devCode });
   } catch (err) {
@@ -218,7 +219,7 @@ router.post('/login', authLimiter, async (req, res) => {
 
     const user = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } });
     if (!user) return res.status(401).json({ error: 'ელ-ფოსტა ან პაროლი არასწორია' });
-    if (user.blocked) return res.status(403).json({ error: 'ანგარიში დაბლოკილია. support@xelosani.ge' });
+    if (user.blocked) return res.status(403).json({ error: 'ანგარიში დაბლოკილია. support@fixi.ge' });
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ error: 'ელ-ფოსტა ან პაროლი არასწორია' });
@@ -230,7 +231,7 @@ router.post('/login', authLimiter, async (req, res) => {
       await saveCode(user.email, code, 'verify');
       const sent = await sendEmail(
         user.email,
-        'ხელოსანი.ge — ვერიფიკაციის კოდი',
+        'Fixi.ge — ვერიფიკაციის კოდი',
         emailVerifyTemplate(user.name, code)
       );
       const devCode = (!sent && process.env.NODE_ENV !== 'production') ? code : undefined;
@@ -260,7 +261,7 @@ router.post('/forgot', codeLimiter, async (req, res) => {
 
     const code = generateCode();
     await saveCode(email.toLowerCase(), code, 'reset');
-    const sent = await sendEmail(email, 'ხელოსანი.ge — პაროლის აღდგენა', passwordResetTemplate(user.name, code));
+    const sent = await sendEmail(email, 'Fixi.ge — პაროლის აღდგენა', passwordResetTemplate(user.name, code));
     const devCode = (!sent && process.env.NODE_ENV !== 'production') ? code : undefined;
     res.json({ message: 'კოდი გაიგზავნა', devCode });
   } catch (err) {

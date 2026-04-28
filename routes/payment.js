@@ -158,7 +158,7 @@ router.post('/create-order', requireAuth, async (req, res) => {
     if (isTbcConfigured()) {
       const r = await createPayment({
         amount,
-        description: `ხელოსანი.ge ${vipType === 'vipp' ? 'VIP+' : 'VIP'} — ${daysN} დღე`,
+        description: `Fixi.ge ${vipType === 'vipp' ? 'VIP+' : 'VIP'} — ${daysN} დღე`,
         merchantOrderId,
         returnUrl: `${process.env.SITE_URL}/payment-success?orderId=${merchantOrderId}&type=vip`,
         cancelUrl: `${process.env.SITE_URL}/payment-cancel?orderId=${merchantOrderId}`,
@@ -231,7 +231,7 @@ router.post('/subscribe', requireAuth, async (req, res) => {
         const chargeResult = await chargeWithToken({
           recurrentPaymentId: savedCard.token,
           amount,
-          description: `ხელოსანი.ge ${planLabel} — 30 დღე`,
+          description: `Fixi.ge ${planLabel} — 30 დღე`,
           merchantOrderId,
         });
 
@@ -260,7 +260,7 @@ router.post('/subscribe', requireAuth, async (req, res) => {
       const planLabel = plan === 'top' ? '🔝 TOP' : '⚡ Pro';
       const r = await createPayment({
         amount,
-        description: `ხელოსანი.ge ${planLabel} — 30 დღე`,
+        description: `Fixi.ge ${planLabel} — 30 დღე`,
         merchantOrderId,
         returnUrl: `${process.env.SITE_URL}/payment-success?orderId=${merchantOrderId}&type=sub`,
         cancelUrl: `${process.env.SITE_URL}/payment-cancel?orderId=${merchantOrderId}`,
@@ -372,7 +372,7 @@ async function runAutoRenewals() {
       const chargeResult = await chargeWithToken({
         recurrentPaymentId: card.token,
         amount,
-        description: `ხელოსანი.ge ${planLabel} — ავტო-განახლება`,
+        description: `Fixi.ge ${planLabel} — ავტო-განახლება`,
         merchantOrderId,
       });
 
@@ -675,7 +675,7 @@ async function activateVipByPaymentRecord(p) {
   if (user?.email) {
     await sendEmail(
       user.email,
-      `ხელოსანი.ge — ${p.vipType === 'vipp' ? 'VIP+' : 'VIP'} ჩართულია!`,
+      `Fixi.ge — ${p.vipType === 'vipp' ? 'VIP+' : 'VIP'} ჩართულია!`,
       vipConfirmTemplate(user.name, p.vipType, p.days, p.amount)
     );
   }
@@ -730,7 +730,7 @@ async function activateSubByPaymentRecord(s, tbcPayId) {
   if (user?.email && typeof subConfirmTemplate === 'function') {
     await sendEmail(
       user.email,
-      `ხელოსანი.ge — ${s.plan === 'top' ? '🔝 TOP' : '⚡ Pro'} ტარიფი ჩართულია!`,
+      `Fixi.ge — ${s.plan === 'top' ? '🔝 TOP' : '⚡ Pro'} ტარიფი ჩართულია!`,
       subConfirmTemplate(user.name, s.plan, planExpiresAt, s.amount)
     ).catch(() => {});
   }

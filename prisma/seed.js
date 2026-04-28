@@ -10,13 +10,13 @@ async function main() {
   console.log('🌱 Seeding database...');
 
   // ── System accounts (created ONCE, never overwritten) ────────
-  const adminExists = await prisma.user.findUnique({ where: { email: 'admin@xelosani.ge' } });
+  const adminExists = await prisma.user.findUnique({ where: { email: 'admin@fixi.ge' } });
   if (!adminExists) {
     await prisma.user.create({
       data: {
         id: 'admin1',
         name: 'ადმინი', surname: 'სისტემა',
-        email: 'admin@xelosani.ge',
+        email: 'admin@fixi.ge',
         password: await bcrypt.hash('Admin123!', 12),
         type: 'admin', verified: true, emailVerified: true,
         phone: '+995 555 000 000',
@@ -27,13 +27,13 @@ async function main() {
     console.log('  ⏭️  Admin already exists, skipping');
   }
 
-  const staffExists = await prisma.user.findUnique({ where: { email: 'staff@xelosani.ge' } });
+  const staffExists = await prisma.user.findUnique({ where: { email: 'staff@fixi.ge' } });
   if (!staffExists) {
     await prisma.user.create({
       data: {
         id: 'staff1',
         name: 'სუპორტი', surname: 'გუნდი',
-        email: 'staff@xelosani.ge',
+        email: 'staff@fixi.ge',
         password: await bcrypt.hash('Staff123!', 12),
         type: 'staff', verified: true, emailVerified: true,
         phone: '+995 555 000 001',
@@ -190,8 +190,8 @@ async function main() {
   console.log('  🔧 Handyman: giorgi@demo.ge   (VIP+ active)');
   console.log('  🔧 Handyman: levan@demo.ge    (VIP active)');
   console.log('  🏢 Company:  company@demo.ge  (TOP plan + VIP+ active)');
-  console.log('  🛡️  Admin:   admin@xelosani.ge  (Admin123!)');
-  console.log('  👤 Staff:   staff@xelosani.ge  (Staff123!)\n');
+  console.log('  🛡️  Admin:   admin@fixi.ge  (Admin123!)');
+  console.log('  👤 Staff:   staff@fixi.ge  (Staff123!)\n');
 }
 
 main()

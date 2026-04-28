@@ -7,7 +7,7 @@ const fetch = require('node-fetch');
 const TBC_BASE = process.env.TBC_PAY_API_BASE || 'https://api.tbcpayments.ge';
 const CLIENT_ID = process.env.TBC_PAY_CLIENT_ID;
 const CLIENT_SECRET = process.env.TBC_PAY_CLIENT_SECRET;
-const SITE_URL = process.env.SITE_URL || 'https://xelosani.ge';
+const SITE_URL = process.env.SITE_URL || 'https://fixi.ge';
 
 let cachedToken = null;
 let tokenExpiresAt = 0;
@@ -115,7 +115,7 @@ async function createBindPayment({ merchantOrderId, returnUrl, cancelUrl }) {
       tax: 0,
       shipping: 0,
     },
-    extra: 'ბარათის მიბმა — ხელოსანი.ge',
+    extra: 'ბარათის მიბმა — Fixi.ge',
     expirationTimeout: 900,
     merchantPaymentId: merchantOrderId,
     returnUrl: returnUrl || `${SITE_URL}/payment-success?type=bind`,

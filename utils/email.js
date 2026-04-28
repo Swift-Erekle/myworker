@@ -4,8 +4,8 @@ const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 
 const FROM = {
-  email: process.env.SENDGRID_FROM_EMAIL || 'noreply@xelosani.ge',
-  name: 'ხელოსანი.ge',
+  email: process.env.SENDGRID_FROM_EMAIL || 'noreply@fixi.ge',
+  name: 'Fixi.ge',
 };
 
 /**
@@ -31,7 +31,7 @@ function baseTemplate(content) {
   return `<!DOCTYPE html>
 <html lang="ka">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ხელოსანი.ge</title></head>
+<title>Fixi.ge</title></head>
 <body style="margin:0;padding:0;background:#0f0f13;font-family:'Segoe UI',Arial,sans-serif">
 <div style="max-width:520px;margin:40px auto;padding:32px;background:#1a1a24;border-radius:16px;border:1px solid #2e2e3f">
   <div style="margin-bottom:24px;text-align:center">
@@ -39,7 +39,7 @@ function baseTemplate(content) {
   </div>
   ${content}
   <div style="margin-top:32px;padding-top:20px;border-top:1px solid #2e2e3f;text-align:center;font-size:11px;color:#9998b0">
-    ხელოსანი.ge · support@xelosani.ge · <a href="${process.env.SITE_URL}" style="color:#ff6b2b">xelosani.ge</a>
+    Fixi.ge · support@fixi.ge · <a href="${process.env.SITE_URL}" style="color:#ff6b2b">fixi.ge</a>
   </div>
 </div>
 </body></html>`;
@@ -67,7 +67,7 @@ function passwordResetTemplate(name, code) {
       <div style="font-size:42px;font-weight:900;letter-spacing:14px;color:#ff6b2b;font-family:monospace">${code}</div>
     </div>
     <p style="color:#9998b0;font-size:12px;text-align:center">კოდი მოქმედებს <strong style="color:#f0eff5">15 წუთის</strong> განმავლობაში.</p>
-    <p style="color:#e74c3c;font-size:12px;text-align:center">⚠️ თუ ეს შენ არ მოითხოვე, შეგვატყობინე: support@xelosani.ge</p>
+    <p style="color:#e74c3c;font-size:12px;text-align:center">⚠️ თუ ეს შენ არ მოითხოვე, შეგვატყობინე: support@fixi.ge</p>
   `);
 }
 
@@ -140,7 +140,7 @@ function renewalFailedTemplate(name, plan, expiresAt) {
     <div style="margin:20px 0;text-align:center">
       <a href="${process.env.SITE_URL}/card" style="display:inline-block;padding:12px 24px;background:#ff6b2b;color:#fff;border-radius:10px;text-decoration:none;font-weight:700">💳 ბარათის განახლება</a>
     </div>
-    <p style="color:#9998b0;font-size:12px;text-align:center">დახმარება: support@xelosani.ge</p>
+    <p style="color:#9998b0;font-size:12px;text-align:center">დახმარება: support@fixi.ge</p>
   `);
 }
 

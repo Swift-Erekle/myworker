@@ -18,7 +18,7 @@ const isConfigured = () =>
 
 if (isConfigured()) {
   webpush.setVapidDetails(
-    'mailto:' + (process.env.VAPID_EMAIL || 'support@xelosani.ge'),
+    'mailto:' + (process.env.VAPID_EMAIL || 'support@fixi.ge'),
     process.env.VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY
   );
@@ -39,7 +39,7 @@ async function sendPush(subscription, payload) {
     await webpush.sendNotification(
       subscription,
       JSON.stringify({
-        title: payload.title || 'ხელოსანი.ge',
+        title: payload.title || 'Fixi.ge',
         body:  payload.body  || '',
         icon:  payload.icon  || '/assets/icon.png',
         badge: payload.badge || '/assets/icon.png',

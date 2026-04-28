@@ -11,6 +11,7 @@ const { Server } = require('socket.io');
 
 const { setupSocket } = require('./socket');
 const prisma         = require('./utils/prisma');
+const { seoMiddleware, closeSeoBrowser } = require('./utils/seoRender');
 
 const authRoutes    = require('./routes/auth');
 const userRoutes    = require('./routes/users');
@@ -24,6 +25,18 @@ const pushRoutes    = require('./routes/push');
 const notificationRoutes = require('./routes/notifications');
 const proposalRoutes     = require('./routes/proposals');
 
+// ── Startup validation: critical secrets ──────────────────────
+const REQUIRED_ENV = ['JWT_SECRET', 'DATABASE_URL'];
+for (const key of REQUIRED_ENV) {
+  if (!process.env[key]) {
+    console.error(`❌ FATAL: missing required env var: ${key}`);
+    process.exit(1);
+  }
+}
+if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32) {
+  console.warn('⚠️ JWT_SECRET should be at least 32 characters for security');
+}
+
 const app    = express();
 app.set('trust proxy', 1);
 const server = http.createServer(app);
@@ -31,7 +44,7 @@ const server = http.createServer(app);
 // ── CORS configuration ────────────────────────────────────────
 // In production, default to the primary domain. '*' is only allowed in dev.
 const corsOrigin = process.env.CORS_ORIGIN
-  || (process.env.NODE_ENV === 'production' ? 'https://xelosani.ge' : '*');
+  || (process.env.NODE_ENV === 'production' ? 'https://fixi.ge' : '*');
 
 // ── Socket.io ─────────────────────────────────────────────────
 const io = new Server(server, {
@@ -125,10 +138,64 @@ app.get('/payment-cancel', (req, res) => {
 <body style="font-family:sans-serif;background:#0f0f13;color:#fff;text-align:center;padding:80px 20px">
 <div style="font-size:64px;margin-bottom:16px">❌</div>
 <h1 style="color:#e74c3c">გადახდა გაუქმდა</h1>
-<p style="color:#9998b0;margin-top:8px">ცადეთ ხელახლა ან დაგვიკავშირდით: support@xelosani.ge</p>
+<p style="color:#9998b0;margin-top:8px">ცადეთ ხელახლა ან დაგვიკავშირდით: support@fixi.ge</p>
 <p style="color:#9998b0;font-size:13px;margin-top:16px">3 წამში გადამისამართება...</p>
 </body></html>`);
 });
+
+// ── SEO: Sitemap.xml (dynamic) ─────────────────────────────────
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const SITE = process.env.SITE_URL || 'https://fixi.ge';
+    const [handymen, requests] = await Promise.all([
+      prisma.user.findMany({
+        where:  { type: { in: ['handyman','company'] }, blocked: false },
+        select: { id: true, updatedAt: true },
+      }),
+      prisma.request.findMany({
+        where:  { status: { in: ['open','pending'] } },
+        select: { id: true, updatedAt: true },
+      }),
+    ]);
+    const staticUrls = [
+      { loc: SITE + '/',              changefreq: 'daily',   priority: '1.0' },
+      { loc: SITE + '/?nav=handymen', changefreq: 'daily',   priority: '0.9' },
+      { loc: SITE + '/?nav=requests', changefreq: 'hourly',  priority: '0.9' },
+      { loc: SITE + '/terms.html',    changefreq: 'monthly', priority: '0.3' },
+      { loc: SITE + '/privacy.html',  changefreq: 'monthly', priority: '0.3' },
+    ];
+    const handymenUrls = handymen.map(h => ({
+      loc: `${SITE}/?user=${h.id}`,
+      lastmod: new Date(h.updatedAt).toISOString().split('T')[0],
+      changefreq: 'weekly', priority: '0.8',
+    }));
+    const requestUrls = requests.map(r => ({
+      loc: `${SITE}/?req=${r.id}`,
+      lastmod: new Date(r.updatedAt).toISOString().split('T')[0],
+      changefreq: 'daily', priority: '0.7',
+    }));
+    const all = [...staticUrls, ...handymenUrls, ...requestUrls];
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${all.map(u => `  <url>
+    <loc>${u.loc}</loc>
+    ${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ''}
+    <changefreq>${u.changefreq}</changefreq>
+    <priority>${u.priority}</priority>
+  </url>`).join('\n')}
+</urlset>`;
+    res.header('Content-Type', 'application/xml');
+    res.send(xml);
+  } catch (err) {
+    console.error('[SITEMAP]', err.message);
+    res.status(500).send('<?xml version="1.0"?><urlset/>');
+  }
+});
+
+// ── SEO: Dynamic Rendering for bot User-Agents ─────────────────
+// Detects Googlebot / Facebook / Telegram / Twitter etc. and serves
+// pre-rendered HTML via Puppeteer (cached). For humans → SPA as usual.
+app.use(seoMiddleware);
 
 // ── Serve frontend ─────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
@@ -240,7 +307,7 @@ app.use((err, req, res, next) => {
           if (user?.email && user.plan !== 'start') {
             await sendEmail(
               user.email,
-              'ხელოსანი.ge — ავტო-განახლება ვერ მოხდა',
+              'Fixi.ge — ავტო-განახლება ვერ მოხდა',
               renewalFailedTemplate(user.name, user.plan, user.planExpiresAt)
             );
           }
@@ -434,10 +501,10 @@ app.use((err, req, res, next) => {
 // ── Start ──────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`\n🚀 ხელოსანი.ge backend on port ${PORT}`);
+  console.log(`\n🚀 Fixi.ge backend on port ${PORT}`);
   console.log(`   Env: ${process.env.NODE_ENV || 'development'}`);
   console.log(`   Health: http://localhost:${PORT}/api/health\n`);
 });
 
-process.on('SIGTERM', async () => { await prisma.$disconnect(); server.close(() => process.exit(0)); });
-process.on('SIGINT',  async () => { await prisma.$disconnect(); process.exit(0); });
+process.on('SIGTERM', async () => { await closeSeoBrowser(); await prisma.$disconnect(); server.close(() => process.exit(0)); });
+process.on('SIGINT',  async () => { await closeSeoBrowser(); await prisma.$disconnect(); process.exit(0); });

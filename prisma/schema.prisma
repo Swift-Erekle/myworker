@@ -22,6 +22,7 @@ model User {
   surname        String?
   email          String    @unique
   phone          String?
+  whatsappEnabled Boolean  @default(false)
   password       String
   type           String    // user, handyman, company, staff, admin
   specialty      String?

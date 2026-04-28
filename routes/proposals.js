@@ -332,6 +332,15 @@ router.post('/:id/agree', requireAuth, async (req, res) => {
     const io = req.app.get('io');
     const otherUserId = isHandyman ? p.senderId : p.recipientId;
 
+    // ✅ NEW: live event so other party's chat UI updates instantly
+    if (io && p.chat) {
+      io.to(`chat:${p.chat.id}`).emit('proposalAgreed', {
+        chatId: p.chat.id,
+        proposalId: p.id,
+        bothAgreed,
+      });
+    }
+
     if (bothAgreed) {
       createNotification({ prisma, io, userId: otherUserId, type: 'offer_accepted',
         title: '🤝 შევთანხმდით', body: `"${p.title}" — თანამშრომლობა დაიწყო`,

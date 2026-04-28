@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /payment-success
+Disallow: /payment-cancel
+
+# Sitemap
+Sitemap: https://fixi.ge/sitemap.xml

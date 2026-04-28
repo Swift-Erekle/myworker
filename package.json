@@ -1,7 +1,7 @@
 {
-  "name": "xelosani-backend",
+  "name": "fixi-backend",
   "version": "1.0.0",
-  "description": "ხელოსანი.ge backend API",
+  "description": "Fixi.ge backend API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -24,9 +24,11 @@
     "express-rate-limit": "^7.2.0",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
+    "lru-cache": "^10.2.0",
     "multer": "^1.4.5-lts.1",
     "node-cron": "^3.0.3",
     "node-fetch": "^2.7.0",
+    "puppeteer": "^23.0.0",
     "socket.io": "^4.7.4",
     "uuid": "^9.0.1",
     "web-push": "^3.6.7"

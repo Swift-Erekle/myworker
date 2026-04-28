@@ -41,7 +41,7 @@ async function handleCloudinaryUpload(req, res, next) {
         const isAudio = file.mimetype.startsWith('audio');
         return uploadBuffer(file.buffer, {
           resource_type: isVideo ? 'video' : isAudio ? 'video' : 'image',
-          folder: isVideo ? 'xelosani/videos' : isAudio ? 'xelosani/audio' : 'xelosani/images',
+          folder: isVideo ? 'fixi/videos' : isAudio ? 'fixi/audio' : 'fixi/images',
         });
       })
     );

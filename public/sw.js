@@ -1,11 +1,11 @@
 // public/sw.js
-// ── ხელოსანი.ge Service Worker ───────────────────────────────
+// ── Fixi.ge Service Worker ───────────────────────────────
 // Handles:
 //   1. push  — shows a notification
 //   2. notificationclick — opens the right page on tap
 //   3. Basic offline cache (optional, non-blocking)
 
-const CACHE_NAME = 'xelosani-v2';
+const CACHE_NAME = 'fixi-v2';
 const OFFLINE_ASSETS = ['/', '/assets/icon.png'];
 
 // ── Install: pre-cache key assets ─────────────────────────────
@@ -33,7 +33,7 @@ self.addEventListener('push', (e) => {
   let data = {};
   try { data = e.data?.json() || {}; } catch (_) {}
 
-  const title   = data.title  || 'ხელოსანი.ge';
+  const title   = data.title  || 'Fixi.ge';
   const body    = data.body   || '';
   // ✅ Always use the brand logo so notifications carry our identity
   const icon    = data.icon   || '/assets/icon.png';

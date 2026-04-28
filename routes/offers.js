@@ -347,6 +347,9 @@ router.post('/:id/disagree', requireAuth, async (req, res) => {
         where: { id: offer.chat.id },
         data:  { updatedAt: thirteenDaysAgo },
       }).catch(() => {});
+      // ✅ NEW: live event so other party's chat UI updates instantly
+      const ioDisagree = req.app.get('io');
+      if (ioDisagree) ioDisagree.to(`chat:${offer.chat.id}`).emit('offerDisagreed', { chatId: offer.chat.id, offerId: offer.id });
     }
 
     res.json({ ok: true });
