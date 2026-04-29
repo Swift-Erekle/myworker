@@ -1700,6 +1700,11 @@
       flex-wrap: wrap
     }
 
+    .prof-top > div {
+      min-width: 0;
+      flex: 1
+    }
+
     .pav {
       width: 88px;
       height: 88px;
@@ -1714,7 +1719,9 @@
 
     .pname {
       font-size: 26px;
-      font-weight: 800
+      font-weight: 800;
+      word-break: break-word;
+      overflow-wrap: break-word
     }
 
     .psp {
@@ -1744,12 +1751,22 @@
       gap: 28px;
       padding: 32px 20px;
       max-width: 880px;
-      margin: 0 auto
+      margin: 0 auto;
+      box-sizing: border-box
+    }
+
+    .prof-grid > div {
+      min-width: 0;
+      overflow-wrap: break-word;
+      word-break: break-word
     }
 
     @media(max-width:660px) {
       .prof-grid {
-        grid-template-columns: 1fr
+        grid-template-columns: 1fr;
+        padding: 16px 12px;
+        gap: 14px;
+        overflow-x: hidden
       }
 
       .fr {
@@ -1890,11 +1907,50 @@
       .prof-grid {
         grid-template-columns: 1fr;
         padding: 14px 12px;
-        gap: 12px
+        gap: 12px;
+        overflow-x: hidden
+      }
+
+      .prof-grid > div {
+        min-width: 0;
+        max-width: 100%
+      }
+
+      .prof-top > div:last-child {
+        min-width: 0;
+        flex: 1;
+        max-width: 100%
+      }
+
+      .pname {
+        word-break: break-word;
+        overflow-wrap: break-word
+      }
+
+      .pactions {
+        flex-wrap: wrap
+      }
+
+      .pactions .btn {
+        white-space: normal;
+        text-align: center;
+        flex-shrink: 1
+      }
+
+      #pInfo, #pServices {
+        word-break: break-word;
+        overflow-wrap: break-word
+      }
+
+      #pInfo div, #pServices div {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis
       }
 
       .ic {
-        padding: 12px
+        padding: 12px;
+        overflow: hidden
       }
 
       .wgrid {
