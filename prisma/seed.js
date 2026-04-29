@@ -9,40 +9,48 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // ── System accounts (created ONCE, never overwritten) ────────
-  const adminExists = await prisma.user.findUnique({ where: { email: 'admin@fixi.ge' } });
-  if (!adminExists) {
-    await prisma.user.create({
-      data: {
-        id: 'admin1',
-        name: 'ადმინი', surname: 'სისტემა',
-        email: 'admin@fixi.ge',
-        password: await bcrypt.hash('Admin123!', 12),
-        type: 'admin', verified: true, emailVerified: true,
-        phone: '+995 555 000 000',
-      },
-    });
-    console.log('  ✅ Admin created');
-  } else {
-    console.log('  ⏭️  Admin already exists, skipping');
-  }
+  // ── System accounts (upsert by id — handles both fresh DB and id-conflict cases) ────────
+  const adminPw = await bcrypt.hash('Admin123!', 12);
+  await prisma.user.upsert({
+    where: { id: 'admin1' },
+    update: {
+      email: 'admin@fixi.ge',
+      name: 'ადმინი', surname: 'სისტემა',
+      password: adminPw,
+      type: 'admin', verified: true, emailVerified: true,
+      phone: '+995 555 000 000',
+    },
+    create: {
+      id: 'admin1',
+      name: 'ადმინი', surname: 'სისტემა',
+      email: 'admin@fixi.ge',
+      password: adminPw,
+      type: 'admin', verified: true, emailVerified: true,
+      phone: '+995 555 000 000',
+    },
+  });
+  console.log('  ✅ Admin ready');
 
-  const staffExists = await prisma.user.findUnique({ where: { email: 'staff@fixi.ge' } });
-  if (!staffExists) {
-    await prisma.user.create({
-      data: {
-        id: 'staff1',
-        name: 'სუპორტი', surname: 'გუნდი',
-        email: 'staff@fixi.ge',
-        password: await bcrypt.hash('Staff123!', 12),
-        type: 'staff', verified: true, emailVerified: true,
-        phone: '+995 555 000 001',
-      },
-    });
-    console.log('  ✅ Staff created');
-  } else {
-    console.log('  ⏭️  Staff already exists, skipping');
-  }
+  const staffPw = await bcrypt.hash('Staff123!', 12);
+  await prisma.user.upsert({
+    where: { id: 'staff1' },
+    update: {
+      email: 'staff@fixi.ge',
+      name: 'სუპორტი', surname: 'გუნდი',
+      password: staffPw,
+      type: 'staff', verified: true, emailVerified: true,
+      phone: '+995 555 000 001',
+    },
+    create: {
+      id: 'staff1',
+      name: 'სუპორტი', surname: 'გუნდი',
+      email: 'staff@fixi.ge',
+      password: staffPw,
+      type: 'staff', verified: true, emailVerified: true,
+      phone: '+995 555 000 001',
+    },
+  });
+  console.log('  ✅ Staff ready');
 
   // ── Demo users ───────────────────────────────────────────────
   const demoPass = await bcrypt.hash('Demo1234!', 12);
