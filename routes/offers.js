@@ -21,8 +21,8 @@ router.post('/', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'მხოლოდ ხელოსანს შეუძლია შეთავაზება' });
     }
 
-    const { requestId, price, duration, durationMinutes, comment } = req.body;
-    if (!requestId || !price) {
+    const { requestId, price, negotiable, duration, durationMinutes, comment } = req.body;
+    if (!requestId || (!price && !negotiable)) {
       return res.status(400).json({ error: 'მოთხოვნის ID და ფასი სავალდებულოა' });
     }
     if (!durationMinutes || parseInt(durationMinutes) <= 0) {
@@ -104,11 +104,12 @@ router.post('/', requireAuth, async (req, res) => {
       }).catch(() => {});
     }
 
+    const finalPrice = negotiable ? 0 : parseInt(price);
     const offer = await prisma.offer.create({
       data: {
         requestId,
         handymanId: req.user.id,
-        price:    parseInt(price),
+        price:    finalPrice,
         duration: duration || null,
         durationMinutes: parseInt(durationMinutes),
         comment:  comment  || null,
@@ -127,13 +128,13 @@ router.post('/', requireAuth, async (req, res) => {
     // ── Push: notify request owner of new offer ───────────────
     sendPushToUser(prisma, request.userId, {
       title: `${req.user.emoji || '🔧'} ახალი შეთავაზება!`,
-      body:  `${req.user.name} — ₾${parseInt(price)}${comment ? ': ' + comment.substring(0, 60) : ''}`,
+      body:  `${req.user.name} — ${finalPrice === 0 ? 'შეთ.' : '₾' + finalPrice}${comment ? ': ' + comment.substring(0, 60) : ''}`,
       tag:   'new-offer-' + requestId,
       url:   `/?req=${requestId}`,
     }).catch(() => {});
     sendExpoPushToUser(prisma, request.userId, {
       title: `${req.user.emoji || '🔧'} ახალი შეთავაზება!`,
-      body:  `${req.user.name} — ₾${parseInt(price)}${comment ? ': ' + comment.substring(0, 60) : ''}`,
+      body:  `${req.user.name} — ${finalPrice === 0 ? 'შეთ.' : '₾' + finalPrice}${comment ? ': ' + comment.substring(0, 60) : ''}`,
       data:  { requestId, type: 'new_offer' },
     }).catch(() => {});
 
@@ -144,7 +145,7 @@ router.post('/', requireAuth, async (req, res) => {
       userId: request.userId,
       type:   'new_offer',
       title:  `${req.user.emoji || '🔧'} ახალი შეთავაზება`,
-      body:   `${req.user.name} ${req.user.surname || ''} — ₾${parseInt(price)}`,
+      body:   `${req.user.name} ${req.user.surname || ''} — ${finalPrice === 0 ? 'შეთ.' : '₾' + finalPrice}`,
       link:   `?req=${requestId}`,
     }).catch(() => {});
 
