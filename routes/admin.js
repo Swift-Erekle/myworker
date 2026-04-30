@@ -107,6 +107,7 @@ router.get('/users/:id', async (req, res) => {
         offers: { orderBy: { createdAt: 'desc' }, take: 10, include: { request: { select: { title: true } } } },
         reviewsReceived: { orderBy: { createdAt: 'desc' }, take: 5 },
         vipPayments: { orderBy: { createdAt: 'desc' }, take: 5 },
+        subscriptionPayments: { orderBy: { createdAt: 'desc' }, take: 5 },
       },
     });
     if (!user) return res.status(404).json({ error: 'მომხმარებელი ვერ მოიძებნა' });

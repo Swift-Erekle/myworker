@@ -181,6 +181,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
                 reviewsReceived: { select: { stars: true } },
               },
             },
+            chat: { select: { id: true } },
           },
         },
       },
